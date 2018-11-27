@@ -9,11 +9,11 @@ import (
 /**
 Static method to create a new user
 */
-func CreateUser(usersRepo Repo, user User) error {
+func createUser(usersRepo Repo, user User) (User, error) {
 
 	//Make sure the info being passed in is valid
-	if ok, err := ValidateUser(usersRepo, user); !ok {
-		return err
+	if ok, err := validateUser(usersRepo, user); !ok {
+		return nil, err
 	}
 
 	//Now hash the password
@@ -24,37 +24,38 @@ func CreateUser(usersRepo Repo, user User) error {
 
 	//Make sure it created an id
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	//Store the return
-	user = userReturn
-
 	//Store the token to return
-	user.SetToken(authentication.CreateJWTToken(user.Id()))
+	userReturn.SetToken(authentication.CreateJWTToken(user.Id()))
 
 	//Clear the password
-	user.SetPassword("") //delete password
+	userReturn.SetPassword("") //delete password
 
-	return nil
+	return userReturn, nil
 
 }
 
 /**
 Validate incoming user details to make sure it has an email address and stuff
 */
-func ValidateUser(usersRepo Repo, user User) (bool, error) {
+func validateUser(usersRepo Repo, user User) (bool, error) {
 
 	if !strings.Contains(user.Email(), "@") {
 		return false, errors.New("validate_missing_email")
 	}
 
-	if len(user.Password()) < 6 {
-		return false, errors.New("validate_password_insufficient")
+	//Check the password
+	err := validatePassword(user.Password())
+
+	//If the user already exists
+	if err != nil {
+		return false, err
 	}
 
 	//Now look up a possible user
-	_, err := usersRepo.GetUserByEmail(user.Email())
+	_, err = usersRepo.GetUserByEmail(user.Email())
 
 	//If the user already exists
 	if err == nil {
@@ -66,9 +67,102 @@ func ValidateUser(usersRepo Repo, user User) (bool, error) {
 }
 
 /**
+Make sure that the password is valid
+*/
+func validatePassword(password string) error {
+	if len(password) < 6 {
+		return errors.New("validate_password_insufficient")
+	}
+	return nil
+}
+
+/**
+Updates everything from the password
+*/
+func updateUser(usersRepo Repo, userId int, newUser User) (User, error) {
+
+	//Load up the user
+	oldUser, err := usersRepo.GetUser(userId)
+
+	//Check for err
+	if err != nil {
+		return nil, err
+	}
+
+	//There are three things we cannot change when we update the user, the id
+	if newUser.Id() != oldUser.Id() {
+		return nil, errors.New("update_forbidden")
+	}
+
+	//And the password
+	if newUser.Password() != oldUser.Password() {
+		return nil, errors.New("update_forbidden")
+	}
+
+	//And the email
+	if newUser.Email() != oldUser.Email() {
+		return nil, errors.New("update_forbidden")
+	}
+
+	//Now update in the repo
+	newUser, err = usersRepo.UpdateUser(newUser)
+
+	return newUser, err
+
+}
+
+/**
+Define a struct for just updating password
+*/
+type updatePasswordChangeStruct struct {
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	PasswordOld string `json:"passwordold"`
+}
+
+/**
+Updates everything from the password
+*/
+func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordChangeStruct) error {
+
+	//Load up the user
+	oldUser, err := usersRepo.GetUser(userId)
+
+	//Make sure that the emails match
+	if passwordChange.Email != oldUser.Email() {
+		return errors.New("password_change_forbidden")
+	}
+
+	//Make sure the old password matches
+	passwordsMath := authentication.ComparePasswords(oldUser.Password(), passwordChange.PasswordOld)
+
+	//Make sure that the emails match
+	if !passwordsMath {
+		return errors.New("password_change_forbidden")
+	}
+
+	//Make sure the new password is valid
+	err = validatePassword(passwordChange.Password)
+
+	//If the password is bad
+	if err != nil {
+		return err
+	}
+
+	//So it looks like we can update it, so hash the new password
+	oldUser.SetPassword(authentication.HashPassword(passwordChange.Password))
+
+	//Now update in the repo
+	_, err = usersRepo.UpdateUser(oldUser)
+
+	return err
+
+}
+
+/**
 Login in the user
 */
-func Login(userPassword string, user User) error {
+func login(userPassword string, user User) (User, error) {
 
 	//Now see if we login
 	passwordsMath := authentication.ComparePasswords(user.Password(), userPassword)
@@ -78,11 +172,11 @@ func Login(userPassword string, user User) error {
 
 	//If they do not match
 	if !passwordsMath {
-		return errors.New("login_invalid_password")
+		return nil, errors.New("login_invalid_password")
 	}
 
 	//Create JWT token and Store the token in the response
 	user.SetToken(authentication.CreateJWTToken(user.Id()))
 
-	return nil
+	return user, nil
 }

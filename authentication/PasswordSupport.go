@@ -1,7 +1,9 @@
 package authentication
 
 import (
+	"crypto/rand"
 	"errors"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"os"
@@ -58,6 +60,15 @@ func ComparePasswords(currentPwHash string, testingPassword string) bool {
 		return true
 	}
 
+}
+
+/**
+ * Get a random token
+ */
+func TokenGenerator() string {
+	b := make([]byte, 4)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
 }
 
 /**

@@ -57,6 +57,27 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			HandlerFunc: handler.handleUserDocumentation,
 			Public:      true,
 		},
+		{ //Allow for the user to update tthem selves
+			Name:        "UserUpdate",
+			Method:      "PUT",
+			Pattern:     "/users/",
+			HandlerFunc: handler.handleUserUpdate,
+			Public:      false,
+		},
+		{ //Allow for the user to get an update of them selves
+			Name:        "UserGet",
+			Method:      "GET",
+			Pattern:     "/users/",
+			HandlerFunc: handler.handleUserGet,
+			Public:      false,
+		},
+		{ //Allow for the user to get an update of them selves
+			Name:        "PasswordChange",
+			Method:      "POST",
+			Pattern:     "/users/password/change",
+			HandlerFunc: handler.handlePasswordUpdate,
+			Public:      false,
+		},
 	}
 
 	return routes
@@ -80,7 +101,7 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	}
 
 	//Now create the new suer
-	err = CreateUser(handler.userRepo, newUser)
+	_, err = createUser(handler.userRepo, newUser)
 
 	//Check to see if the user was created
 	if err == nil {
@@ -118,7 +139,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//We have the user, try to login
-	err = Login(userCred.Password(), user)
+	user, err = login(userCred.Password(), user)
 
 	//If there is an error, don't login
 	if err != nil {
@@ -130,6 +151,94 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	//Check to see if the user was created
 	if err == nil {
 		utils.ReturnJson(w, http.StatusCreated, user)
+	} else {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+	}
+
+}
+
+/**
+Updates the password for this user
+*/
+func (handler *Handler) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
+
+	//We have gone through the auth, so we should know the id of the logged in user
+	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+
+	//Now load the current user from the repo
+	user, err := handler.userRepo.GetUser(loggedInUser)
+
+	//Check for an error
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	//decode the request body into struct with all of the info specified and failed if any error occur
+	err = json.NewDecoder(r.Body).Decode(user)
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+
+	}
+
+	//Now update the user
+	user, err = updateUser(handler.userRepo, loggedInUser, user)
+
+	//Check to see if the user was created
+	if err == nil {
+		utils.ReturnJson(w, http.StatusAccepted, user)
+	} else {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+	}
+
+}
+
+/**
+Get the current up to date user
+*/
+func (handler *Handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
+
+	//We have gone through the auth, so we should know the id of the logged in user
+	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+
+	//Get the user
+	user, err := handler.userRepo.GetUser(loggedInUser)
+
+	//Check to see if the user was created
+	if err == nil {
+		utils.ReturnJson(w, http.StatusOK, user)
+	} else {
+		utils.ReturnJsonStatus(w, http.StatusUnsupportedMediaType, false, err.Error())
+	}
+
+}
+
+/**
+Updates the password for this user
+*/
+func (handler *Handler) handlePasswordUpdate(w http.ResponseWriter, r *http.Request) {
+
+	//We have gone through the auth, so we should know the id of the logged in user
+	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+
+	//Create a new password change object
+	info := updatePasswordChangeStruct{}
+
+	//Now get the json info
+	err := json.NewDecoder(r.Body).Decode(&info)
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+
+	}
+
+	//Now update the password
+	err = passwordChange(handler.userRepo, loggedInUser, info)
+
+	//Check to see if the user was created
+	if err == nil {
+		utils.ReturnJsonStatus(w, http.StatusAccepted, true, "password_change_success")
 	} else {
 		utils.ReturnJsonError(w, http.StatusForbidden, err)
 	}

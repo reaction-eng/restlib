@@ -1,26 +1,17 @@
 package authentication
 
-///**
-//Define an interface that all Calc Repos must follow
-//*/
-//type PasswordResetRepo interface {
-//	/**
-//	Get the user with the email.  An error is thrown is not found
-//	*/
-//	GetUserByEmail(email string) (User, error)
-//
-//	/**
-//	Get the user with the email.  An error is thrown is not found
-//	*/
-//	GetUser(id int) (User, error)
-//
-//	/**
-//	Add User
-//	*/
-//	AddUser(user User) (User, error)
-//
-//	/**
-//	Allow databases to be closed
-//	*/
-//	CleanUp()
-//}
+/**
+Define an interface that all Calc Repos must follow
+*/
+type PasswordResetRepo interface {
+
+	/**
+	Issues a request for the user
+	*/
+	IssueResetRequest(userId int, email string) error
+
+	/**
+	Allow databases to be closed
+	*/
+	CleanUp()
+}

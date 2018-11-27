@@ -146,7 +146,7 @@ func getUserDocumentation() string {
             </tr>
             <tr>
                 <td>Json Response (Failure)</td>
-                <td>Code: 403 or 415 </td>
+                <td>Code: 403 or 422 </td>
                 <td>
                     Response:{<br/>
                     status:false<br/>
@@ -196,7 +196,7 @@ func getUserDocumentation() string {
             </tr>
             <tr>
                 <td>Json Response (Failure)</td>
-                <td>Code: 403 or 415 </td>
+                <td>Code: 403 or 422 </td>
                 <td>
                     Response:{<br/>
                     status:false<br/>

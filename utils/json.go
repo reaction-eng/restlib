@@ -31,7 +31,7 @@ Provide a support method to return json
 func ReturnJsonError(w http.ResponseWriter, statusCode int, err error) {
 
 	//Now just pass it
-	ReturnJson(w, statusCode, map[string]interface{}{"message": err.Error()})
+	ReturnJson(w, statusCode, map[string]interface{}{"status": false, "message": err.Error()})
 
 }
 

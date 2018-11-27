@@ -20,6 +20,11 @@ type Repo interface {
 	AddUser(user User) (User, error)
 
 	/**
+	Update User
+	*/
+	UpdateUser(user User) (User, error)
+
+	/**
 	Allow databases to be closed
 	*/
 	CleanUp()

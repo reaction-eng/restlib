@@ -20,6 +20,7 @@ type RepoSql struct {
 	addUserStatement        *sql.Stmt
 	getUserStatement        *sql.Stmt
 	getUserByEmailStatement *sql.Stmt
+	updateUserStatement     *sql.Stmt
 }
 
 //Provide a method to make a new UserRepoSql
@@ -64,6 +65,16 @@ func NewRepoSql(db *sql.DB, tableName string) *RepoSql {
 	}
 	//Store it
 	newRepo.getUserByEmailStatement = getUserByEmail
+
+	//update the user
+	updateStatement, err := db.Prepare("UPDATE  " + tableName + " SET email = ?, password = ? WHERE id = ?")
+
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.updateUserStatement = updateStatement
 
 	//Return a point
 	return &newRepo
@@ -131,12 +142,30 @@ func (repo *RepoSql) AddUser(newUser User) (User, error) {
 }
 
 /**
+Update the user table.  No checks are made here,
+*/
+func (repo *RepoSql) UpdateUser(user User) (User, error) {
+	//Update the user statement
+	//Just update the info
+	//execute the statement//"UPDATE  " + tableName + " SET email = ?, password = ? WHERE id = ?"
+	_, err := repo.updateUserStatement.Exec(user.Email(), user.Password(), user.Id())
+
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return user, err
+}
+
+/**
 Clean up the database, nothing much to do
 */
 func (repo *RepoSql) CleanUp() {
 	repo.addUserStatement.Close()
 	repo.getUserByEmailStatement.Close()
 	repo.getUserStatement.Close()
+	repo.updateUserStatement.Close()
 }
 
 /**
