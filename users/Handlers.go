@@ -13,6 +13,9 @@ import (
 type Handler struct {
 	// The user handler needs to have access to user repo
 	userRepo Repo
+
+	//passwordResetRepo
+	//passwordResetRepo authentication.
 }
 
 /**
@@ -66,7 +69,7 @@ Function used to create new user
 func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 
 	//Create an empty new user
-	newUser := &User{}
+	newUser := handler.userRepo.NewEmptyUser()
 
 	//decode the request body into struct and failed if any error occur
 	err := json.NewDecoder(r.Body).Decode(newUser)
@@ -77,11 +80,11 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	}
 
 	//Now create the new suer
-	err = newUser.Create(handler.userRepo) //Create account
+	err = CreateUser(handler.userRepo, newUser)
 
 	//Check to see if the user was created
 	if err == nil {
-		utils.ReturnJsonStatus(w, http.StatusCreated, true, "user "+newUser.Email+" added ")
+		utils.ReturnJsonStatus(w, http.StatusCreated, true, "create_user_added")
 	} else {
 		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, err.Error())
 	}
@@ -94,7 +97,7 @@ Function used to create new user
 func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	//Create an empty new user
-	userCred := &User{}
+	userCred := handler.userRepo.NewEmptyUser()
 
 	//decode the request body into struct and failed if any error occur
 	err := json.NewDecoder(r.Body).Decode(userCred)
@@ -105,7 +108,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//Now look up the user
-	user, err := handler.userRepo.GetUserByEmail(userCred.Email)
+	user, err := handler.userRepo.GetUserByEmail(userCred.Email())
 
 	//check for an error
 	if err != nil {
@@ -115,7 +118,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//We have the user, try to login
-	err = user.Login(userCred.Password)
+	err = Login(userCred.Password(), user)
 
 	//If there is an error, don't login
 	if err != nil {

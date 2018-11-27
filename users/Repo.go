@@ -23,4 +23,9 @@ type Repo interface {
 	Allow databases to be closed
 	*/
 	CleanUp()
+
+	/**
+	Create empty user
+	*/
+	NewEmptyUser() User
 }

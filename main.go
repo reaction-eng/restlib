@@ -1,8 +1,8 @@
 package restlib
 
 import (
-	"bitbucket.org/reidev/restlib/authentication"
 	"bitbucket.org/reidev/restlib/configuration"
+	"bitbucket.org/reidev/restlib/middleware"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/users"
 	"bitbucket.org/reidev/stoichcalcservicego/calcs"
@@ -46,10 +46,10 @@ func main() {
 	router := routing.NewRouter(nil, []routing.Route{}, userHandler)
 
 	//Add in middleware/filter that respons to CORS
-	router.Use(authentication.MakeCORSMiddlewareFunc()) //Make sure to add the cross site permission first
+	router.Use(middleware.MakeCORSMiddlewareFunc()) //Make sure to add the cross site permission first
 
-	//Add in middleware/filter that checks for user authentication
-	router.Use(authentication.MakeJwtMiddlewareFunc(router, userRepo))
+	//Add in middleware/filter that checks for user middleware
+	router.Use(middleware.MakeJwtMiddlewareFunc(router, userRepo))
 
 	//Start the filter
 	log.Fatal(http.ListenAndServe(config.GetString("host_port"), router))

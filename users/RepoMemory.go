@@ -35,12 +35,12 @@ func (repo *RepoMemory) GetUserByEmail(email string) (User, error) {
 	//March over each
 	for _, v := range repo.usersList {
 		//Check the email
-		if v.Email == email {
+		if v.Email() == email {
 			return v, nil
 		}
 	}
 
-	return User{Id: -1}, errors.New("no user with email")
+	return nil, errors.New("no user with email")
 }
 
 /**
@@ -50,12 +50,12 @@ func (repo *RepoMemory) GetUser(id int) (User, error) {
 	//March over each
 	for _, v := range repo.usersList {
 		//Check the email
-		if v.Id == id {
+		if v.Id() == id {
 			return v, nil
 		}
 	}
 
-	return User{Id: -1}, errors.New("no user with id")
+	return nil, errors.New("no user with id")
 }
 
 /**
@@ -63,7 +63,7 @@ Add the user to the database
 */
 func (repo *RepoMemory) AddUser(t User) (User, error) {
 	repo.currentId += 1
-	t.Id = repo.currentId
+	t.SetId(repo.currentId)
 
 	repo.usersList = append(repo.usersList, t)
 	return t, nil
@@ -74,6 +74,13 @@ Clean up the database, nothing much to do
 */
 func (repo *RepoMemory) CleanUp() {
 
+}
+
+/**
+Clean up the database, nothing much to do
+*/
+func (repo *RepoMemory) NewEmptyUser() User {
+	return &BasicUser{}
 }
 
 //func RepoDestroyCalc(id int) error {

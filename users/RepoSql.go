@@ -75,18 +75,18 @@ Look up the user and return if they were found
 */
 func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
 	//var dataResult string
-	var user User
+	var user BasicUser
 
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
-	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id, &user.Email, &user.Password)
+	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id_, &user.Email_, &user.Password_)
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
-		err = errors.New("user not found")
+		err = errors.New("login_email_not_found")
 	}
 
 	//Return the user calcs
-	return user, err
+	return &user, err
 }
 
 /**
@@ -94,18 +94,18 @@ Look up the user by id and return if they were found
 */
 func (repo *RepoSql) GetUser(id int) (User, error) {
 	//var dataResult string
-	var user User
+	var user BasicUser
 
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
-	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id, &user.Email, &user.Password)
+	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id_, &user.Email_, &user.Password_)
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
-		err = errors.New("user not found")
+		err = errors.New("login_user_id_not_found")
 	}
 
 	//Return the user calcs
-	return user, err
+	return &user, err
 }
 
 /**
@@ -114,7 +114,7 @@ Add the user to the database
 func (repo *RepoSql) AddUser(newUser User) (User, error) {
 	//Add the info
 	//execute the statement//(userId,name,input,flow)
-	result, err := repo.addUserStatement.Exec(newUser.Email, newUser.Password)
+	result, err := repo.addUserStatement.Exec(newUser.Email(), newUser.Password())
 
 	//Check for error
 	if err != nil {
@@ -125,7 +125,7 @@ func (repo *RepoSql) AddUser(newUser User) (User, error) {
 	newId, _ := result.LastInsertId()
 
 	//Add the newid to the user and return it
-	newUser.Id = int(newId)
+	newUser.SetId(int(newId))
 
 	return newUser, nil
 }
@@ -137,6 +137,13 @@ func (repo *RepoSql) CleanUp() {
 	repo.addUserStatement.Close()
 	repo.getUserByEmailStatement.Close()
 	repo.getUserStatement.Close()
+}
+
+/**
+Clean up the database, nothing much to do
+*/
+func (repo *RepoSql) NewEmptyUser() User {
+	return &BasicUser{}
 }
 
 //func RepoDestroyCalc(id int) error {
