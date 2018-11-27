@@ -47,6 +47,13 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			HandlerFunc: handler.handleUserLogin,
 			Public:      true,
 		},
+		{ //Allow for the user to login
+			Name:        "User Api Documentation",
+			Method:      "GET",
+			Pattern:     "/api/users",
+			HandlerFunc: handler.handleUserDocumentation,
+			Public:      true,
+		},
 	}
 
 	return routes
@@ -92,7 +99,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	//decode the request body into struct and failed if any error occur
 	err := json.NewDecoder(r.Body).Decode(userCred)
 	if err != nil {
-		utils.ReturnJson(w, http.StatusUnprocessableEntity, err)
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
 		return
 
 	}
