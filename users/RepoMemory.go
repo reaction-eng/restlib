@@ -2,6 +2,7 @@ package users
 
 import (
 	"errors"
+	//"log"
 )
 
 /**
@@ -81,6 +82,25 @@ Clean up the database, nothing much to do
 */
 func (repo *RepoMemory) NewEmptyUser() User {
 	return &BasicUser{}
+}
+
+/**
+Update the user table.  No checks are made here,
+*/
+func (repo *RepoMemory) UpdateUser(user User) (User, error) {
+	////Update the user statement
+	////Just update the info
+	////execute the statement//"UPDATE  " + tableName + " SET email = ?, password = ? WHERE id = ?"
+	//_, err := repo.updateUserStatement.Exec(user.Email(), user.Password(), user.Id())
+	//
+	////Check for error
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	// TODO: Doesn't do anything
+
+	return user, nil
 }
 
 //func RepoDestroyCalc(id int) error {
