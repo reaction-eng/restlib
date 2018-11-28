@@ -38,6 +38,13 @@ Function used to get routes
 func (handler *Handler) GetRoutes() []routing.Route {
 
 	var routes = []routing.Route{
+		{ //Allow for the user to login
+			Name:        "User Api Documentation",
+			Method:      "GET",
+			Pattern:     "/api/users",
+			HandlerFunc: handler.handleUserDocumentation,
+			Public:      true,
+		},
 		{ //Now for the user info
 			Name:        "UserCreate",
 			Method:      "POST",
@@ -50,13 +57,6 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			Method:      "POST",
 			Pattern:     "/users/login",
 			HandlerFunc: handler.handleUserLogin,
-			Public:      true,
-		},
-		{ //Allow for the user to login
-			Name:        "User Api Documentation",
-			Method:      "GET",
-			Pattern:     "/api/users",
-			HandlerFunc: handler.handleUserDocumentation,
 			Public:      true,
 		},
 		{ //Allow for the user to update tthem selves

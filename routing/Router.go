@@ -30,10 +30,13 @@ type RouteProducer interface {
 	GetRoutes() []Route
 }
 
+//Type def a logger wrapper
+type LoggerWrapper func(inner http.Handler, name string) http.Handler
+
 /**
 * Build a new instance of this router.  It contains all of the paths so we can ghceck them later
  */
-func NewRouter(optionsHandler http.HandlerFunc, routes []Route, routeProducers ...RouteProducer) *Router {
+func NewRouter(optionsHandler http.HandlerFunc, routes []Route, loggerWrapper LoggerWrapper, routeProducers ...RouteProducer) *Router {
 	muxRouter := mux.NewRouter().StrictSlash(true)
 
 	//Add in an option to handle all options
@@ -49,7 +52,7 @@ func NewRouter(optionsHandler http.HandlerFunc, routes []Route, routeProducers .
 
 	//For each route
 	for _, route := range routes {
-		router.addRoute(route)
+		router.addRoute(route, loggerWrapper)
 
 	}
 
@@ -57,7 +60,7 @@ func NewRouter(optionsHandler http.HandlerFunc, routes []Route, routeProducers .
 	for _, producer := range routeProducers {
 		//For each route produced
 		for _, route := range producer.GetRoutes() {
-			router.addRoute(route)
+			router.addRoute(route, loggerWrapper)
 		}
 
 	}
@@ -69,14 +72,15 @@ func NewRouter(optionsHandler http.HandlerFunc, routes []Route, routeProducers .
 /**
 Determines if it is a public path based upon the routes
 */
-func (router *Router) addRoute(route Route) {
+func (router *Router) addRoute(route Route, loggerWrapper LoggerWrapper) {
 
 	// Define a new handler
 	var handler http.Handler = route.HandlerFunc
 
 	// Wrap the handler in a Logger wrapper
-	handler = Logger(handler, route.Name)
-
+	if loggerWrapper != nil {
+		handler = loggerWrapper(handler, route.Name)
+	}
 	// Add the route to the router
 	router.
 		Methods(route.Method).
@@ -105,7 +109,10 @@ func (router *Router) PublicRoute(path string) bool {
 	return false
 }
 
-func Logger(inner http.Handler, name string) http.Handler {
+/**
+Simple wrapping function that can be used else where.
+*/
+func SimpleLogger(inner http.Handler, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
