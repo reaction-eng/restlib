@@ -11,6 +11,16 @@ type PasswordResetRepo interface {
 	IssueResetRequest(userId int, email string) error
 
 	/**
+	Issues a request for the user
+	*/
+	CheckForResetToken(userId int, reset_token string) (int, error)
+
+	/**
+	Issues a request for the user
+	*/
+	UseResetToken(id int) error
+
+	/**
 	Allow databases to be closed
 	*/
 	CleanUp()

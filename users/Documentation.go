@@ -316,7 +316,7 @@ func getUserDocumentation() string {
             </tr>
             <tr>
                 <td>Json Response (Failure)</td>
-                <td>Code: 401 </td>
+                <td>Code: 404 </td>
                 <td>
                     Response:{<br/>
                     status:false<br/>
@@ -332,7 +332,7 @@ func getUserDocumentation() string {
             <thead>
             <tr>
                 <th colspan="3">
-                    Password Reset
+                    Password Reset Get
                 </th>
             </tr>
             </thead>
@@ -340,8 +340,62 @@ func getUserDocumentation() string {
             <tr>
                 <td colspan="3">
                     Method to request a password reset email.
-                    The Email is required to match the logged in user.
+                </td>
+            </tr>
+            <tr>
+                <td>URL</td>
+                <td colspan="2">/users/password/reset</td>
+            </tr>
+            <tr>
+                <td>Method</td>
+                <td colspan="2">GET</td>
+            </tr>
+            <tr>
+                <td>Access</td>
+                <td colspan="2">Public</td>
+            </tr>
+            <tr>
+                <td>URL Param</td>
+                <td colspan="2">
+                    email=string
+                </td>
+            </tr>
+            <tr>
+                <td>Json Response (Success)</td>
+                <td>Code: 201 </td>
+                <td>
+                    Response{<br/>
+                    status:true<br/>
+                    token:string<br/>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Json Response (Failure)</td>
+                <td>Code: 404 </td>
+                <td>
+                    Response:{<br/>
+                    status:false<br/>
+                    message:string<br/>
+                    }
+                </td>
+            </tr>
 
+            </tbody>
+        </table>
+		<!-------Password Reset ------------------>
+        <table class="ui celled striped table">
+            <thead>
+            <tr>
+                <th colspan="3">
+                    Password Reset Post
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td colspan="3">
+                    Method to request change a password after a reset
                 </td>
             </tr>
             <tr>
@@ -361,6 +415,8 @@ func getUserDocumentation() string {
                 <td colspan="2">
                     {<br/>
                         email:string<br/>
+						reset_token:string<br/>
+						password:string<br/>
                     }
                 </td>
             </tr>
@@ -387,10 +443,32 @@ func getUserDocumentation() string {
 
             </tbody>
         </table>
+        <!-- The list of possible erros -->
+        <div class="ui segment">
+        	<h3 class="ui header">
+            	<div class="content">
+             	   Possible Error Messages
+           	 	</div>
+        	</h3>
+        	<ul>
+        		<li>create_user_added: when a new user is created in the database</li>
+        		<li>validate_missing_email: The user did not include the email</li>
+        		<li>validate_password_insufficient: password does not meet requirements</li>
+        		<li>validate_email_in_use: the email is already in use</li>
+        		<li>login_invalid_password: invalid password</li>
+        		<li>auth_missing_token: </li>
+        		<li>login_user_id_not_found</li>
+        		<li>login_email_not_found</li>
+        		<li>password_change_success</li>
+        		<li>password_change_missing_email</li>
+        		<li>password_change_request_received</li>
+        		<li>password_change_forbidden</li>
+        	</ul>
+  			<p></p>
+		</div>
     </div>
 </body>
 </html>
-
 	`
 
 }

@@ -4,7 +4,7 @@ import "fmt"
 
 //Build the dbString //username:password@protocol(address)/dbname
 func (config *Configuration) GetDataBaseSourceName() string {
-	dbString := fmt.Sprintf("%s:%s@%s(%s)/%s",
+	dbString := fmt.Sprintf("%s:%s@%s(%s)/%s?parseTime=true",
 		config.GetString("db_username"),
 		config.GetString("db_password"),
 		config.GetString("db_protocol"),

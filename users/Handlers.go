@@ -1,6 +1,7 @@
 package users
 
 import (
+	"bitbucket.org/reidev/restlib/authentication"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/utils"
 	"encoding/json"
@@ -15,16 +16,17 @@ type Handler struct {
 	userRepo Repo
 
 	//passwordResetRepo
-	//passwordResetRepo authentication.
+	resetRepo authentication.PasswordResetRepo
 }
 
 /**
  * This struct is used
  */
-func NewHandler(userRepo Repo) *Handler {
+func NewHandler(userRepo Repo, resetRepo authentication.PasswordResetRepo) *Handler {
 	//Build a new User Handler
 	handler := Handler{
-		userRepo: userRepo,
+		userRepo:  userRepo,
+		resetRepo: resetRepo,
 	}
 
 	return &handler
@@ -77,6 +79,20 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			Pattern:     "/users/password/change",
 			HandlerFunc: handler.handlePasswordUpdate,
 			Public:      false,
+		},
+		{ //Allow for the user to ask for a password change
+			Name:        "PasswordResetGet",
+			Method:      "GET",
+			Pattern:     "/users/password/reset",
+			HandlerFunc: handler.handlePasswordResetGet,
+			Public:      true,
+		},
+		{ //Allow the user to set their password
+			Name:        "PasswordResetPost",
+			Method:      "POST",
+			Pattern:     "/users/password/reset",
+			HandlerFunc: handler.handlePasswordResetPut,
+			Public:      true,
 		},
 	}
 
@@ -243,4 +259,102 @@ func (handler *Handler) handlePasswordUpdate(w http.ResponseWriter, r *http.Requ
 		utils.ReturnJsonError(w, http.StatusForbidden, err)
 	}
 
+}
+
+/**
+Function to request a password change
+*/
+func (handler *Handler) handlePasswordResetGet(w http.ResponseWriter, r *http.Request) {
+
+	//Now get the email that was passed in
+	keys, ok := r.URL.Query()["email"]
+
+	//Only take the first one
+	if !ok || len(keys[0]) < 1 {
+		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, "password_change_missing_email")
+	}
+
+	//Get the email
+	email := keys[0]
+
+	//Look up the user
+	user, err := handler.userRepo.GetUserByEmail(email)
+
+	//If there is an error just return, we don't want people to know if there was an email here
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusOK, true, "password_change_request_received")
+		return
+	}
+
+	//Now issue a request
+	err = handler.resetRepo.IssueResetRequest(user.Id(), user.Email())
+
+	//There was a real error return
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusNotFound, err)
+		return
+	}
+
+	//Now just return
+	utils.ReturnJsonStatus(w, http.StatusOK, true, "password_change_request_received")
+
+}
+
+/**
+Function to request a password change
+*/
+func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Request) {
+
+	//Define a local struct to get the email out of the request
+	type ResetGet struct {
+		Email      string `json:"email"`
+		ResetToken string `json:"reset_token"`
+		Password   string `json:"password"`
+	}
+
+	//Create a new password change object
+	info := ResetGet{}
+
+	//Now get the json info
+	err := json.NewDecoder(r.Body).Decode(&info)
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+
+	}
+
+	//Lookup the user id
+	user, err := handler.userRepo.GetUserByEmail(info.Email)
+
+	//Return the error
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusForbidden, false, "password_change_forbidden")
+		return
+	}
+
+	//Try to use the token
+	requestId, err := handler.resetRepo.CheckForResetToken(user.Id(), info.ResetToken)
+
+	//Return the error
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusForbidden, false, "password_change_forbidden")
+		return
+	}
+
+	//Now update the password
+	err = passwordChangeForced(handler.userRepo, user.Id(), user.Email(), info.Password)
+	//Return the error
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+		return
+	}
+	//Mark the request as used
+	err = handler.resetRepo.UseResetToken(requestId)
+
+	//Check to see if the user was created
+	if err == nil {
+		utils.ReturnJsonStatus(w, http.StatusAccepted, false, "password_change_success")
+	} else {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+	}
 }

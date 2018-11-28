@@ -160,9 +160,48 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 }
 
 /**
+Updates everything from the password
+*/
+func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword string) error {
+
+	//Load up the user
+	oldUser, err := usersRepo.GetUser(userId)
+
+	//Make sure that the emails match
+	if email != oldUser.Email() {
+		return errors.New("password_change_forbidden")
+	}
+
+	//Make sure the new password is valid
+	err = validatePassword(newPassword)
+
+	//If the password is bad
+	if err != nil {
+		return err
+	}
+
+	//So it looks like we can update it, so hash the new password
+	oldUser.SetPassword(authentication.HashPassword(newPassword))
+
+	//Now update in the repo
+	_, err = usersRepo.UpdateUser(oldUser)
+
+	return err
+
+}
+
+/**
 Login in the user
 */
 func login(userPassword string, user User) (User, error) {
+
+	//Make sure the new password is valid
+	err := validatePassword(userPassword)
+
+	//If the password is bad
+	if err != nil {
+		return nil, errors.New("login_invalid_password")
+	}
 
 	//Now see if we login
 	passwordsMath := authentication.ComparePasswords(user.Password(), userPassword)
