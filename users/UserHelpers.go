@@ -28,7 +28,7 @@ func createUser(usersRepo Repo, user User) (User, error) {
 	}
 
 	//Store the token to return
-	userReturn.SetToken(authentication.CreateJWTToken(user.Id()))
+	userReturn.SetToken(authentication.CreateJWTToken(user.Id(), user.Email()))
 
 	//Clear the password
 	userReturn.SetPassword("") //delete password
@@ -215,7 +215,7 @@ func login(userPassword string, user User) (User, error) {
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(authentication.CreateJWTToken(user.Id()))
+	user.SetToken(authentication.CreateJWTToken(user.Id(), user.Email()))
 
 	return user, nil
 }

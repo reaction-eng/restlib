@@ -19,6 +19,7 @@ JWT claims struct
 */
 type Token struct {
 	UserId int
+	Email  string
 	jwt.StandardClaims
 }
 
@@ -36,10 +37,10 @@ func HashPassword(password string) string {
 /**
   Support function to generate a JWT token
 */
-func CreateJWTToken(userId int) string {
+func CreateJWTToken(userId int, email string) string {
 
 	//Create new JWT token for the newly registered account
-	tk := &Token{UserId: userId}
+	tk := &Token{UserId: userId, Email: email}
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
 	tokenString, _ := token.SignedString([]byte(os.Getenv("token_password")))
 
@@ -74,17 +75,17 @@ func TokenGenerator() string {
 /**
   Compare passwords.  Determine if they match
 */
-func ValidateToken(tokenHeader string) (int, error) {
+func ValidateToken(tokenHeader string) (int, string, error) {
 
 	//Token is missing, returns with error code 403 Unauthorized
 	if tokenHeader == "" {
-		return -1, errors.New("auth_missing_token")
+		return -1, "", errors.New("auth_missing_token")
 	}
 
 	//Now split the token to get the useful part
 	splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 	if len(splitted) != 2 {
-		return -1, errors.New("auth_malformed_token")
+		return -1, "", errors.New("auth_malformed_token")
 
 	}
 
@@ -102,17 +103,17 @@ func ValidateToken(tokenHeader string) (int, error) {
 
 	//check for mailformed data
 	if err != nil { //Malformed token, returns with http code 403 as usual
-		return -1, errors.New("auth_malformed_token")
+		return -1, "", errors.New("auth_malformed_token")
 
 	}
 
 	//Token is invalid, maybe not signed on this server
 	if !token.Valid {
 		//Return the error
-		return -1, errors.New("auth_forbidden")
+		return -1, "", errors.New("auth_forbidden")
 
 	}
 
-	return 1, nil
+	return tk.UserId, tk.Email, nil
 
 }

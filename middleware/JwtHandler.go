@@ -41,7 +41,7 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.Midd
 			tokenHeader := r.Header.Get("Authorization") //Grab the token from the header
 
 			//Validate and get the user id
-			userId, err := authentication.ValidateToken(tokenHeader)
+			userId, tokenEmail, err := authentication.ValidateToken(tokenHeader)
 
 			//If there is an error return
 			if err != nil {
@@ -52,7 +52,7 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.Midd
 			}
 
 			//Now look up the user by id
-			_, err = userRepo.GetUser(userId)
+			loggedInUser, err := userRepo.GetUser(userId)
 
 			//If there is an error return
 			if err != nil {
@@ -61,6 +61,14 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.Midd
 
 				return
 			}
+			//Make sure the emails match in the token and logged in user
+			if loggedInUser.Email() != tokenEmail {
+				//Return the error
+				utils.ReturnJsonStatus(w, http.StatusForbidden, false, "auth_malformed_token")
+
+				return
+			}
+
 			//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
 			//fmt.Sprintf("User %", tk.Username) //Useful for monitoring
 			ctx := context.WithValue(r.Context(), "user", userId)
