@@ -24,7 +24,7 @@ type RepoSql struct {
 }
 
 //Provide a method to make a new UserRepoSql
-func NewRepoSql(db *sql.DB, tableName string) *RepoSql {
+func NewRepoMySql(db *sql.DB, tableName string) *RepoSql {
 
 	//Define a new repo
 	newRepo := RepoSql{
@@ -68,6 +68,64 @@ func NewRepoSql(db *sql.DB, tableName string) *RepoSql {
 
 	//update the user
 	updateStatement, err := db.Prepare("UPDATE  " + tableName + " SET email = ?, password = ? WHERE id = ?")
+
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.updateUserStatement = updateStatement
+
+	//Return a point
+	return &newRepo
+
+}
+
+//Provide a method to make a new UserRepoSql
+func NewRepoPostgresSql(db *sql.DB, tableName string) *RepoSql {
+
+	//Define a new repo
+	newRepo := RepoSql{
+		db:        db,
+		tableName: tableName,
+	}
+
+	//Create the table if it is not already there
+	//Create a table
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, email TEXT NOT NULL, password TEXT NOT NULL)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Add calc data to table
+	addUser, err := db.Prepare("INSERT INTO " + tableName + "(email,password) VALUES ($1, $2)")
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	////Store it
+	newRepo.addUserStatement = addUser
+
+	//get calc statement
+	getUser, err := db.Prepare("SELECT * FROM " + tableName + " where id = $1")
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	////Store it
+	newRepo.getUserStatement = getUser
+
+	//get calc statement
+	getUserByEmail, err := db.Prepare("SELECT * FROM " + tableName + " where email like $1")
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.getUserByEmailStatement = getUserByEmail
+
+	//update the user
+	updateStatement, err := db.Prepare("UPDATE  " + tableName + " SET email = $1, password = $2 WHERE id = $3")
 
 	//Check for error
 	if err != nil {

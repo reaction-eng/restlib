@@ -28,7 +28,7 @@ type PasswordResetRepoSql struct {
 }
 
 //Provide a method to make a new UserRepoSql
-func NewRepoSql(db *sql.DB, tableName string, emailer PasswordResetEmailer) *PasswordResetRepoSql {
+func NewRepoMySql(db *sql.DB, tableName string, emailer PasswordResetEmailer) *PasswordResetRepoSql {
 
 	//Define a new repo
 	newRepo := PasswordResetRepoSql{
@@ -64,6 +64,57 @@ func NewRepoSql(db *sql.DB, tableName string, emailer PasswordResetEmailer) *Pas
 
 	//pull the request from the table
 	rmRequest, err := db.Prepare("delete FROM " + tableName + " where id = ? limit 1")
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.rmRequestStatement = rmRequest
+
+	//Return a point
+	return &newRepo
+
+}
+
+//Provide a method to make a new UserRepoSql
+func NewRepoPostgresSql(db *sql.DB, tableName string, emailer PasswordResetEmailer) *PasswordResetRepoSql {
+
+	//Define a new repo
+	newRepo := PasswordResetRepoSql{
+		db:        db,
+		tableName: tableName,
+		emailer:   emailer,
+	}
+
+	//Create the table if it is not already there
+	//Create a table
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, userId int NOT NULL, email TEXT NOT NULL, token TEXT NOT NULL, issued DATE NOT NULL)")
+
+	//_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, userId int, email TEXT, token TEXT, issued DATE, PRIMARY KEY (id) )")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Add request data to table
+	addRequest, err := db.Prepare("INSERT INTO " + tableName + "(userId,email, token, issued) VALUES ($1, $2, $3, $4)")
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.addRequestStatement = addRequest
+
+	//pull the request from the table
+	getRequest, err := db.Prepare("SELECT * FROM " + tableName + " where userId = $1 AND token = $2")
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.getRequestStatement = getRequest
+
+	//pull the request from the table
+	rmRequest, err := db.Prepare("delete FROM " + tableName + " where id = $1")
 	//Check for error
 	if err != nil {
 		log.Fatal(err)
