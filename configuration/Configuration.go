@@ -16,18 +16,22 @@ type Configuration struct {
 }
 
 //Provide a function to create a new one
-func NewConfiguration() *Configuration {
+func NewConfiguration(configFiles ...string) *Configuration {
 	//Define a Configuration
 	config := Configuration{}
 
-	//Load in the file
-	configFile, err := os.Open("config.json")
-	defer configFile.Close()
-	if err != nil {
-		fmt.Println(err.Error())
+	//Now march over each file
+	for _, configFile := range configFiles {
+		//Load in the file
+		configFileStream, err := os.Open(configFile)
+		defer configFileStream.Close()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		//Get the json and add to the params
+		jsonParser := json.NewDecoder(configFileStream)
+		jsonParser.Decode(&config.params)
 	}
-	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config.params)
 
 	//Return it
 	return &config
