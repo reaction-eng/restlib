@@ -15,7 +15,7 @@ func MakeCORSMiddlewareFunc() mux.MiddlewareFunc {
 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Headers", "Origin,authorization,content-type, X-Auth-Token, X-Requested-With")
+			w.Header().Set("Access-Control-Allow-Headers", "Origin,authorization,content-type, x-ijt, X-Auth-Token, X-Requested-With")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
 
 			//Just serve it
