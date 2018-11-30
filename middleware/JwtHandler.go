@@ -1,7 +1,8 @@
 package middleware
 
 import (
-	"bitbucket.org/reidev/restlib/authentication"
+	"bitbucket.org/reidev/restlib/passwords"
+	"bitbucket.org/reidev/restlib/roles"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/users"
 	"bitbucket.org/reidev/restlib/utils"
@@ -13,7 +14,7 @@ import (
 /**
 Define a function to handle checking for auth
 */
-func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.MiddlewareFunc {
+func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo roles.PermissionRepo) mux.MiddlewareFunc {
 
 	//Return an instance
 	return func(next http.Handler) http.Handler {
@@ -27,11 +28,18 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.Midd
 				return
 			}
 
-			//current request path
-			requestPath := r.URL.Path
+			//current the current route
+			route := router.GetRoute(r)
+
+			//If the route was not found return
+			if route == nil {
+				//Return the error
+				utils.ReturnJsonStatus(w, http.StatusForbidden, false, "")
+				return
+			}
 
 			//check if request does not need middleware, serve the request if it doesn't need it
-			if router.PublicRoute(requestPath) {
+			if route.Public {
 				//Just serve it
 				next.ServeHTTP(w, r)
 				return
@@ -41,7 +49,7 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.Midd
 			tokenHeader := r.Header.Get("Authorization") //Grab the token from the header
 
 			//Validate and get the user id
-			userId, tokenEmail, err := authentication.ValidateToken(tokenHeader)
+			userId, tokenEmail, err := passwords.ValidateToken(tokenHeader)
 
 			//If there is an error return
 			if err != nil {
@@ -67,6 +75,20 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo) mux.Midd
 				utils.ReturnJsonStatus(w, http.StatusForbidden, false, "auth_malformed_token")
 
 				return
+			}
+
+			//Make sure that the user has permission
+			if permRepo != nil {
+				//See if we are allowed
+				userPerm, err := permRepo.GetPermissions(loggedInUser)
+
+				//See if we are allowed to
+				if err != nil || !userPerm.AllowedTo(route.ReqPermissions...) {
+					//Return the error
+					utils.ReturnJsonStatus(w, http.StatusForbidden, false, "")
+					return
+				}
+
 			}
 
 			//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token

@@ -1,8 +1,8 @@
 package users_test
 
 import (
-	"bitbucket.org/reidev/restlib/authentication"
 	"bitbucket.org/reidev/restlib/middleware"
+	"bitbucket.org/reidev/restlib/passwords"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/users"
 	"net/http"
@@ -86,8 +86,8 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	userRepo := users.NewRepoMemory()
 
 	//Add some default users
-	_, err := userRepo.AddUser(&users.BasicUser{Email_: "one@example.com", Password_: authentication.HashPassword("123456")})
-	_, err = userRepo.AddUser(&users.BasicUser{Email_: "two@example.com", Password_: authentication.HashPassword("789012")})
+	_, err := userRepo.AddUser(&users.BasicUser{Email_: "one@example.com", Password_: passwords.HashPassword("123456")})
+	_, err = userRepo.AddUser(&users.BasicUser{Email_: "two@example.com", Password_: passwords.HashPassword("789012")})
 
 	if err != nil {
 		t.Error(err)
@@ -103,7 +103,7 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	//Add in middleware/filter that respons to CORS
 	router.Use(middleware.MakeCORSMiddlewareFunc()) //Make sure to add the cross site permission first
 
-	//Add in middleware/filter that checks for user authentication
+	//Add in middleware/filter that checks for user passwords
 	router.Use(middleware.MakeJwtMiddlewareFunc(router, userRepo))
 
 	//Define the routing env

@@ -1,7 +1,7 @@
 package users
 
 import (
-	"bitbucket.org/reidev/restlib/authentication"
+	"bitbucket.org/reidev/restlib/passwords"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/utils"
 	"encoding/json"
@@ -16,13 +16,13 @@ type Handler struct {
 	userRepo Repo
 
 	//passwordResetRepo
-	resetRepo authentication.PasswordResetRepo
+	resetRepo passwords.PasswordResetRepo
 }
 
 /**
  * This struct is used
  */
-func NewHandler(userRepo Repo, resetRepo authentication.PasswordResetRepo) *Handler {
+func NewHandler(userRepo Repo, resetRepo passwords.PasswordResetRepo) *Handler {
 	//Build a new User Handler
 	handler := Handler{
 		userRepo:  userRepo,

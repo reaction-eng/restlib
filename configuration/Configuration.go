@@ -75,3 +75,45 @@ func (config *Configuration) GetInt(key string) (int, error) {
 	return res, err
 
 }
+
+/**
+ * Add function to get item
+ */
+func (config *Configuration) GetConfig(key string) *Configuration {
+	//Get the child interface
+	childConfigInterface := config.Get(key)
+
+	//If childConfigInterface, return nil
+	if childConfigInterface == nil {
+		return nil
+	}
+
+	//Now cast it
+	childConfig := childConfigInterface.(map[string]interface{})
+
+	return &Configuration{childConfig}
+
+}
+
+/**
+ * Add function to get item
+ */
+func (config *Configuration) GetStringArray(key string) []string {
+	//Get the child interface
+	childConfigInterface := config.Get(key)
+
+	//Get as an array
+	childArray := childConfigInterface.([]interface{})
+
+	//Now build a new slice
+	childStringArray := make([]string, 0)
+
+	//Now march over each child array
+	for _, child := range childArray {
+		childStringArray = append(childStringArray, child.(string))
+
+	}
+
+	return childStringArray
+
+}

@@ -96,17 +96,24 @@ func (router *Router) addRoute(route Route, loggerWrapper LoggerWrapper) {
 /**
 Determines if it is a public path based upon the routes
 */
-func (router *Router) PublicRoute(path string) bool {
+func (router *Router) GetRoute(req *http.Request) *Route {
 
-	//Check each route
-	for _, r := range router.routes {
-		if r.Pattern == path {
-			return r.Public
+	//Get the route name from the req
+	if muxRoute := mux.CurrentRoute(req); muxRoute != nil {
+		routeName := muxRoute.GetName()
+
+		//Now march over the routes and return one
+		for _, route := range router.routes {
+			if route.Name == routeName {
+				return &route
+			}
+
 		}
+
 	}
 
 	//Assume not public by default
-	return false
+	return nil
 }
 
 /**

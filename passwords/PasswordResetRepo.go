@@ -1,4 +1,4 @@
-package authentication
+package passwords
 
 /**
 Define an interface that all Calc Repos must follow

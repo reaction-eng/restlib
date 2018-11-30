@@ -1,7 +1,7 @@
 package users
 
 import (
-	"bitbucket.org/reidev/restlib/authentication"
+	"bitbucket.org/reidev/restlib/passwords"
 	"errors"
 	"strings"
 )
@@ -17,7 +17,7 @@ func createUser(usersRepo Repo, user User) (User, error) {
 	}
 
 	//Now hash the password
-	user.SetPassword(authentication.HashPassword(user.Password()))
+	user.SetPassword(passwords.HashPassword(user.Password()))
 
 	//Now store it
 	userReturn, err := usersRepo.AddUser(user)
@@ -28,7 +28,7 @@ func createUser(usersRepo Repo, user User) (User, error) {
 	}
 
 	//Store the token to return
-	userReturn.SetToken(authentication.CreateJWTToken(user.Id(), user.Email()))
+	userReturn.SetToken(passwords.CreateJWTToken(user.Id(), user.Email()))
 
 	//Clear the password
 	userReturn.SetPassword("") //delete password
@@ -104,6 +104,8 @@ func updateUser(usersRepo Repo, userId int, newUser User) (User, error) {
 		return nil, errors.New("update_forbidden")
 	}
 
+	//Make sure we
+
 	//Now update in the repo
 	newUser, err = usersRepo.UpdateUser(newUser)
 
@@ -134,7 +136,7 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 	}
 
 	//Make sure the old password matches
-	passwordsMath := authentication.ComparePasswords(oldUser.Password(), passwordChange.PasswordOld)
+	passwordsMath := passwords.ComparePasswords(oldUser.Password(), passwordChange.PasswordOld)
 
 	//Make sure that the emails match
 	if !passwordsMath {
@@ -150,7 +152,7 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 	}
 
 	//So it looks like we can update it, so hash the new password
-	oldUser.SetPassword(authentication.HashPassword(passwordChange.Password))
+	oldUser.SetPassword(passwords.HashPassword(passwordChange.Password))
 
 	//Now update in the repo
 	_, err = usersRepo.UpdateUser(oldUser)
@@ -181,7 +183,7 @@ func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword 
 	}
 
 	//So it looks like we can update it, so hash the new password
-	oldUser.SetPassword(authentication.HashPassword(newPassword))
+	oldUser.SetPassword(passwords.HashPassword(newPassword))
 
 	//Now update in the repo
 	_, err = usersRepo.UpdateUser(oldUser)
@@ -204,7 +206,7 @@ func login(userPassword string, user User) (User, error) {
 	}
 
 	//Now see if we login
-	passwordsMath := authentication.ComparePasswords(user.Password(), userPassword)
+	passwordsMath := passwords.ComparePasswords(user.Password(), userPassword)
 
 	//Blank out the password before returning
 	user.SetPassword("")
@@ -215,7 +217,7 @@ func login(userPassword string, user User) (User, error) {
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(authentication.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(passwords.CreateJWTToken(user.Id(), user.Email()))
 
 	return user, nil
 }
