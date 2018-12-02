@@ -9,31 +9,25 @@ import (
 /**
 Static method to create a new user
 */
-func createUser(usersRepo Repo, user User) (User, error) {
+func createUser(usersRepo Repo, user User) error {
 
 	//Make sure the info being passed in is valid
 	if ok, err := validateUser(usersRepo, user); !ok {
-		return nil, err
+		return err
 	}
 
 	//Now hash the password
 	user.SetPassword(passwords.HashPassword(user.Password()))
 
 	//Now store it
-	userReturn, err := usersRepo.AddUser(user)
+	_, err := usersRepo.AddUser(user)
 
 	//Make sure it created an id
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	//Store the token to return
-	userReturn.SetToken(passwords.CreateJWTToken(user.Id(), user.Email()))
-
-	//Clear the password
-	userReturn.SetPassword("") //delete password
-
-	return userReturn, nil
+	return nil
 
 }
 

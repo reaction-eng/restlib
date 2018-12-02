@@ -1,7 +1,6 @@
 package routing
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -12,5 +11,4 @@ type Route struct {
 	HandlerFunc    http.HandlerFunc
 	Public         bool
 	ReqPermissions []string
-	MuxRoute       *mux.Route
 }

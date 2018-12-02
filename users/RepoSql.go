@@ -183,20 +183,16 @@ Add the user to the database
 func (repo *RepoSql) AddUser(newUser User) (User, error) {
 	//Add the info
 	//execute the statement//(userId,name,input,flow)
-	result, err := repo.addUserStatement.Exec(newUser.Email(), newUser.Password())
+	_, err := repo.addUserStatement.Exec(newUser.Email(), newUser.Password())
 
 	//Check for error
 	if err != nil {
 		return newUser, err
 	}
 
-	////Get the id
-	newId, _ := result.LastInsertId()
+	//Now look up the person by email
+	return repo.GetUserByEmail(newUser.Email())
 
-	//Add the newid to the user and return it
-	newUser.SetId(int(newId))
-
-	return newUser, nil
 }
 
 /**

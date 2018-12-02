@@ -117,7 +117,7 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	}
 
 	//Now create the new suer
-	_, err = createUser(handler.userRepo, newUser)
+	err = createUser(handler.userRepo, newUser)
 
 	//Check to see if the user was created
 	if err == nil {

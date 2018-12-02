@@ -14,7 +14,7 @@ import (
 /**
 Define a function to handle checking for auth
 */
-func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo roles.PermissionRepo) mux.MiddlewareFunc {
+func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo roles.Repo) mux.MiddlewareFunc {
 
 	//Return an instance
 	return func(next http.Handler) http.Handler {

@@ -11,8 +11,8 @@ import (
 Define a simple database configuration
 */
 type Configuration struct {
-	//Load in the params from json
-	params map[string]interface{}
+	//Load in the Params from json
+	Params map[string]interface{}
 }
 
 //Provide a function to create a new one
@@ -24,13 +24,14 @@ func NewConfiguration(configFiles ...string) *Configuration {
 	for _, configFile := range configFiles {
 		//Load in the file
 		configFileStream, err := os.Open(configFile)
-		defer configFileStream.Close()
+
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		//Get the json and add to the params
+		//Get the json and add to the Params
 		jsonParser := json.NewDecoder(configFileStream)
-		jsonParser.Decode(&config.params)
+		jsonParser.Decode(&config.Params)
+		configFileStream.Close()
 	}
 
 	//Return it
@@ -42,7 +43,7 @@ func NewConfiguration(configFiles ...string) *Configuration {
  */
 func (config *Configuration) Get(key string) interface{} {
 	//Get the key from the file
-	param := config.params[key]
+	param := config.Params[key]
 
 	//Now see if it is specified in the env
 	systemEnvVar := os.Getenv(key)
@@ -71,6 +72,17 @@ func (config *Configuration) GetString(key string) string {
 func (config *Configuration) GetInt(key string) (int, error) {
 	//Get the key from the
 	res, err := strconv.Atoi(config.GetString(key))
+
+	return res, err
+
+}
+
+/**
+ * Add function to get item
+ */
+func (config *Configuration) GetFloat(key string) (float64, error) {
+	//Get the key from the
+	res, err := strconv.ParseFloat(config.GetString(key), 64)
 
 	return res, err
 
