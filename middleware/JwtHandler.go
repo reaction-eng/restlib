@@ -85,7 +85,7 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 				//See if we are allowed to
 				if err != nil || !userPerm.AllowedTo(route.ReqPermissions...) {
 					//Return the error
-					utils.ReturnJsonStatus(w, http.StatusForbidden, false, "")
+					utils.ReturnJsonStatus(w, http.StatusForbidden, false, "insufficient_access")
 					return
 				}
 
