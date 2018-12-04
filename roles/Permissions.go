@@ -5,7 +5,7 @@ package roles
  */
 type Permissions struct {
 	//Store a list of
-	permissions []string
+	Permissions []string `json:"permissions"`
 
 	//And s list of Roles
 
@@ -19,7 +19,7 @@ func (perm *Permissions) AllowedTo(tasks ...string) bool {
 	//March over each task
 	for _, task := range tasks {
 		//See if it is in my list of permissions
-		if !contains(perm.permissions, task) {
+		if !contains(perm.Permissions, task) {
 			return false
 		}
 

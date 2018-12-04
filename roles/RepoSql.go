@@ -151,7 +151,7 @@ func (repo *RepoSql) GetPermissions(user users.User) (*Permissions, error) {
 
 	//Get the permissions from
 	return &Permissions{
-		permissions: permissions,
+		Permissions: permissions,
 	}, nil
 
 }
