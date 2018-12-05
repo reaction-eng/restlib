@@ -1,12 +1,13 @@
 package passwords
 
 import (
+	"bitbucket.org/reidev/restlib/configuration"
 	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
-	"os"
+	"log"
 	"strings"
 )
 
@@ -21,6 +22,32 @@ type Token struct {
 	UserId int
 	Email  string
 	jwt.StandardClaims
+}
+
+//Keep a global password config
+var jwtTokenPassword []byte
+
+//Load it during init
+func init() {
+	//Load in a config file
+	config, err := configuration.NewConfiguration("config.auth.json")
+
+	//If there is an error
+	if err != nil {
+		log.Fatal("Cannot load config auth file: config.auth.json", err)
+	}
+
+	//Now get the token
+	jwtTokenPasswordString := config.GetString("token_password")
+
+	//If it is null error
+	if len(jwtTokenPasswordString) < 60 {
+		log.Fatal("The jwt token is not specified or not long enough.")
+
+	}
+	//Store the byte array
+	jwtTokenPassword = []byte(jwtTokenPasswordString)
+
 }
 
 /**
@@ -42,7 +69,7 @@ func CreateJWTToken(userId int, email string) string {
 	//Create new JWT token for the newly registered account
 	tk := &Token{UserId: userId, Email: email}
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
-	tokenString, _ := token.SignedString([]byte(os.Getenv("token_password")))
+	tokenString, _ := token.SignedString(jwtTokenPassword)
 
 	return tokenString
 
@@ -98,7 +125,7 @@ func ValidateToken(tokenHeader string) (int, string, error) {
 	//Now parse the token
 	token, err := jwt.ParseWithClaims(tokenPart, tk,
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(os.Getenv("token_password")), nil
+			return jwtTokenPassword, nil
 		})
 
 	//check for mailformed data

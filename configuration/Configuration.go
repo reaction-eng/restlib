@@ -16,7 +16,7 @@ type Configuration struct {
 }
 
 //Provide a function to create a new one
-func NewConfiguration(configFiles ...string) *Configuration {
+func NewConfiguration(configFiles ...string) (*Configuration, error) {
 	//Define a Configuration
 	config := Configuration{}
 
@@ -26,7 +26,7 @@ func NewConfiguration(configFiles ...string) *Configuration {
 		configFileStream, err := os.Open(configFile)
 
 		if err != nil {
-			fmt.Println(err.Error())
+			return nil, err
 		}
 		//Get the json and add to the Params
 		jsonParser := json.NewDecoder(configFileStream)
@@ -35,7 +35,7 @@ func NewConfiguration(configFiles ...string) *Configuration {
 	}
 
 	//Return it
-	return &config
+	return &config, nil
 }
 
 /**
