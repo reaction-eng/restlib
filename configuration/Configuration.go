@@ -110,6 +110,33 @@ func (config *Configuration) GetConfig(key string) *Configuration {
 /**
  * Add function to get item
  */
+func (config *Configuration) GetStruct(key string, object interface{}) error {
+	//Get the child interface
+	childConfigInterface := config.Get(key)
+
+	//If childConfigInterface, return nil
+	if childConfigInterface == nil {
+		return nil
+	}
+
+	//Now unmarshal
+	jsonByte, err := json.Marshal(childConfigInterface)
+
+	//If there is no error
+	if err != nil {
+		return err
+	}
+
+	//Now put the json back into the object
+	err = json.Unmarshal(jsonByte, object)
+
+	return err
+
+}
+
+/**
+ * Add function to get item
+ */
 func (config *Configuration) GetStringArray(key string) []string {
 	//Get the child interface
 	childConfigInterface := config.Get(key)

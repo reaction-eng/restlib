@@ -72,7 +72,6 @@ func getUserDocumentation() string {
                 <td colspan="2">
                     User:{<br/>
                         email:string<br/>
-                        password:string<br/>
                     }
                 </td>
             </tr>
@@ -98,7 +97,67 @@ func getUserDocumentation() string {
             </tr>
 
             </tbody>
-        </table><!-------Password Reset ------------------>
+        </table>
+        <!-------User Activate ------------------>
+        <table class="ui celled striped table">
+            <thead>
+                <tr>
+                    <th colspan="3">
+                        User Activate
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td colspan="3">
+                    Activate a User
+                </td>
+            </tr>
+            <tr>
+                <td>URL</td>
+                <td colspan="2">/users/activate</td>
+            </tr>
+            <tr>
+                <td>Method</td>
+                <td colspan="2">POST</td>
+            </tr>
+            <tr>
+                <td>Access</td>
+                <td colspan="2">Public</td>
+            </tr>
+            <tr>
+                <td>Json Input</td>
+                <td colspan="2">
+                    User:{<br/>
+                        email:string<br/>
+                        activation_token:string
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Json Response (Success)</td>
+                <td>Code: 200 </td>
+                <td>
+                    Response:{<br/>
+                    status:true<br/>
+                    message:string
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Json Response (Failure)</td>
+                <td>Code: 422 </td>
+                <td>
+                    Response:{<br/>
+                    status:false<br/>
+                    message:string
+                    }
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+        <!-------Password Reset ------------------>
         <table class="ui celled striped table">
             <thead>
             <tr>
@@ -383,6 +442,62 @@ func getUserDocumentation() string {
 
             </tbody>
         </table>
+        <!-------Password Reset ------------------>
+        <table class="ui celled striped table">
+            <thead>
+            <tr>
+                <th colspan="3">
+                    Get User Activation Token
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td colspan="3">
+                    Method to request a new user activation token
+                </td>
+            </tr>
+            <tr>
+                <td>URL</td>
+                <td colspan="2">/users/activation/</td>
+            </tr>
+            <tr>
+                <td>Method</td>
+                <td colspan="2">GET</td>
+            </tr>
+            <tr>
+                <td>Access</td>
+                <td colspan="2">Public</td>
+            </tr>
+            <tr>
+                <td>URL Param</td>
+                <td colspan="2">
+                    email=string
+                </td>
+            </tr>
+            <tr>
+                <td>Json Response (Success)</td>
+                <td>Code: 201 </td>
+                <td>
+                    Response{<br/>
+                    status:true<br/>
+                    message:string<br/>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Json Response (Failure)</td>
+                <td>Code: 404 </td>
+                <td>
+                    Response:{<br/>
+                    status:false<br/>
+                    message:string<br/>
+                    }
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
 		<!-------Password Reset ------------------>
         <table class="ui celled striped table">
             <thead>
@@ -459,6 +574,7 @@ func getUserDocumentation() string {
         		<li>auth_missing_token: </li>
         		<li>login_user_id_not_found</li>
         		<li>login_email_not_found</li>
+				<li>user_not_activated</li>
         		<li>password_change_success</li>
         		<li>password_change_missing_email</li>
         		<li>password_change_request_received</li>

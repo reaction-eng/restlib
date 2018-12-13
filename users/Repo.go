@@ -25,6 +25,11 @@ type Repo interface {
 	UpdateUser(user User) (User, error)
 
 	/**
+	Activate User
+	*/
+	ActivateUser(user User) error
+
+	/**
 	Allow databases to be closed
 	*/
 	CleanUp()

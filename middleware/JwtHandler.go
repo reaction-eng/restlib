@@ -77,6 +77,12 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 				return
 			}
 
+			//Make sure that the person is activated
+			if !loggedInUser.Activated() {
+				//There prob is not a user to return
+				utils.ReturnJsonStatus(w, http.StatusForbidden, false, "user_not_activated")
+			}
+
 			//Make sure that the user has permission
 			if permRepo != nil {
 				//See if we are allowed

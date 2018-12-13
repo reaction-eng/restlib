@@ -18,10 +18,31 @@ type PasswordResetRepo interface {
 	/**
 	Issues a request for the user
 	*/
-	UseResetToken(id int) error
+	IssueActivationRequest(userId int, email string) error
+
+	/**
+	Issues a request for the user
+	*/
+	CheckForActivationToken(userId int, activation_token string) (int, error)
+
+	/**
+	Issues a request for the user
+	*/
+	UseToken(id int) error
 
 	/**
 	Allow databases to be closed
 	*/
 	CleanUp()
+}
+
+//Define a struct to store password reset configs
+type PasswordResetConfig struct {
+	Template string `json:"template"`
+	Subject  string `json:"subject"`
+}
+
+//Define a struct to store password reset configs
+type PasswordResetInfo struct {
+	Token string `json:"token"`
 }

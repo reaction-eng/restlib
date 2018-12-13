@@ -9,7 +9,7 @@ import (
 /**
 Static method to create a new user
 */
-func createUser(usersRepo Repo, user User) error {
+func createUser(usersRepo Repo, passRepo passwords.PasswordResetRepo, user User) error {
 
 	//Make sure the info being passed in is valid
 	if ok, err := validateUser(usersRepo, user); !ok {
@@ -20,9 +20,16 @@ func createUser(usersRepo Repo, user User) error {
 	user.SetPassword(passwords.HashPassword(user.Password()))
 
 	//Now store it
-	_, err := usersRepo.AddUser(user)
+	newUser, err := usersRepo.AddUser(user)
 
 	//Make sure it created an id
+	if err != nil {
+		return err
+	}
+
+	//Else issue the request
+	err = passRepo.IssueActivationRequest(newUser.Id(), newUser.Email())
+
 	if err != nil {
 		return err
 	}
@@ -49,10 +56,10 @@ func validateUser(usersRepo Repo, user User) (bool, error) {
 	}
 
 	//Now look up a possible user
-	_, err = usersRepo.GetUserByEmail(user.Email())
+	user, err = usersRepo.GetUserByEmail(user.Email())
 
 	//If the user already exists
-	if err == nil {
+	if err == nil || user != nil {
 		return false, errors.New("validate_email_in_use")
 	}
 
@@ -190,6 +197,11 @@ func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword 
 Login in the user
 */
 func login(userPassword string, user User) (User, error) {
+
+	//Before you can login the user must be active
+	if !user.Activated() {
+		return nil, errors.New("user_not_activated")
+	}
 
 	//Make sure the new password is valid
 	err := validatePassword(userPassword)

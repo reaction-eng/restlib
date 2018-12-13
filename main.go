@@ -1,10 +1,5 @@
 package main
 
-import (
-	"bitbucket.org/reidev/restlib/passwords"
-	"fmt"
-)
-
 //import (
 //	"bitbucket.org/reidev/restlib/configuration"
 //	"bitbucket.org/reidev/restlib/middleware"
@@ -20,9 +15,6 @@ import (
 
 func main() {
 
-	token := passwords.CreateJWTToken(1232, "mtmcgurn@gmail.com")
-
-	fmt.Println(token)
 	////Get the config so we can build the database
 	//config := configuration.NewConfiguration()
 	//

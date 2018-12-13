@@ -52,6 +52,27 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			HandlerFunc: handler.handleUserCreate,
 			Public:      true,
 		},
+		{ //Allow the user to turn on their account
+			Name:        "User Activate",
+			Method:      "POST",
+			Pattern:     "/users/activate",
+			HandlerFunc: handler.handleUserActivationPut,
+			Public:      true,
+		},
+		{ //Allow the user to turn on their account
+			Name:        "User Activate",
+			Method:      "GET",
+			Pattern:     "/users/activate",
+			HandlerFunc: handler.handleUserActivationGet,
+			Public:      true,
+		},
+		{ //Allow the user to turn on their account
+			Name:        "Get User Activation Token",
+			Method:      "GET",
+			Pattern:     "/users/activate",
+			HandlerFunc: handler.handleUserActivationPut,
+			Public:      true,
+		},
 		{ //Allow for the user to login
 			Name:        "UserLogin",
 			Method:      "POST",
@@ -59,7 +80,7 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			HandlerFunc: handler.handleUserLogin,
 			Public:      true,
 		},
-		{ //Allow for the user to update tthem selves
+		{ //Allow for the user to update them selves
 			Name:        "UserUpdate",
 			Method:      "PUT",
 			Pattern:     "/users/",
@@ -117,7 +138,12 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	}
 
 	//Now create the new suer
-	err = createUser(handler.userRepo, newUser)
+	err = createUser(handler.userRepo, handler.resetRepo, newUser)
+
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, err.Error())
+		return
+	}
 
 	//Check to see if the user was created
 	if err == nil {
@@ -349,12 +375,114 @@ func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Re
 		return
 	}
 	//Mark the request as used
-	err = handler.resetRepo.UseResetToken(requestId)
+	err = handler.resetRepo.UseToken(requestId)
 
 	//Check to see if the user was created
 	if err == nil {
-		utils.ReturnJsonStatus(w, http.StatusAccepted, false, "password_change_success")
+		utils.ReturnJsonStatus(w, http.StatusAccepted, true, "password_change_success")
 	} else {
 		utils.ReturnJsonError(w, http.StatusForbidden, err)
 	}
+}
+
+/**
+Function to request a password change
+*/
+func (handler *Handler) handleUserActivationPut(w http.ResponseWriter, r *http.Request) {
+
+	//Define a local struct to get the email out of the request
+	type ActivationGet struct {
+		Email    string `json:"email"`
+		ActToken string `json:"activation_token"`
+	}
+
+	//Create a new password change object
+	info := ActivationGet{}
+
+	//Now get the json info
+	err := json.NewDecoder(r.Body).Decode(&info)
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+
+	}
+
+	//Lookup the user id
+	user, err := handler.userRepo.GetUserByEmail(info.Email)
+
+	//Return the error
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusForbidden, false, "activation_forbidden")
+		return
+	}
+
+	//Try to use the token
+	requestId, err := handler.resetRepo.CheckForActivationToken(user.Id(), info.ActToken)
+
+	//Return the error
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusForbidden, false, "activation_forbidden")
+		return
+	}
+	//Now activate the user
+	err = handler.userRepo.ActivateUser(user)
+
+	//Return the error
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+		return
+	}
+	//Mark the request as used
+	err = handler.resetRepo.UseToken(requestId)
+
+	//Check to see if the user was created
+	if err == nil {
+		utils.ReturnJsonStatus(w, http.StatusAccepted, true, "user_activated")
+	} else {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+	}
+}
+
+/**
+Get a new user activation token
+*/
+func (handler *Handler) handleUserActivationGet(w http.ResponseWriter, r *http.Request) {
+
+	//Now get the email that was passed in
+	keys, ok := r.URL.Query()["email"]
+
+	//Only take the first one
+	if !ok || len(keys[0]) < 1 {
+		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, "activation_token_missing_email")
+	}
+
+	//Get the email
+	email := keys[0]
+
+	//Look up the user
+	user, err := handler.userRepo.GetUserByEmail(email)
+
+	//If there is an error just return, we don't want people to know if there was an email here
+	if err != nil {
+		utils.ReturnJsonStatus(w, http.StatusOK, true, "activation_token_request_received")
+		return
+	}
+
+	//Now issue a request
+	//If the user is not already active
+	if user.Activated() {
+		utils.ReturnJsonStatus(w, http.StatusOK, true, "activation_token_request_received")
+	}
+	//Else issue the request
+	err = handler.resetRepo.IssueActivationRequest(user.Id(), user.Email())
+
+	//There was a real error return
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusNotFound, err)
+		return
+	}
+
+	//Now just return
+	utils.ReturnJsonStatus(w, http.StatusOK, true, "activation_token_request_received")
+
 }

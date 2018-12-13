@@ -2,8 +2,10 @@ package users
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"log"
+	"time"
 )
 
 /**
@@ -21,6 +23,32 @@ type RepoSql struct {
 	getUserStatement        *sql.Stmt
 	getUserByEmailStatement *sql.Stmt
 	updateUserStatement     *sql.Stmt
+	activateStatement       *sql.Stmt
+
+	//Store the nullable time object
+
+}
+
+// NullTime represents a time.Time that may be null. NullTime implements the
+// sql.Scanner interface so it can be used as a scan destination, similar to
+// sql.NullString.
+type NullTime struct {
+	Time  time.Time
+	Valid bool // Valid is true if Time is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (nt *NullTime) Scan(value interface{}) error {
+	nt.Time, nt.Valid = value.(time.Time)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (nt NullTime) Value() (driver.Value, error) {
+	if !nt.Valid {
+		return nil, nil
+	}
+	return nt.Time, nil
 }
 
 //Provide a method to make a new UserRepoSql
@@ -34,7 +62,7 @@ func NewRepoMySql(db *sql.DB, tableName string) *RepoSql {
 
 	//Create the table if it is not already there
 	//Create a table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id) )")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, activation Date, PRIMARY KEY (id) )")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +76,7 @@ func NewRepoMySql(db *sql.DB, tableName string) *RepoSql {
 	//Store it
 	newRepo.addUserStatement = addUser
 
-	//get calc statement
+	//get user statement
 	getUser, err := db.Prepare("SELECT * FROM " + tableName + " where id = ?")
 	//Check for error
 	if err != nil {
@@ -76,6 +104,14 @@ func NewRepoMySql(db *sql.DB, tableName string) *RepoSql {
 	//Store it
 	newRepo.updateUserStatement = updateStatement
 
+	//Activate User statemetn
+	activateStatement, err := db.Prepare("UPDATE  " + tableName + " SET activation = ? WHERE id = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.activateStatement = activateStatement
+
 	//Return a point
 	return &newRepo
 
@@ -92,7 +128,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string) *RepoSql {
 
 	//Create the table if it is not already there
 	//Create a table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, email TEXT NOT NULL, password TEXT NOT NULL)")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, email TEXT NOT NULL, password TEXT NOT NULL, activation Date)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -134,6 +170,14 @@ func NewRepoPostgresSql(db *sql.DB, tableName string) *RepoSql {
 	//Store it
 	newRepo.updateUserStatement = updateStatement
 
+	//Activate User statemetn
+	activateStatement, err := db.Prepare("UPDATE  " + tableName + " SET activation = $1 WHERE id = $2")
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Store it
+	newRepo.activateStatement = activateStatement
+
 	//Return a point
 	return &newRepo
 
@@ -146,13 +190,20 @@ func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
 	//var dataResult string
 	var user BasicUser
 
+	//Store the sql time
+	var activationDate NullTime
+
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
-	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id_, &user.Email_, &user.Password_)
+	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id_, &user.Email_, &user.Password_, &activationDate)
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
 		err = errors.New("login_email_not_found")
+		return nil, err
 	}
+
+	//Store if this is activated
+	user.activated_ = activationDate.Valid
 
 	//Return the user calcs
 	return &user, err
@@ -165,13 +216,19 @@ func (repo *RepoSql) GetUser(id int) (User, error) {
 	//var dataResult string
 	var user BasicUser
 
+	//Store the sql time
+	var activationDate NullTime
+
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
-	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id_, &user.Email_, &user.Password_)
+	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id_, &user.Email_, &user.Password_, &activationDate)
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
 		err = errors.New("login_user_id_not_found")
 	}
+
+	//Store if this is activated
+	user.activated_ = activationDate.Valid
 
 	//Return the user calcs
 	return &user, err
@@ -181,6 +238,7 @@ func (repo *RepoSql) GetUser(id int) (User, error) {
 Add the user to the database
 */
 func (repo *RepoSql) AddUser(newUser User) (User, error) {
+
 	//Add the info
 	//execute the statement//(userId,name,input,flow)
 	_, err := repo.addUserStatement.Exec(newUser.Email(), newUser.Password())
@@ -210,6 +268,27 @@ func (repo *RepoSql) UpdateUser(user User) (User, error) {
 	}
 
 	return user, err
+}
+
+/**
+Update the user table.  No checks are made here,
+*/
+func (repo *RepoSql) ActivateUser(user User) error {
+	//Get the current time
+	actTime := NullTime{
+		Time:  time.Now(),
+		Valid: true,
+	}
+
+	//Just update the info//"UPDATE  " + tableName + " SET activation = $1 WHERE id = $2")
+	_, err := repo.activateStatement.Exec(actTime, user.Id())
+
+	//Check for error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return err
 }
 
 /**

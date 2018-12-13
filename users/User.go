@@ -16,4 +16,7 @@ type User interface {
 	//Return the user email
 	Token() string
 	SetToken(token string)
+
+	//Check if the user was activated
+	Activated() bool
 }

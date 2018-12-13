@@ -2,10 +2,11 @@ package users
 
 //a struct to rep user account
 type BasicUser struct {
-	Id_       int    `json:"id"`
-	Email_    string `json:"email"`
-	Password_ string `json:"password"`
-	Token_    string `json:"token";sql:"-"`
+	Id_        int    `json:"id"`
+	Email_     string `json:"email"`
+	Password_  string `json:"password"`
+	Token_     string `json:"token";sql:"-"`
+	activated_ bool
 }
 
 /**
@@ -35,4 +36,8 @@ func (basic *BasicUser) Token() string {
 }
 func (basic *BasicUser) SetToken(tk string) {
 	basic.Token_ = tk
+}
+
+func (basic *BasicUser) Activated() bool {
+	return basic.activated_
 }
