@@ -180,6 +180,7 @@ func (repo *PasswordResetRepoSql) IssueResetRequest(userId int, emailAddress str
 	//Build a reset token
 	resetInfo := PasswordResetInfo{
 		Token: token,
+		Email: emailAddress,
 	}
 
 	//Now email
@@ -211,6 +212,7 @@ func (repo *PasswordResetRepoSql) IssueActivationRequest(userId int, emailAddres
 	//Build a reset token
 	resetInfo := PasswordResetInfo{
 		Token: token,
+		Email: emailAddress,
 	}
 
 	//Now email

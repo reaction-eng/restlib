@@ -23,7 +23,7 @@ type PasswordResetRepo interface {
 	/**
 	Issues a request for the user
 	*/
-	CheckForActivationToken(userId int, activation_token string) (int, error)
+	CheckForActivationToken(userId int, activationToken string) (int, error)
 
 	/**
 	Issues a request for the user
@@ -45,4 +45,5 @@ type PasswordResetConfig struct {
 //Define a struct to store password reset configs
 type PasswordResetInfo struct {
 	Token string `json:"token"`
+	Email string `json:"email"`
 }
