@@ -8,6 +8,7 @@ type User interface {
 
 	//Return the user email
 	Email() string
+	SetEmail(email string)
 
 	//Get the password
 	Password() string
@@ -19,4 +20,7 @@ type User interface {
 
 	//Check if the user was activated
 	Activated() bool
+
+	//Check to see if the user can login with a password
+	PasswordLogin() bool
 }

@@ -25,13 +25,13 @@ func NewConfiguration(configFiles ...string) (*Configuration, error) {
 		//Load in the file
 		configFileStream, err := os.Open(configFile)
 
-		if err != nil {
-			return nil, err
+		if err == nil {
+			//Get the json and add to the Params
+			jsonParser := json.NewDecoder(configFileStream)
+			jsonParser.Decode(&config.Params)
+			configFileStream.Close()
 		}
-		//Get the json and add to the Params
-		jsonParser := json.NewDecoder(configFileStream)
-		jsonParser.Decode(&config.Params)
-		configFileStream.Close()
+
 	}
 
 	//Return it
@@ -85,6 +85,22 @@ func (config *Configuration) GetFloat(key string) (float64, error) {
 	res, err := strconv.ParseFloat(config.GetString(key), 64)
 
 	return res, err
+
+}
+
+/**
+ * Add function to get item
+ */
+func (config *Configuration) GetKeys() []string {
+	keys := make([]string, len(config.Params))
+
+	i := 0
+	for k := range config.Params {
+		keys[i] = k
+		i++
+	}
+
+	return keys
 
 }
 

@@ -3,7 +3,7 @@ package roles
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"os"
 )
 
@@ -30,11 +30,15 @@ func NewPermissionTableJson(fileName string) *PermissionTableJson {
 	configFileStream, err := os.Open(fileName)
 	defer configFileStream.Close()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatal(err)
 	}
 	//Get the json and add to the Params
 	jsonParser := json.NewDecoder(configFileStream)
-	jsonParser.Decode(&permTable)
+	err = jsonParser.Decode(&permTable)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return permTable
 }

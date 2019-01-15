@@ -86,8 +86,8 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	userRepo := users.NewRepoMemory()
 
 	//Add some default users
-	_, err := userRepo.AddUser(&users.BasicUser{Email_: "one@example.com", Password_: passwords.HashPassword("123456")})
-	_, err = userRepo.AddUser(&users.BasicUser{Email_: "two@example.com", Password_: passwords.HashPassword("789012")})
+	_, err := userRepo.AddUser(&users.BasicUser{Email_: "one@example.com", password_: passwords.HashPassword("123456")})
+	_, err = userRepo.AddUser(&users.BasicUser{Email_: "two@example.com", password_: passwords.HashPassword("789012")})
 
 	if err != nil {
 		t.Error(err)

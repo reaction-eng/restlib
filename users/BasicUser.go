@@ -1,12 +1,15 @@
 package users
 
+import "strings"
+
 //a struct to rep user account
 type BasicUser struct {
-	Id_        int    `json:"id"`
-	Email_     string `json:"email"`
-	Password_  string `json:"password"`
-	Token_     string `json:"token";sql:"-"`
-	activated_ bool
+	Id_            int    `json:"id"`
+	Email_         string `json:"email"`
+	password_      string `json:"-"`
+	Token_         string `json:"token";sql:"-"`
+	activated_     bool
+	passwordlogin_ bool
 }
 
 /**
@@ -19,17 +22,20 @@ func (basic *BasicUser) SetId(id int) {
 	basic.Id_ = id
 }
 func (basic *BasicUser) Email() string {
-	return basic.Email_
+	return strings.TrimSpace(strings.ToLower(basic.Email_))
+}
+func (basic *BasicUser) SetEmail(email string) {
+	basic.Email_ = email
 }
 
 //func (basic *BasicUser) SetId(id int)  {
 //	basic.Id_ = id
 //}
 func (basic *BasicUser) Password() string {
-	return basic.Password_
+	return basic.password_
 }
 func (basic *BasicUser) SetPassword(pw string) {
-	basic.Password_ = pw
+	basic.password_ = pw
 }
 func (basic *BasicUser) Token() string {
 	return basic.Token_
@@ -40,4 +46,24 @@ func (basic *BasicUser) SetToken(tk string) {
 
 func (basic *BasicUser) Activated() bool {
 	return basic.activated_
+}
+
+func (basic *BasicUser) PasswordLogin() bool {
+	return basic.passwordlogin_
+}
+
+/**
+Provide code to copy the user into this user
+*/
+/**
+Add the required setters and getters
+*/
+func (basic *BasicUser) CopyFrom(from User) {
+	basic.Email_ = from.Email()
+	basic.password_ = from.Password()
+	basic.Id_ = from.Id()
+	basic.Token_ = from.Token()
+	basic.activated_ = from.Activated()
+	basic.passwordlogin_ = from.PasswordLogin()
+
 }

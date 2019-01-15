@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/reidev/restlib/utils"
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 /**
@@ -159,8 +160,15 @@ Function used to create new user
 */
 func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) {
 
-	//Create an empty new user
-	userCred := handler.userRepo.NewEmptyUser()
+	/**
+	Define a struct for just updating password
+	*/
+	type loginUserStruct struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	userCred := &loginUserStruct{}
 
 	//decode the request body into struct and failed if any error occur
 	err := json.NewDecoder(r.Body).Decode(userCred)
@@ -171,7 +179,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//Now look up the user
-	user, err := handler.userRepo.GetUserByEmail(userCred.Email())
+	user, err := handler.userRepo.GetUserByEmail(strings.TrimSpace(strings.ToLower(userCred.Email)))
 
 	//check for an error
 	if err != nil {
@@ -181,7 +189,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//We have the user, try to login
-	user, err = login(userCred.Password(), user)
+	user, err = login(userCred.Password, user)
 
 	//If there is an error, don't login
 	if err != nil {
@@ -246,6 +254,10 @@ func (handler *Handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 
 	//Get the user
 	user, err := handler.userRepo.GetUser(loggedInUser)
+
+	//Make sure we null the password
+	//Blank out the password before returning
+	user.SetPassword("")
 
 	//Check to see if the user was created
 	if err == nil {

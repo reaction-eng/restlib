@@ -72,6 +72,8 @@ func getUserDocumentation() string {
                 <td colspan="2">
                     User:{<br/>
                         email:string<br/>
+                        password:string<br/>
+
                     }
                 </td>
             </tr>

@@ -24,6 +24,7 @@ type RepoSql struct {
 	getUserByEmailStatement *sql.Stmt
 	updateUserStatement     *sql.Stmt
 	activateStatement       *sql.Stmt
+	listAllUsersStatement   *sql.Stmt
 
 	//Store the nullable time object
 
@@ -112,6 +113,13 @@ func NewRepoMySql(db *sql.DB, tableName string) *RepoSql {
 	//Store it
 	newRepo.activateStatement = activateStatement
 
+	//update the user
+	listAllUsers, err := db.Prepare("SELECT id FROM " + tableName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	newRepo.listAllUsersStatement = listAllUsers
+
 	//Return a point
 	return &newRepo
 
@@ -178,6 +186,13 @@ func NewRepoPostgresSql(db *sql.DB, tableName string) *RepoSql {
 	//Store it
 	newRepo.activateStatement = activateStatement
 
+	//update the user
+	listAllUsers, err := db.Prepare("SELECT id FROM " + tableName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	newRepo.listAllUsersStatement = listAllUsers
+
 	//Return a point
 	return &newRepo
 
@@ -194,7 +209,7 @@ func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
 	var activationDate NullTime
 
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
-	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id_, &user.Email_, &user.Password_, &activationDate)
+	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id_, &user.Email_, &user.password_, &activationDate)
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
@@ -204,6 +219,7 @@ func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
 
 	//Store if this is activated
 	user.activated_ = activationDate.Valid
+	user.passwordlogin_ = len(user.password_) > 0
 
 	//Return the user calcs
 	return &user, err
@@ -220,7 +236,7 @@ func (repo *RepoSql) GetUser(id int) (User, error) {
 	var activationDate NullTime
 
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
-	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id_, &user.Email_, &user.Password_, &activationDate)
+	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id_, &user.Email_, &user.password_, &activationDate)
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
@@ -229,9 +245,40 @@ func (repo *RepoSql) GetUser(id int) (User, error) {
 
 	//Store if this is activated
 	user.activated_ = activationDate.Valid
+	user.passwordlogin_ = len(user.password_) > 0
 
 	//Return the user calcs
 	return &user, err
+}
+
+/**
+List all of the users
+*/
+func (repo *RepoSql) ListAllUsers() ([]int, error) {
+	//Put in the list
+	list := make([]int, 0)
+
+	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
+	rows, err := repo.listAllUsersStatement.Query()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+
+		//Append the row
+		list = append(list, id)
+
+	}
+	err = rows.Err()
+
+	return list, err
 }
 
 /**
@@ -299,6 +346,7 @@ func (repo *RepoSql) CleanUp() {
 	repo.getUserByEmailStatement.Close()
 	repo.getUserStatement.Close()
 	repo.updateUserStatement.Close()
+	repo.listAllUsersStatement.Close()
 }
 
 /**

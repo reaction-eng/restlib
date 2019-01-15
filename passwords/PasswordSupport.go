@@ -30,11 +30,11 @@ var jwtTokenPassword []byte
 //Load it during init
 func init() {
 	//Load in a config file
-	config, err := configuration.NewConfiguration("config.auth.json")
+	config, err := configuration.NewConfiguration("config.auth.json", "config.secret.json")
 
 	//If there is an error
 	if err != nil {
-		log.Fatal("Cannot load config auth file: config.auth.json", err)
+		log.Fatal("Cannot load config auth file: config.auth.json or config.secret.json", err)
 	}
 
 	//Now get the token

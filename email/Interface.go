@@ -1,11 +1,14 @@
 package email
 
+import "bitbucket.org/reidev/restlib/utils"
+
 /**
 Simple struct for email
 */
 type HeaderInfo struct {
 	To      []string
 	Subject string
+	ReplyTo string
 }
 
 /**
@@ -16,15 +19,34 @@ type Interface interface {
 	/**
 	Get the specific news istem
 	*/
-	SendEmail(email *HeaderInfo, body string) error
+	SendEmail(email *HeaderInfo, body string, attachments map[string][]*utils.Base64File) error
 
 	/**
 	Send html email
 	*/
-	SendEmailHtml(email *HeaderInfo, templateName string, data interface{}) error
+	SendEmailTemplateString(email *HeaderInfo, templateString string, data interface{}, attachments map[string][]*utils.Base64File) error
+	SendEmailTemplateFile(email *HeaderInfo, templateString string, data interface{}, attachments map[string][]*utils.Base64File) error
 
 	/**
 	Send html email
 	*/
-	SendEmailJson(email *HeaderInfo, data interface{}) error
+	SendEmailTable(email *HeaderInfo, tableData TableInfo, attachments map[string][]*utils.Base64File) error
+}
+
+/**
+Simple email message
+*/
+type TableInfo interface {
+
+	//Check to see if it node
+	IsNode() bool
+
+	//Get the title
+	GetTitle() string
+
+	//Get value
+	GetValue() string
+
+	//Get the children
+	GetChildren() []TableInfo
 }

@@ -108,20 +108,37 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configF
 }
 
 //Provide a method to make a new UserRepoSql
-func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, configFile string) *PasswordResetRepoSql {
+func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, configFile ...string) *PasswordResetRepoSql {
+
+	//Create a config
+	config, err := configuration.NewConfiguration(configFile...)
+
+	//If there is no error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Build a reset and activation config
+	resetEmailConfig := PasswordResetConfig{}
+	activationEmailConfig := PasswordResetConfig{}
+
+	//Pull from the config
+	config.GetStruct("password_reset", &resetEmailConfig)
+	config.GetStruct("user_activation", &activationEmailConfig)
 
 	//Define a new repo
 	newRepo := PasswordResetRepoSql{
-		db:        db,
-		tableName: tableName,
-		emailer:   emailer,
+		db:                    db,
+		tableName:             tableName,
+		emailer:               emailer,
+		resetEmailConfig:      resetEmailConfig,
+		activationEmailConfig: activationEmailConfig,
 	}
 
 	//Create the table if it is not already there
 	//Create a table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, userId int NOT NULL, email TEXT NOT NULL, token TEXT NOT NULL, type int NOT NULL,issued DATE NOT NULL)")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, userId int NOT NULL, email TEXT NOT NULL, token TEXT NOT NULL,issued DATE NOT NULL, type int NOT NULL)")
 
-	//_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, userId int, email TEXT, token TEXT, issued DATE, PRIMARY KEY (id) )")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -184,7 +201,7 @@ func (repo *PasswordResetRepoSql) IssueResetRequest(userId int, emailAddress str
 	}
 
 	//Now email
-	err = repo.emailer.SendEmailHtml(&header, repo.resetEmailConfig.Template, resetInfo)
+	err = repo.emailer.SendEmailTemplateFile(&header, repo.resetEmailConfig.Template, resetInfo, nil)
 
 	//Return the user calcs
 	return err
@@ -216,7 +233,7 @@ func (repo *PasswordResetRepoSql) IssueActivationRequest(userId int, emailAddres
 	}
 
 	//Now email
-	err = repo.emailer.SendEmailHtml(&header, repo.activationEmailConfig.Template, resetInfo)
+	err = repo.emailer.SendEmailTemplateFile(&header, repo.activationEmailConfig.Template, resetInfo, nil)
 
 	//Return the user calcs
 	return err

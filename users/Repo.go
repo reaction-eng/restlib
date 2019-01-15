@@ -38,4 +38,9 @@ type Repo interface {
 	Create empty user
 	*/
 	NewEmptyUser() User
+
+	/**
+	List all users
+	*/
+	ListAllUsers() ([]int, error)
 }

@@ -128,8 +128,16 @@ Updates everything from the password
 */
 func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordChangeStruct) error {
 
+	//Clean up the email
+	passwordChange.Email = strings.TrimSpace(strings.ToLower(passwordChange.Email))
+
 	//Load up the user
 	oldUser, err := usersRepo.GetUser(userId)
+
+	//Make sure the user can login with password
+	if !oldUser.PasswordLogin() {
+		return errors.New("user_password_login_forbidden")
+	}
 
 	//Make sure that the emails match
 	if passwordChange.Email != oldUser.Email() {
@@ -167,13 +175,16 @@ Updates everything from the password
 */
 func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword string) error {
 
+	//Clean up the email
+	email = strings.TrimSpace(strings.ToLower(email))
+
 	//Load up the user
 	oldUser, err := usersRepo.GetUser(userId)
 
-	//Make sure that the emails match
-	if email != oldUser.Email() {
-		return errors.New("password_change_forbidden")
-	}
+	//Make sure the user can login with password
+	//if !oldUser.PasswordLogin() {
+	//	return errors.New("user_password_login_forbidden")
+	//}
 
 	//Make sure the new password is valid
 	err = validatePassword(newPassword)
@@ -197,6 +208,11 @@ func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword 
 Login in the user
 */
 func login(userPassword string, user User) (User, error) {
+
+	//Make sure the user can login with password
+	if !user.PasswordLogin() {
+		return nil, errors.New("user_password_login_forbidden")
+	}
 
 	//Before you can login the user must be active
 	if !user.Activated() {
