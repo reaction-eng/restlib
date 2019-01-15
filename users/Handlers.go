@@ -130,13 +130,28 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	//Create an empty new user
 	newUser := handler.userRepo.NewEmptyUser()
 
+	/**
+	Define a struct for just updating password
+	*/
+	type newUserStruct struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	//Create the new user
+	newUserInfo := &newUserStruct{}
+
 	//decode the request body into struct and failed if any error occur
-	err := json.NewDecoder(r.Body).Decode(newUser)
+	err := json.NewDecoder(r.Body).Decode(newUserInfo)
 	if err != nil {
 		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, err.Error())
 		return
 
 	}
+
+	//Copy over the new user data
+	newUser.SetEmail(newUserInfo.Email)
+	newUser.SetPassword(newUserInfo.Password)
 
 	//Now create the new suer
 	err = createUser(handler.userRepo, handler.resetRepo, newUser)
