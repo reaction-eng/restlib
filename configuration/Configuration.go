@@ -3,6 +3,7 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -60,9 +61,34 @@ func (config *Configuration) Get(key string) interface{} {
 /**
  * Add function to get item
  */
+func (config *Configuration) GetFatal(key string) interface{} {
+	//Get the thing
+	thing := config.Get(key)
+
+	//Make sure it is not nil
+	if thing == nil {
+		log.Fatal("Cannot not find configuration for " + key)
+	}
+
+	return thing
+
+}
+
+/**
+ * Add function to get item
+ */
 func (config *Configuration) GetString(key string) string {
 	//Get the key from the
 	return fmt.Sprint(config.Get(key))
+
+}
+
+/**
+ * Add function to get item
+ */
+func (config *Configuration) GetStringFatal(key string) string {
+	//Get the key from the
+	return fmt.Sprint(config.GetFatal(key))
 
 }
 

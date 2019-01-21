@@ -16,7 +16,7 @@ type ObjectRedisCache struct {
 }
 
 //Provide a method to make a new AnimalRepoSql
-func NewGoogleDirRedisCache(redis *redis.Ring) *ObjectRedisCache {
+func NewObjectRedisCache(redis *redis.Ring) *ObjectRedisCache {
 
 	codec := &cache.Codec{
 		Redis: redis,

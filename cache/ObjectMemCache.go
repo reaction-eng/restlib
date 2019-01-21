@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"encoding/json"
 	"github.com/patrickmn/go-cache"
 
 	"time"
@@ -15,7 +16,7 @@ type ObjectMemCache struct {
 }
 
 //Provide a method to make a new AnimalRepoSql
-func NewGoogleDirMemCache() *ObjectMemCache {
+func NewObjectMemCache() *ObjectMemCache {
 
 	//Define a new repo
 	infoRepo := ObjectMemCache{
@@ -35,7 +36,18 @@ func (repo *ObjectMemCache) Get(key string, returnItem interface{}) {
 	item, found := repo.cache.Get(key)
 
 	if found {
-		returnItem = &item
+
+		//Convert to json
+		jsonByte, err := json.Marshal(item)
+
+		//If there is no error
+		if err != nil {
+			return
+		}
+
+		//Now restore back
+		json.Unmarshal(jsonByte, &returnItem)
+
 	} else {
 		returnItem = nil
 	}
