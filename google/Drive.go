@@ -8,9 +8,9 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/drive/v3"
+	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -41,6 +41,7 @@ func NewDrive(configFiles ...string) *Drive {
 		Scopes: []string{
 			drive.DriveMetadataReadonlyScope,
 			drive.DriveReadonlyScope,
+			drive.DriveFileScope,
 		},
 		TokenURL: google.JWTTokenURL,
 	}
@@ -411,9 +412,61 @@ func (gog *Drive) GetFileHtml(id string) string {
 /**
 * Method to get the file html
  */
-func (gog *Drive) GetArbitraryFile(id string) (*http.Response, error) {
+func (gog *Drive) GetArbitraryFile(id string) (io.ReadCloser, error) {
 
 	//Get the plain text version of the file
-	return gog.connection.Files.Get(id).Download()
+	rep, err := gog.connection.Files.Get(id).Download()
+
+	//If there was an error return
+	if err != nil {
+		return nil, err
+	}
+
+	//Ok return the read and closer
+	return rep.Body, nil
+}
+
+/**
+* Method to get the file html
+ */
+func (gog *Drive) GetFileAsInterface(id string, inter interface{}) error {
+	//Get the resposne,
+	rep, err := gog.GetArbitraryFile(id)
+	defer rep.Close()
+	//If there was no error
+	if err != nil {
+		return err
+	}
+
+	//REad the data
+	data, err := ioutil.ReadAll(rep)
+	if err != nil {
+		return err
+	}
+
+	//Now decode the resposne into json
+	err = json.Unmarshal(data, &inter)
+
+	return err
+
+}
+
+/**
+* Method to upload a file
+ */
+func (gog *Drive) PostArbitraryFile(fileName string, parent string, file io.Reader) (string, error) {
+	//Create the file
+	myFile := drive.File{
+		Parents: []string{parent},
+		Name:    fileName,
+	}
+
+	//Upload the file
+	createdFile, err := gog.connection.Files.Create(&myFile).Media(file).SupportsTeamDrives(true).Do()
+	if err != nil {
+		return "", err
+	}
+	//Now return the link
+	return createdFile.Id, nil
 
 }
