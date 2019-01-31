@@ -1,8 +1,8 @@
 package users
 
 import (
+	"bitbucket.org/reidev/restlib/utils"
 	"database/sql"
-	"database/sql/driver"
 	"errors"
 	"log"
 	"time"
@@ -28,28 +28,6 @@ type RepoSql struct {
 
 	//Store the nullable time object
 
-}
-
-// NullTime represents a time.Time that may be null. NullTime implements the
-// sql.Scanner interface so it can be used as a scan destination, similar to
-// sql.NullString.
-type NullTime struct {
-	Time  time.Time
-	Valid bool // Valid is true if Time is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (nt *NullTime) Scan(value interface{}) error {
-	nt.Time, nt.Valid = value.(time.Time)
-	return nil
-}
-
-// Value implements the driver Valuer interface.
-func (nt NullTime) Value() (driver.Value, error) {
-	if !nt.Valid {
-		return nil, nil
-	}
-	return nt.Time, nil
 }
 
 //Provide a method to make a new UserRepoSql
@@ -206,7 +184,7 @@ func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
 	var user BasicUser
 
 	//Store the sql time
-	var activationDate NullTime
+	var activationDate utils.NullTime
 
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
 	err := repo.getUserByEmailStatement.QueryRow(email).Scan(&user.Id_, &user.Email_, &user.password_, &activationDate)
@@ -233,7 +211,7 @@ func (repo *RepoSql) GetUser(id int) (User, error) {
 	var user BasicUser
 
 	//Store the sql time
-	var activationDate NullTime
+	var activationDate utils.NullTime
 
 	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
 	err := repo.getUserStatement.QueryRow(id).Scan(&user.Id_, &user.Email_, &user.password_, &activationDate)
@@ -322,7 +300,7 @@ Update the user table.  No checks are made here,
 */
 func (repo *RepoSql) ActivateUser(user User) error {
 	//Get the current time
-	actTime := NullTime{
+	actTime := utils.NullTime{
 		Time:  time.Now(),
 		Valid: true,
 	}
