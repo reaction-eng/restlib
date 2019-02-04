@@ -32,11 +32,11 @@ func NewSmtpSender(configFile ...string) *SmtpSender {
 	}
 
 	sender := SmtpSender{
-		smtpServer:   config.GetString("smtp_server"),
-		smtpPort:     config.GetString("smtp_port"),
-		smtpUser:     config.GetString("smtp_user"),
-		smtpPassword: config.GetString("smtp_password"),
-		smtpFrom:     config.GetString("smtp_from"),
+		smtpServer:   config.GetStringFatal("smtp_server"),
+		smtpPort:     config.GetStringFatal("smtp_port"),
+		smtpUser:     config.GetStringFatal("smtp_user"),
+		smtpPassword: config.GetStringFatal("smtp_password"),
+		smtpFrom:     config.GetStringFatal("smtp_from"),
 	}
 
 	return &sender

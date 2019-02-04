@@ -28,8 +28,8 @@ func NewSheets(configFiles ...string) *Sheets {
 
 	//Open the client
 	jwtConfig := &jwt.Config{
-		Email:      config.GetString("google_auth_email"),
-		PrivateKey: []byte(config.GetString("google_auth_key")),
+		Email:      config.GetStringFatal("google_auth_email"),
+		PrivateKey: []byte(config.GetStringFatal("google_auth_key")),
 		Scopes: []string{
 			sheets.DriveScope,
 			sheets.DriveFileScope,
