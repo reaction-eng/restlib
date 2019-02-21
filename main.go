@@ -3,7 +3,6 @@ package main
 import (
 	"bitbucket.org/reidev/restlib/stl"
 	"fmt"
-	"image/png"
 	"log"
 	"os"
 )
@@ -14,7 +13,7 @@ import (
 func main() {
 
 	//file, err := os.Open("/Users/mcgurn/Desktop/TorusAscii.stl")
-	file, err := os.Open("/Users/mcgurn/Desktop/Torus.stl")
+	file, err := os.Open("/Users/mcgurn/Downloads/AirAssis_mod_si.stl")
 
 	if err != nil {
 		log.Fatal(err)
@@ -23,19 +22,9 @@ func main() {
 
 	stlMesh, err := stl.ReadMesh(file)
 
+	stlMesh.SaveAsPng("/Users/mcgurn/Downloads/img.png")
+
 	fmt.Println(stlMesh)
 	fmt.Println(err)
 
-	//Convert to an img
-	img, err := stlMesh.GetImage()
-
-	// Write the body to file
-	out, err := os.Create("/Users/mcgurn/Downloads/img.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = png.Encode(out, img)
-	if err != nil {
-		log.Fatal(err)
-	}
 }

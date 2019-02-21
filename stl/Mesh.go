@@ -3,11 +3,15 @@ package stl
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+//Store the max element size
+const maxNumEle = 1000000
 
 //Setup the vertex type
 type Vertex [3]float32
@@ -84,6 +88,9 @@ func readMeshFromBinary(in *bufio.Reader) (*Mesh, error) {
 	err = binary.Read(in, binary.LittleEndian, &numEle)
 	if err != nil {
 		return nil, err
+	}
+	if numEle > maxNumEle {
+		return nil, errors.New("invalid stl or more than allowed elements: " + strconv.Itoa(int(numEle)))
 	}
 
 	//Size the array
