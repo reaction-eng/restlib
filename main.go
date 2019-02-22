@@ -10,7 +10,7 @@ import (
 //Define the global variables that are setup in the main
 //var calcsRepo calcs.Repo
 
-func main() {
+func main2() {
 
 	file, err := os.Open("/Users/mcgurn/Desktop/TorusAscii.stl")
 	//file, err := os.Open("/Users/mcgurn/Downloads/AirAssis_mod_si.stl")
@@ -35,5 +35,18 @@ func main() {
 
 	fmt.Println(stlMesh)
 	fmt.Println(err)
+
+}
+
+func main() {
+
+	//Layout some points
+	pts := []stl.Vertex{
+		{10.0, 15.0, 20.0},
+		{10.0, 16.0, 20.0},
+		{10.0, 16.0, 21.0},
+	}
+
+	stl.RotateAndCreateMesh(pts)
 
 }

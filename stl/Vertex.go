@@ -39,6 +39,13 @@ func (v *Vertex) cross(oth *Vertex) Vertex {
 }
 
 //Function to cross
+func (v *Vertex) dot(oth *Vertex) float32 {
+	//New vertex
+	return v[0]*oth[0] + v[1]*oth[1] + v[2]*oth[2]
+
+}
+
+//Function to cross
 func (v *Vertex) norm() {
 	//Get the mag
 	mag := float32(math.Sqrt(float64(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])))
@@ -47,5 +54,17 @@ func (v *Vertex) norm() {
 	v[0] /= mag + 1E-30
 	v[1] /= mag + 1E-30
 	v[2] /= mag + 1E-30
+
+}
+
+func (v *Vertex) mag() float32 {
+	return float32(math.Sqrt(float64(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])))
+
+}
+
+func (v *Vertex) addTo(other *Vertex) {
+	v[0] += other[0]
+	v[1] += other[1]
+	v[2] += other[2]
 
 }
