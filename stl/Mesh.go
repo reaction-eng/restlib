@@ -13,14 +13,6 @@ import (
 //Store the max element size
 const maxNumEle = 1000000
 
-//Setup the vertex type
-type Vertex [3]float32
-
-//Store the element it is a vertex
-type Element struct {
-	Nodes [3]Vertex
-}
-
 //Hold everything in the mesh
 type Mesh struct {
 	//Store a list of Elements

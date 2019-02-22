@@ -12,8 +12,8 @@ import (
 
 func main() {
 
-	//file, err := os.Open("/Users/mcgurn/Desktop/TorusAscii.stl")
-	file, err := os.Open("/Users/mcgurn/Downloads/AirAssis_mod_si.stl")
+	file, err := os.Open("/Users/mcgurn/Desktop/TorusAscii.stl")
+	//file, err := os.Open("/Users/mcgurn/Downloads/AirAssis_mod_si.stl")
 
 	if err != nil {
 		log.Fatal(err)
@@ -22,7 +22,16 @@ func main() {
 
 	stlMesh, err := stl.ReadMesh(file)
 
-	stlMesh.SaveAsPng("/Users/mcgurn/Downloads/img.png")
+	//Now try writing it
+	// Write the body to file
+	out, err := os.Create("/Users/mcgurn/Downloads/output.stl")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	//Output the mesh
+	stlMesh.WriteMeshBinary(out)
 
 	fmt.Println(stlMesh)
 	fmt.Println(err)
