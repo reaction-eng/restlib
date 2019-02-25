@@ -1,42 +1,80 @@
 package stl
 
 import (
-	"fmt"
+	"errors"
 	"math"
 )
 
-func RotateAndCreateMesh(pts []Vertex) {
+func RotateAndCreateMesh(pts []Vertex, slices int) (*Mesh, error) {
 
-	//Output each pt
-	fmt.Println("x y z data")
-	for _, pt := range pts {
-		fmt.Println(fmt.Sprint(pt[0]) + " " + fmt.Sprint(pt[1]) + " " + fmt.Sprint(pt[2]) + " 0.0")
+	//We need at least three pts
+	if len(pts) < 3 {
+		return nil, errors.New("insufficient points for generating mesh")
 	}
 
-	fmt.Println("x y z data")
+	//Store their index for future use
+	strCap := pts[0]
+	endCap := pts[len(pts)-1]
 
-	//Rotate around
-	const slices = 10
-	const deltaTheta = 2.0 * math.Pi / slices
+	//Now get the body pts
+	baseBodyPts := pts[1 : len(pts)-1]
 
+	//Store the bodypts length
+	bodyPtLen := len(baseBodyPts)
+
+	//Compute how to rotate it
+	deltaOmega := 2.0 * math.Pi / float64(slices)
+
+	//Now we need to build the elements
+	elements := make([]Element, 0)
+
+	//Now march over every slice
 	for s := 0; s < slices; s++ {
-		theta := deltaTheta * float64(s)
+		//compute the start and end omega
+		startOmega := float64(s) * deltaOmega
+		endOmega := float64(s+1) * deltaOmega
 
-		//Build a rotation matrix
-		rotMat := NewRotationMatrix(pts[0], pts[len(pts)-1], theta)
+		//Now rotate the pts and add them
+		startRot := NewRotationMatrix(strCap, endCap, startOmega)
+		endRot := NewRotationMatrix(strCap, endCap, endOmega)
 
-		//Rotate this pt
-		rotatedPts := make([]Vertex, 0)
+		//Step up each step on the ladder
+		for step := 0; step < bodyPtLen-1; step++ {
+			//Build the left
+			left := NewElement(
+				startRot.rotate(&baseBodyPts[step]),
+				endRot.rotate(&baseBodyPts[step]),
+				startRot.rotate(&baseBodyPts[step+1]),
+			)
+			right := NewElement(
+				endRot.rotate(&baseBodyPts[step]),
+				endRot.rotate(&baseBodyPts[step+1]),
+				startRot.rotate(&baseBodyPts[step+1]),
+			)
 
-		//Now get each pt
-		for _, pt := range pts[1 : len(pts)-1] {
-			rotatedPts = append(rotatedPts, rotMat.rotate(&pt))
+			//Add them elements
+			elements = append(elements, *left, *right)
 		}
 
-		for _, pt := range rotatedPts {
-			fmt.Println(fmt.Sprint(pt[0]) + " " + fmt.Sprint(pt[1]) + " " + fmt.Sprint(pt[2]) + " " + fmt.Sprint(theta))
-		}
+		//Add the end pts
+		elements = append(elements,
+			*NewElement(
+				endRot.rotate(&strCap),
+				endRot.rotate(&baseBodyPts[0]),
+				startRot.rotate(&baseBodyPts[0]),
+			),
+			*NewElement(
+				startRot.rotate(&baseBodyPts[bodyPtLen-1]),
+				endRot.rotate(&baseBodyPts[bodyPtLen-1]),
+				startRot.rotate(&endCap),
+			),
+		)
 
 	}
+
+	//Return the stl
+	return &Mesh{
+		Elements: elements,
+	}, nil
 
 }
