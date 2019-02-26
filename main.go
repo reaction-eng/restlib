@@ -64,7 +64,25 @@ func main() {
 	}
 	defer out.Close()
 
+	//Now try writing it
+	// Write the body to file
+	ptsout, err := os.Create("/Users/mcgurn/Downloads/output.pts")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	//Now try writing it
+	// Write the body to file
+	triout, err := os.Create("/Users/mcgurn/Downloads/output.tri")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
 	//Output the mesh
 	mesh.WriteMeshAscii(out)
+	mesh.WriteUintahPts(ptsout)
+	mesh.WriteUintahTri(triout)
 
 }

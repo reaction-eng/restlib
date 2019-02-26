@@ -93,3 +93,39 @@ func printVertexString(w io.Writer, vertex *Vertex) {
 		io.WriteString(w, fmt.Sprint(num)+" ")
 	}
 }
+
+//GEt the stl as a pts file
+func (mesh *Mesh) WriteUintahPts(w io.Writer) error {
+
+	//March over each element and output teach pt
+	for _, ele := range mesh.Elements {
+		//Now each vertex
+		for _, node := range ele.Nodes {
+			printVertexString(w, &node)
+			io.WriteString(w, "\n")
+		}
+	}
+	return nil
+}
+
+//GEt the stl as a tri file
+func (mesh *Mesh) WriteUintahTri(w io.Writer) error {
+
+	//Assume each element was output in order with no shared nodes, one based index is used
+	nodeNumber := 1
+
+	//March over each element and output teach pt
+	for _, ele := range mesh.Elements {
+		//Now each vertex
+		for range ele.Nodes {
+			io.WriteString(w, fmt.Sprint(nodeNumber)+" ")
+
+			//Bump the node number
+			nodeNumber++
+		}
+
+		//Print an end line
+		io.WriteString(w, "\n")
+	}
+	return nil
+}
