@@ -43,14 +43,18 @@ func main() {
 	//Layout some points
 	pts := []stl.Vertex{
 		{0.0, 0.0, 0.0},
-		{.25, .25, 0.0},
-		{.3, .5, 0.0},
-		{.5, .6, 0.0},
-		{.7, .8, 0.0},
-		{0.0, 1.0, 0.0},
+		{0.5, 0.5, 0.0},
+		{.75, 0.75, 0.0},
+		{.3, 0.9, 0.0},
+		{.6, 1.3, 0.0},
+		{.9, 1.3, 0.0},
+		{.9, 1.6, 0.0},
+		{0.0, 1.6, 0.0},
 	}
 
-	mesh, err := stl.RotateAndCreateMesh(pts, 4)
+	incPts, _ := stl.IncreaseLineResolution(pts, 0.1, 1.0)
+	//incPts := pts
+	mesh, _ := stl.RotateAndCreateMesh(incPts, 10)
 
 	//Now try writing it
 	// Write the body to file

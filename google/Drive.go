@@ -454,11 +454,16 @@ func (gog *Drive) GetFileAsInterface(id string, inter interface{}) error {
 /**
 * Method to upload a file
  */
-func (gog *Drive) PostArbitraryFile(fileName string, parent string, file io.Reader) (string, error) {
+func (gog *Drive) PostArbitraryFile(fileName string, parent string, file io.Reader, mime string) (string, error) {
 	//Create the file
 	myFile := drive.File{
 		Parents: []string{parent},
 		Name:    fileName,
+	}
+
+	//If there is a mime type use it
+	if len(mime) > 0 {
+		myFile.MimeType = mime
 	}
 
 	//Upload the file

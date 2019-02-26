@@ -8,7 +8,7 @@ import (
 
 //Write the mesh, for now default to binary
 func (mesh *Mesh) WriteMesh(w io.Writer) error {
-	return mesh.WriteMeshAscii(w)
+	return mesh.WriteMeshBinary(w)
 }
 
 //Write the mesh out to the writer stream

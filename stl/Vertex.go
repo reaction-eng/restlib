@@ -39,6 +39,17 @@ func (v *Vertex) cross(oth *Vertex) Vertex {
 }
 
 //Function to cross
+func (v *Vertex) scaleCopy(factor float32) Vertex {
+	//New vertex
+	return Vertex{
+		v[0] * factor,
+		v[1] * factor,
+		v[2] * factor,
+	}
+
+}
+
+//Function to cross
 func (v *Vertex) dot(oth *Vertex) float32 {
 	//New vertex
 	return v[0]*oth[0] + v[1]*oth[1] + v[2]*oth[2]
