@@ -25,6 +25,11 @@ type Mesh struct {
 //Read the mesh from a file
 func ReadMesh(in io.Reader) (*Mesh, error) {
 
+	//Check for nil in
+	if in == nil {
+		return nil, errors.New("invalid reader")
+	}
+
 	//Wrap the reader in a buf io
 	bufIn := bufio.NewReader(in)
 
@@ -232,4 +237,26 @@ func splitLine(line string) []string {
 
 	//Now split and get the first argument
 	return strings.Split(line, ",")
+}
+
+//Returns a subset of elements
+func (mesh *Mesh) GetSubsetMesh(ints []int) (*Mesh, error) {
+	//Create a new mesh with elements
+	newMesh := &Mesh{
+		Elements: make([]Element, 0),
+	}
+
+	//Now copy over the ints
+	for _, index := range ints {
+		//Make sure it is valid
+		if index < 0 || index > len(mesh.Elements) {
+			return nil, errors.New("invalid index for element")
+		}
+
+		//Ok add it
+		newMesh.Elements = append(newMesh.Elements, mesh.Elements[index])
+
+	}
+	return newMesh, nil
+
 }
