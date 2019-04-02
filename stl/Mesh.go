@@ -1,6 +1,7 @@
 package stl
 
 import (
+	"bitbucket.org/reidev/restlib/utils"
 	"bufio"
 	"encoding/binary"
 	"errors"
@@ -258,5 +259,24 @@ func (mesh *Mesh) GetSubsetMesh(ints []int) (*Mesh, error) {
 
 	}
 	return newMesh, nil
+
+}
+
+func (mesh *Mesh) ConvertToSI(unit utils.Unit) {
+	//Get the si factor as a float32
+	factor := float32(unit.GetFactorSI())
+
+	//Update all of the positions to convert to si
+	//March over each node
+	for e := range mesh.Elements {
+		//For each vertex
+		for n := range mesh.Elements[e].Nodes {
+			//Add to the value
+			for dir := 0; dir < len(mesh.Elements[e].Nodes); dir++ {
+				mesh.Elements[e].Nodes[n][dir] *= factor
+			}
+
+		}
+	}
 
 }

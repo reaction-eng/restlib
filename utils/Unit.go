@@ -74,3 +74,10 @@ Convert to SI from the other unit
 func (unit *Unit) ToSI(input float64) float64 {
 	return input * unit.toSI
 }
+
+/**
+Convert to SI from the other unit
+*/
+func (unit *Unit) GetFactorSI() float64 {
+	return unit.toSI
+}
