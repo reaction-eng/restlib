@@ -112,7 +112,7 @@ func (mesh *Mesh) WriteUintahPts(w io.Writer) error {
 func (mesh *Mesh) WriteUintahTri(w io.Writer) error {
 
 	//Assume each element was output in order with no shared nodes, one based index is used
-	nodeNumber := 1
+	nodeNumber := 0
 
 	//March over each element and output teach pt
 	for _, ele := range mesh.Elements {

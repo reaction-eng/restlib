@@ -79,3 +79,23 @@ func (v *Vertex) addTo(other *Vertex) {
 	v[2] += other[2]
 
 }
+// see two Vertex is differ
+func (v * Vertex) diff(oth *Vertex) bool{
+	return (v[0]== oth[0]&& v[1]==oth[1]&& v[2]==oth[2])
+}
+
+// vertex translation
+func (v * Vertex) trans(normTrans *Vertex, ExtrudLen float64) Vertex{
+
+	return Vertex{
+		v[0] + normTrans[0]*float32(ExtrudLen),
+		v[1] + normTrans[1]*float32(ExtrudLen),
+		v[2] + normTrans[2]*float32(ExtrudLen),
+	}
+
+}
+
+
+
+
+
