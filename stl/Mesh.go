@@ -3,6 +3,7 @@ package stl
 import (
 	"bitbucket.org/reidev/restlib/utils"
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -77,6 +78,9 @@ func readMeshFromBinary(in *bufio.Reader) (*Mesh, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	//Remove any invalid info from the string
+	titleBytes = bytes.Trim(titleBytes, "\x00")
 
 	//Store the name
 	mesh.Name = string(titleBytes)
