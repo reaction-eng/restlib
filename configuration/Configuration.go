@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 /**
@@ -197,4 +198,29 @@ func (config *Configuration) GetStringArray(key string) []string {
 
 	return childStringArray
 
+}
+
+// GetBool returns a configuration entry typed as bool.
+
+// key is the configuration entry to retrieve. If the entry does not exist or
+// is not bool, then defaultVal is returned. Values of type string that are
+// some variant of true/false, True/False, etc. will be converted to bool. This
+// also works for parameters retrieved from environment variables.
+//
+// It is the caller's responsibility to provide the correct default for the
+// given use case.
+func (config *Configuration) GetBool(key string, defaultVal bool) bool {
+	switch val := config.Get(key).(type) {
+	case bool:
+		return val
+	// Convert strings with true/false text to bool
+	case string:
+		switch strings.ToLower(val) {
+		case "true":
+			return true
+		case "false":
+			return false
+		}
+	}
+	return defaultVal
 }
