@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -87,6 +88,22 @@ func (config *Configuration) GetString(key string) string {
 /**
  * Add function to get item
  */
+func (config *Configuration) GetStringError(key string) (string, error) {
+	//Get the value
+	value := config.Get(key)
+
+	if value == nil {
+		return "", errors.New("could not find " + key)
+	}
+
+	//Get the key from the
+	return fmt.Sprint(value), nil
+
+}
+
+/**
+ * Add function to get item
+ */
 func (config *Configuration) GetStringFatal(key string) string {
 	//Get the key from the
 	return fmt.Sprint(config.GetFatal(key))
@@ -101,6 +118,26 @@ func (config *Configuration) GetInt(key string) (int, error) {
 	res, err := strconv.Atoi(config.GetString(key))
 
 	return res, err
+
+}
+
+/**
+ * Add function to get item
+ */
+func (config *Configuration) GetIntFatal(key string) int {
+
+	//Get the string
+	string := config.GetStringFatal(key)
+
+	//Get the key from the
+	res, err := strconv.Atoi(string)
+
+	if err != nil {
+		log.Fatal("Cannot not find int configuration for " + key)
+
+	}
+
+	return res
 
 }
 
