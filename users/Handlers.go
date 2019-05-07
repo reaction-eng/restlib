@@ -18,16 +18,20 @@ type Handler struct {
 
 	//passwordResetRepo
 	resetRepo passwords.PasswordResetRepo
+
+	//Keep track if we want to allow userCreation
+	allowUserCreation bool
 }
 
 /**
  * This struct is used
  */
-func NewHandler(userRepo Repo, resetRepo passwords.PasswordResetRepo) *Handler {
+func NewHandler(userRepo Repo, resetRepo passwords.PasswordResetRepo, allowUserCreation bool) *Handler {
 	//Build a new User Handler
 	handler := Handler{
-		userRepo:  userRepo,
-		resetRepo: resetRepo,
+		userRepo:          userRepo,
+		resetRepo:         resetRepo,
+		allowUserCreation: allowUserCreation,
 	}
 
 	return &handler
@@ -38,47 +42,13 @@ Function used to get routes
 */
 func (handler *Handler) GetRoutes() []routing.Route {
 
+	//Provide the user update and documentation by default
 	var routes = []routing.Route{
 		{ //Allow for the user to login
 			Name:        "User Api Documentation",
 			Method:      "GET",
 			Pattern:     "/api/users",
 			HandlerFunc: handler.handleUserDocumentation,
-			Public:      true,
-		},
-		{ //Now for the user info
-			Name:        "UserCreate",
-			Method:      "POST",
-			Pattern:     "/users/new",
-			HandlerFunc: handler.handleUserCreate,
-			Public:      true,
-		},
-		{ //Allow the user to turn on their account
-			Name:        "User Activate",
-			Method:      "POST",
-			Pattern:     "/users/activate",
-			HandlerFunc: handler.handleUserActivationPut,
-			Public:      true,
-		},
-		{ //Allow the user to turn on their account
-			Name:        "User Activate",
-			Method:      "GET",
-			Pattern:     "/users/activate",
-			HandlerFunc: handler.handleUserActivationGet,
-			Public:      true,
-		},
-		{ //Allow the user to turn on their account
-			Name:        "Get User Activation Token",
-			Method:      "GET",
-			Pattern:     "/users/activate",
-			HandlerFunc: handler.handleUserActivationPut,
-			Public:      true,
-		},
-		{ //Allow for the user to login
-			Name:        "UserLogin",
-			Method:      "POST",
-			Pattern:     "/users/login",
-			HandlerFunc: handler.handleUserLogin,
 			Public:      true,
 		},
 		{ //Allow for the user to update them selves
@@ -95,27 +65,77 @@ func (handler *Handler) GetRoutes() []routing.Route {
 			HandlerFunc: handler.handleUserGet,
 			Public:      false,
 		},
-		{ //Allow for the user to get an update of them selves
-			Name:        "PasswordChange",
-			Method:      "POST",
-			Pattern:     "/users/password/change",
-			HandlerFunc: handler.handlePasswordUpdate,
-			Public:      false,
-		},
-		{ //Allow for the user to ask for a password change
-			Name:        "PasswordResetGet",
-			Method:      "GET",
-			Pattern:     "/users/password/reset",
-			HandlerFunc: handler.handlePasswordResetGet,
-			Public:      true,
-		},
-		{ //Allow the user to set their password
-			Name:        "PasswordResetPost",
-			Method:      "POST",
-			Pattern:     "/users/password/reset",
-			HandlerFunc: handler.handlePasswordResetPut,
-			Public:      true,
-		},
+	}
+
+	//If the user can create users append the routes
+	if handler.allowUserCreation {
+
+		routes = append(routes,
+			routing.Route{ //Allow for the user to login
+				Name:        "User Api Documentation",
+				Method:      "GET",
+				Pattern:     "/api/users",
+				HandlerFunc: handler.handleUserDocumentation,
+				Public:      true,
+			},
+			routing.Route{ //Now for the user info
+				Name:        "UserCreate",
+				Method:      "POST",
+				Pattern:     "/users/new",
+				HandlerFunc: handler.handleUserCreate,
+				Public:      true,
+			},
+			routing.Route{ //Allow the user to turn on their account
+				Name:        "User Activate",
+				Method:      "POST",
+				Pattern:     "/users/activate",
+				HandlerFunc: handler.handleUserActivationPut,
+				Public:      true,
+			},
+			routing.Route{ //Allow the user to turn on their account
+				Name:        "User Activate",
+				Method:      "GET",
+				Pattern:     "/users/activate",
+				HandlerFunc: handler.handleUserActivationGet,
+				Public:      true,
+			},
+			routing.Route{ //Allow the user to turn on their account
+				Name:        "Get User Activation Token",
+				Method:      "GET",
+				Pattern:     "/users/activate",
+				HandlerFunc: handler.handleUserActivationPut,
+				Public:      true,
+			},
+			routing.Route{ //Allow for the user to login
+				Name:        "UserLogin",
+				Method:      "POST",
+				Pattern:     "/users/login",
+				HandlerFunc: handler.handleUserLogin,
+				Public:      true,
+			},
+			routing.Route{ //Allow for the user to get an update of them selves
+				Name:        "PasswordChange",
+				Method:      "POST",
+				Pattern:     "/users/password/change",
+				HandlerFunc: handler.handlePasswordUpdate,
+				Public:      false,
+			},
+			routing.Route{ //Allow for the user to ask for a password change
+				Name:        "PasswordResetGet",
+				Method:      "GET",
+				Pattern:     "/users/password/reset",
+				HandlerFunc: handler.handlePasswordResetGet,
+				Public:      true,
+			},
+			routing.Route{ //Allow the user to set their password
+				Name:        "PasswordResetPost",
+				Method:      "POST",
+				Pattern:     "/users/password/reset",
+				HandlerFunc: handler.handlePasswordResetPut,
+				Public:      true,
+			},
+		)
+
 	}
 
 	return routes
