@@ -23,6 +23,9 @@ func NewConfiguration(configFiles ...string) (*Configuration, error) {
 	//Define a Configuration
 	config := Configuration{}
 
+	// Read secrets last which will overwrite any existing keys
+	configFiles = append(configFiles, "config.secret.json")
+
 	//Now march over each file
 	for _, configFile := range configFiles {
 		//Load in the file

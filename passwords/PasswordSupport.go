@@ -1,14 +1,15 @@
 package passwords
 
 import (
-	"bitbucket.org/reidev/restlib/configuration"
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strings"
+
+	"bitbucket.org/reidev/restlib/configuration"
+	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 /**
@@ -30,11 +31,11 @@ var jwtTokenPassword []byte
 //Load it during init
 func init() {
 	//Load in a config file
-	config, err := configuration.NewConfiguration("config.auth.json", "config.secret.json")
+	config, err := configuration.NewConfiguration("config.auth.json")
 
 	//If there is an error
 	if err != nil {
-		log.Fatal("Cannot load config auth file: config.auth.json or config.secret.json", err)
+		log.Fatal("Cannot load config auth file: config.auth.json", err)
 	}
 
 	//Now get the token
