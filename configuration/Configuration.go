@@ -21,21 +21,37 @@ type Configuration struct {
 //Provide a function to create a new one
 func NewConfiguration(configFiles ...string) (*Configuration, error) {
 	//Define a Configuration
-	config := Configuration{}
+	config := Configuration{
+		Params: make(map[string]interface{}, 0),
+	}
 
 	// Read secrets last which will overwrite any existing keys
 	configFiles = append(configFiles, "config.secret.json")
 
 	//Now march over each file
 	for _, configFile := range configFiles {
-		//Load in the file
-		configFileStream, err := os.Open(configFile)
+		//See if itself a config
+		var testMap map[string]interface{}
+		err := json.Unmarshal([]byte(configFile), &testMap)
 
-		if err == nil {
-			//Get the json and add to the Params
-			jsonParser := json.NewDecoder(configFileStream)
-			jsonParser.Decode(&config.Params)
-			configFileStream.Close()
+		//See if it is a config string
+		if err == nil && testMap != nil {
+			//Merge the maps
+			for k, v := range testMap {
+				config.Params[k] = v
+			}
+
+		} else {
+			//Parse as file
+			//Load in the file
+			configFileStream, err := os.Open(configFile)
+
+			if err == nil {
+				//Get the json and add to the Params
+				jsonParser := json.NewDecoder(configFileStream)
+				jsonParser.Decode(&config.Params)
+				configFileStream.Close()
+			}
 		}
 
 	}
