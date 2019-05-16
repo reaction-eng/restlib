@@ -144,7 +144,7 @@ Function used to create new user
 func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 
 	//Create an empty new user
-	newUser := handler.userHelper.usersRepo.NewEmptyUser()
+	newUser := handler.userHelper.NewEmptyUser()
 
 	/**
 	Define a struct for just updating password
@@ -210,7 +210,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//Now look up the user
-	user, err := handler.userHelper.usersRepo.GetUserByEmail(strings.TrimSpace(strings.ToLower(userCred.Email)))
+	user, err := handler.userHelper.GetUserByEmail(strings.TrimSpace(strings.ToLower(userCred.Email)))
 
 	//check for an error
 	if err != nil {
@@ -247,7 +247,7 @@ func (handler *Handler) handleUserUpdate(w http.ResponseWriter, r *http.Request)
 	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
 
 	//Now load the current user from the repo
-	user, err := handler.userHelper.usersRepo.GetUser(loggedInUser)
+	user, err := handler.userHelper.GetUser(loggedInUser)
 
 	//Check for an error
 	if err != nil {
@@ -284,7 +284,7 @@ func (handler *Handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
 
 	//Get the user
-	user, err := handler.userHelper.usersRepo.GetUser(loggedInUser)
+	user, err := handler.userHelper.GetUser(loggedInUser)
 
 	//Make sure we null the password
 	//Blank out the password before returning
@@ -347,7 +347,7 @@ func (handler *Handler) handlePasswordResetGet(w http.ResponseWriter, r *http.Re
 	email := keys[0]
 
 	//Look up the user
-	user, err := handler.userHelper.usersRepo.GetUserByEmail(email)
+	user, err := handler.userHelper.GetUserByEmail(email)
 
 	//If there is an error just return, we don't want people to know if there was an email here
 	if err != nil {
@@ -356,7 +356,7 @@ func (handler *Handler) handlePasswordResetGet(w http.ResponseWriter, r *http.Re
 	}
 
 	//Now issue a request
-	err = handler.userHelper.passRepo.IssueResetRequest(handler.userHelper.passwordHelper.TokenGenerator(), user.Id(), user.Email())
+	err = handler.userHelper.IssueResetRequest(handler.userHelper.passwordHelper.TokenGenerator(), user.Id(), user.Email())
 
 	//There was a real error return
 	if err != nil {
@@ -393,7 +393,7 @@ func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Re
 	}
 
 	//Lookup the user id
-	user, err := handler.userHelper.usersRepo.GetUserByEmail(info.Email)
+	user, err := handler.userHelper.GetUserByEmail(info.Email)
 
 	//Return the error
 	if err != nil {
@@ -402,7 +402,7 @@ func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Re
 	}
 
 	//Try to use the token
-	requestId, err := handler.userHelper.passRepo.CheckForResetToken(user.Id(), info.ResetToken)
+	requestId, err := handler.userHelper.CheckForResetToken(user.Id(), info.ResetToken)
 
 	//Return the error
 	if err != nil {
@@ -418,7 +418,7 @@ func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Re
 		return
 	}
 	//Mark the request as used
-	err = handler.userHelper.passRepo.UseToken(requestId)
+	err = handler.userHelper.UseToken(requestId)
 
 	//Check to see if the user was created
 	if err == nil {
@@ -451,7 +451,7 @@ func (handler *Handler) handleUserActivationPut(w http.ResponseWriter, r *http.R
 	}
 
 	//Lookup the user id
-	user, err := handler.userHelper.usersRepo.GetUserByEmail(info.Email)
+	user, err := handler.userHelper.GetUserByEmail(info.Email)
 
 	//Return the error
 	if err != nil {
@@ -460,7 +460,7 @@ func (handler *Handler) handleUserActivationPut(w http.ResponseWriter, r *http.R
 	}
 
 	//Try to use the token
-	requestId, err := handler.userHelper.passRepo.CheckForActivationToken(user.Id(), info.ActToken)
+	requestId, err := handler.userHelper.CheckForActivationToken(user.Id(), info.ActToken)
 
 	//Return the error
 	if err != nil {
@@ -468,7 +468,7 @@ func (handler *Handler) handleUserActivationPut(w http.ResponseWriter, r *http.R
 		return
 	}
 	//Now activate the user
-	err = handler.userHelper.usersRepo.ActivateUser(user)
+	err = handler.userHelper.ActivateUser(user)
 
 	//Return the error
 	if err != nil {
@@ -476,7 +476,7 @@ func (handler *Handler) handleUserActivationPut(w http.ResponseWriter, r *http.R
 		return
 	}
 	//Mark the request as used
-	err = handler.userHelper.passRepo.UseToken(requestId)
+	err = handler.userHelper.UseToken(requestId)
 
 	//Check to see if the user was created
 	if err == nil {
@@ -503,7 +503,7 @@ func (handler *Handler) handleUserActivationGet(w http.ResponseWriter, r *http.R
 	email := keys[0]
 
 	//Look up the user
-	user, err := handler.userHelper.usersRepo.GetUserByEmail(email)
+	user, err := handler.userHelper.GetUserByEmail(email)
 
 	//If there is an error just return, we don't want people to know if there was an email here
 	if err != nil {
@@ -517,7 +517,7 @@ func (handler *Handler) handleUserActivationGet(w http.ResponseWriter, r *http.R
 		utils.ReturnJsonStatus(w, http.StatusOK, true, "activation_token_request_received")
 	}
 	//Else issue the request
-	err = handler.userHelper.passRepo.IssueActivationRequest(handler.userHelper.passwordHelper.TokenGenerator(), user.Id(), user.Email())
+	err = handler.userHelper.IssueActivationRequest(handler.userHelper.passwordHelper.TokenGenerator(), user.Id(), user.Email())
 
 	//There was a real error return
 	if err != nil {

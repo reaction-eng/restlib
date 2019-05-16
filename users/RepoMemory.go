@@ -103,6 +103,30 @@ func (repo *RepoMemory) UpdateUser(user User) (User, error) {
 	return user, nil
 }
 
+/**
+List all users
+*/
+func (repo *RepoMemory) ListAllUsers() ([]int, error) {
+	list := make([]int, 0)
+
+	for _, user := range repo.usersList {
+		list = append(list, user.Id())
+	}
+
+	return list, nil
+}
+
+/**
+List all users
+*/
+func (repo *RepoMemory) ActivateUser(user User) error {
+	return nil
+}
+
+/**
+Activate User
+*/
+
 //func RepoDestroyCalc(id int) error {
 //	for i, t := range usersList {
 //		if t.Id == id {

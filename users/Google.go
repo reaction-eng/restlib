@@ -2,7 +2,6 @@ package users
 
 import (
 	"bitbucket.org/reidev/restlib/configuration"
-	"bitbucket.org/reidev/restlib/passwords"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/utils"
 	"context"
@@ -28,8 +27,7 @@ type GoogleLoginToken struct {
  */
 type GoogleHandler struct {
 	// The user handler needs to have access to user repo
-	userRepo   Repo
-	passHelper passwords.Helper
+	helper *Helper
 
 	//We need the oauth config
 	oAuthConfig *oauth2.Config
@@ -38,14 +36,13 @@ type GoogleHandler struct {
 /**
  * This struct is used
  */
-func NewGoogleHandler(userRepo Repo, passHelper passwords.Helper, configFiles ...string) *GoogleHandler {
+func NewGoogleHandler(helper *Helper, configFiles ...string) *GoogleHandler {
 	//Create a new config
 	config, _ := configuration.NewConfiguration(configFiles...)
 
 	//Create a new
 	google := &GoogleHandler{
-		userRepo:   userRepo,
-		passHelper: passHelper,
+		helper: helper,
 		oAuthConfig: &oauth2.Config{
 			ClientID:     config.GetStringFatal("google_client_id"),
 			ClientSecret: config.GetStringFatal("google_client_secret"),
@@ -122,18 +119,18 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 	}
 
 	//Now get the user by email
-	user, err := gHandler.userRepo.GetUserByEmail(userInfo.Email)
+	user, err := gHandler.helper.GetUserByEmail(userInfo.Email)
 
 	//See if it a new error
 	if err != nil && user == nil {
 		//The email is not in use, so add it
 		//Create an empty new user
-		newUser := gHandler.userRepo.NewEmptyUser()
+		newUser := gHandler.helper.NewEmptyUser()
 		newUser.SetEmail(userInfo.Email)
 		newUser.SetPassword("") //This is a blank password that prevents being able to login
 
 		//Now store it
-		user, err = gHandler.userRepo.AddUser(newUser)
+		user, err = gHandler.helper.AddUser(newUser)
 
 		//Make sure it created an id
 		if err != nil {
@@ -141,11 +138,11 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 		}
 
 		//Now activate user
-		gHandler.userRepo.ActivateUser(user)
+		gHandler.helper.ActivateUser(user)
 
 		//Now get the user again
 		//Now get the user by email
-		user, err = gHandler.userRepo.GetUserByEmail(user.Email())
+		user, err = gHandler.helper.GetUserByEmail(user.Email())
 
 		if err != nil {
 			utils.ReturnJsonError(w, http.StatusForbidden, err)
@@ -158,7 +155,7 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(gHandler.passHelper.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(gHandler.helper.passwordHelper.CreateJWTToken(user.Id(), user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {

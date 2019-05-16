@@ -31,9 +31,9 @@ type Token struct {
 }
 
 //Load it during init
-func NewBasicHelper() *BasicHelper {
+func NewBasicHelper(configFiles ...string) *BasicHelper {
 	//Load in a config file
-	config, err := configuration.NewConfiguration()
+	config, err := configuration.NewConfiguration(configFiles...)
 
 	//If there is an error
 	if err != nil {

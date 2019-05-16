@@ -2,7 +2,6 @@ package users
 
 import (
 	"bitbucket.org/reidev/restlib/configuration"
-	"bitbucket.org/reidev/restlib/passwords"
 	"bitbucket.org/reidev/restlib/routing"
 	"bitbucket.org/reidev/restlib/utils"
 	"encoding/json"
@@ -57,8 +56,7 @@ type facebookMeResponse struct {
  */
 type FacebookHandler struct {
 	// The user handler needs to have access to user repo
-	userRepo   Repo
-	passHelper passwords.Helper
+	helper *Helper
 
 	//Store the facebook info
 	clientId     string
@@ -68,14 +66,13 @@ type FacebookHandler struct {
 /**
  * This struct is used
  */
-func NewFacebookHandler(userRepo Repo, passHelper passwords.Helper, configFiles ...string) *FacebookHandler {
+func NewFacebookHandler(helper *Helper, configFiles ...string) *FacebookHandler {
 	//Create a new config
 	config, _ := configuration.NewConfiguration(configFiles...)
 
 	//Create a new
 	facebook := &FacebookHandler{
-		userRepo:     userRepo,
-		passHelper:   passHelper,
+		helper:       helper,
 		clientId:     config.GetString("facebook_client_id"),
 		clientSecret: config.GetString("facebook_client_secret"),
 	}
@@ -210,18 +207,18 @@ func (fbHandler *FacebookHandler) handleUserLoginFacebook(w http.ResponseWriter,
 	}
 
 	//Now get the user by email
-	user, err := fbHandler.userRepo.GetUserByEmail(email)
+	user, err := fbHandler.helper.GetUserByEmail(email)
 
 	//See if it a new error
 	if err != nil && user == nil {
 		//The email is not in use, so add it
 		//Create an empty new user
-		newUser := fbHandler.userRepo.NewEmptyUser()
+		newUser := fbHandler.helper.NewEmptyUser()
 		newUser.SetEmail(email)
 		newUser.SetPassword("") //This is a blank password that prevents being able to login
 
 		//Now store it
-		user, err = fbHandler.userRepo.AddUser(newUser)
+		user, err = fbHandler.helper.AddUser(newUser)
 
 		//Make sure it created an id
 		if err != nil {
@@ -229,11 +226,11 @@ func (fbHandler *FacebookHandler) handleUserLoginFacebook(w http.ResponseWriter,
 		}
 
 		//Now activate user
-		fbHandler.userRepo.ActivateUser(user)
+		fbHandler.helper.ActivateUser(user)
 
 		//Now get the user again
 		//Now get the user by email
-		user, err = fbHandler.userRepo.GetUserByEmail(email)
+		user, err = fbHandler.helper.GetUserByEmail(email)
 
 		if err != nil {
 			utils.ReturnJsonError(w, http.StatusForbidden, err)
@@ -246,7 +243,7 @@ func (fbHandler *FacebookHandler) handleUserLoginFacebook(w http.ResponseWriter,
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(fbHandler.passHelper.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(fbHandler.helper.passwordHelper.CreateJWTToken(user.Id(), user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {

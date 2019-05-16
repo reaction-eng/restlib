@@ -82,11 +82,17 @@ Builds the default routing env
 */
 func getDefaultEnv(t *testing.T) *routingEnv {
 
+	//Build a config string
+	configString := "{\"token_password\": \"RvUP*b7fj9JPJ0*OQ9FlCW%Gg7vNTJWfvV7aQf@u9gWuYQ!S@e9SegAYjh!G%V7btMuGC8g29$qOw\"}"
+
 	//Define a memory repo
 	userRepo := users.NewRepoMemory()
 
 	//Make a basic
-	passHelper := passwords.NewBasicHelper()
+	passHelper := passwords.NewBasicHelper(configString)
+
+	//Make a user helper
+	helper := users.NewUserHelper(userRepo, nil, passHelper)
 
 	//Add some default users
 	userOne := users.BasicUser{}
@@ -103,9 +109,6 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 		t.Error(err)
 	}
 
-	//Make a new helper
-	helper := users.NewUserHelper(userRepo, nil, passHelper)
-
 	//Define a new router repo
 	//We also need to handle requests about users,
 	userHandler := users.NewHandler(helper, false)
@@ -117,7 +120,7 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	router.Use(middleware.MakeCORSMiddlewareFunc()) //Make sure to add the cross site permission first
 
 	//Add in middleware/filter that checks for user passwords
-	router.Use(middleware.MakeJwtMiddlewareFunc(router, userRepo))
+	router.Use(middleware.MakeJwtMiddlewareFunc(router, userRepo, nil, passHelper))
 
 	//Define the routing env
 	env := routingEnv{

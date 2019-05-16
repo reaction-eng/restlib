@@ -9,10 +9,10 @@ import (
 type Helper struct {
 
 	//Hold the user repo
-	usersRepo Repo
+	Repo
 
 	//And the password repo
-	passRepo passwords.ResetRepo
+	passwords.ResetRepo
 
 	//And store a password helper
 	passwordHelper passwords.Helper
@@ -21,8 +21,8 @@ type Helper struct {
 func NewUserHelper(usersRepo Repo, passRepo passwords.ResetRepo, passwordHelper passwords.Helper) *Helper {
 
 	return &Helper{
-		usersRepo:      usersRepo,
-		passRepo:       passRepo,
+		Repo:           usersRepo,
+		ResetRepo:      passRepo,
 		passwordHelper: passwordHelper,
 	}
 
@@ -42,7 +42,7 @@ func (helper *Helper) createUser(user User) error {
 	user.SetPassword(helper.passwordHelper.HashPassword(user.Password()))
 
 	//Now store it
-	newUser, err := helper.usersRepo.AddUser(user)
+	newUser, err := helper.AddUser(user)
 
 	//Make sure it created an id
 	if err != nil {
@@ -50,7 +50,7 @@ func (helper *Helper) createUser(user User) error {
 	}
 
 	//Else issue the request
-	err = helper.passRepo.IssueActivationRequest(helper.passwordHelper.TokenGenerator(), newUser.Id(), newUser.Email())
+	err = helper.IssueActivationRequest(helper.passwordHelper.TokenGenerator(), newUser.Id(), newUser.Email())
 
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (helper *Helper) validateUser(user User) (bool, error) {
 	}
 
 	//Now look up a possible user
-	user, err = helper.usersRepo.GetUserByEmail(user.Email())
+	user, err = helper.GetUserByEmail(user.Email())
 
 	//If the user already exists
 	if err == nil || user != nil {
@@ -95,7 +95,7 @@ Updates everything from the password
 func (helper *Helper) updateUser(userId int, newUser User) (User, error) {
 
 	//Load up the user
-	oldUser, err := helper.usersRepo.GetUser(userId)
+	oldUser, err := helper.GetUser(userId)
 
 	//Check for err
 	if err != nil {
@@ -120,7 +120,7 @@ func (helper *Helper) updateUser(userId int, newUser User) (User, error) {
 	//Make sure we
 
 	//Now update in the repo
-	newUser, err = helper.usersRepo.UpdateUser(newUser)
+	newUser, err = helper.UpdateUser(newUser)
 
 	return newUser, err
 
@@ -144,7 +144,7 @@ func (helper *Helper) passwordChange(userId int, passwordChange updatePasswordCh
 	passwordChange.Email = strings.TrimSpace(strings.ToLower(passwordChange.Email))
 
 	//Load up the user
-	oldUser, err := helper.usersRepo.GetUser(userId)
+	oldUser, err := helper.GetUser(userId)
 
 	//Make sure the user can login with password
 	if !oldUser.PasswordLogin() {
@@ -176,7 +176,7 @@ func (helper *Helper) passwordChange(userId int, passwordChange updatePasswordCh
 	oldUser.SetPassword(helper.passwordHelper.HashPassword(passwordChange.Password))
 
 	//Now update in the repo
-	_, err = helper.usersRepo.UpdateUser(oldUser)
+	_, err = helper.UpdateUser(oldUser)
 
 	return err
 
@@ -191,7 +191,7 @@ func (helper *Helper) passwordChangeForced(userId int, email string, newPassword
 	email = strings.TrimSpace(strings.ToLower(email))
 
 	//Load up the user
-	oldUser, err := helper.usersRepo.GetUser(userId)
+	oldUser, err := helper.GetUser(userId)
 
 	//Make sure the user can login with password
 	//if !oldUser.PasswordLogin() {
@@ -210,7 +210,7 @@ func (helper *Helper) passwordChangeForced(userId int, email string, newPassword
 	oldUser.SetPassword(helper.passwordHelper.HashPassword(newPassword))
 
 	//Now update in the repo
-	_, err = helper.usersRepo.UpdateUser(oldUser)
+	_, err = helper.UpdateUser(oldUser)
 
 	return err
 
