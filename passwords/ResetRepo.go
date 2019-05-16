@@ -3,12 +3,12 @@ package passwords
 /**
 Define an interface that all Calc Repos must follow
 */
-type PasswordResetRepo interface {
+type ResetRepo interface {
 
 	/**
 	Issues a request for the user
 	*/
-	IssueResetRequest(userId int, email string) error
+	IssueResetRequest(token string, userId int, email string) error
 
 	/**
 	Issues a request for the user
@@ -18,7 +18,7 @@ type PasswordResetRepo interface {
 	/**
 	Issues a request for the user
 	*/
-	IssueActivationRequest(userId int, email string) error
+	IssueActivationRequest(token string, userId int, email string) error
 
 	/**
 	Issues a request for the user

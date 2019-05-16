@@ -85,17 +85,30 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	//Define a memory repo
 	userRepo := users.NewRepoMemory()
 
+	//Make a basic
+	passHelper := passwords.NewBasicHelper()
+
 	//Add some default users
-	_, err := userRepo.AddUser(&users.BasicUser{Email_: "one@example.com", password_: passwords.HashPassword("123456")})
-	_, err = userRepo.AddUser(&users.BasicUser{Email_: "two@example.com", password_: passwords.HashPassword("789012")})
+	userOne := users.BasicUser{}
+	userOne.SetEmail("one@example.com")
+	userOne.SetPassword(passHelper.HashPassword("123456"))
+	_, err := userRepo.AddUser(&userOne)
+
+	userTwo := users.BasicUser{}
+	userTwo.SetEmail("two@example.com")
+	userTwo.SetPassword(passHelper.HashPassword("789012"))
+	_, err = userRepo.AddUser(&userTwo)
 
 	if err != nil {
 		t.Error(err)
 	}
 
+	//Make a new helper
+	helper := users.NewUserHelper(userRepo, nil, passHelper)
+
 	//Define a new router repo
 	//We also need to handle requests about users,
-	userHandler := users.NewHandler(userRepo, nil)
+	userHandler := users.NewHandler(helper, false)
 
 	//Define the router, by in the routes specific to this project, and others
 	router := routing.NewRouter(nil, nil, nil, userHandler)

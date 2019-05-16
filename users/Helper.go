@@ -6,21 +6,43 @@ import (
 	"strings"
 )
 
+type Helper struct {
+
+	//Hold the user repo
+	usersRepo Repo
+
+	//And the password repo
+	passRepo passwords.ResetRepo
+
+	//And store a password helper
+	passwordHelper passwords.Helper
+}
+
+func NewUserHelper(usersRepo Repo, passRepo passwords.ResetRepo, passwordHelper passwords.Helper) *Helper {
+
+	return &Helper{
+		usersRepo:      usersRepo,
+		passRepo:       passRepo,
+		passwordHelper: passwordHelper,
+	}
+
+}
+
 /**
 Static method to create a new user
 */
-func createUser(usersRepo Repo, passRepo passwords.PasswordResetRepo, user User) error {
+func (helper *Helper) createUser(user User) error {
 
 	//Make sure the info being passed in is valid
-	if ok, err := validateUser(usersRepo, user); !ok {
+	if ok, err := helper.validateUser(user); !ok {
 		return err
 	}
 
 	//Now hash the password
-	user.SetPassword(passwords.HashPassword(user.Password()))
+	user.SetPassword(helper.passwordHelper.HashPassword(user.Password()))
 
 	//Now store it
-	newUser, err := usersRepo.AddUser(user)
+	newUser, err := helper.usersRepo.AddUser(user)
 
 	//Make sure it created an id
 	if err != nil {
@@ -28,7 +50,7 @@ func createUser(usersRepo Repo, passRepo passwords.PasswordResetRepo, user User)
 	}
 
 	//Else issue the request
-	err = passRepo.IssueActivationRequest(newUser.Id(), newUser.Email())
+	err = helper.passRepo.IssueActivationRequest(helper.passwordHelper.TokenGenerator(), newUser.Id(), newUser.Email())
 
 	if err != nil {
 		return err
@@ -41,14 +63,14 @@ func createUser(usersRepo Repo, passRepo passwords.PasswordResetRepo, user User)
 /**
 Validate incoming user details to make sure it has an email address and stuff
 */
-func validateUser(usersRepo Repo, user User) (bool, error) {
+func (helper *Helper) validateUser(user User) (bool, error) {
 
 	if !strings.Contains(user.Email(), "@") {
 		return false, errors.New("validate_missing_email")
 	}
 
 	//Check the password
-	err := validatePassword(user.Password())
+	err := helper.passwordHelper.ValidatePassword(user.Password())
 
 	//If the user already exists
 	if err != nil {
@@ -56,7 +78,7 @@ func validateUser(usersRepo Repo, user User) (bool, error) {
 	}
 
 	//Now look up a possible user
-	user, err = usersRepo.GetUserByEmail(user.Email())
+	user, err = helper.usersRepo.GetUserByEmail(user.Email())
 
 	//If the user already exists
 	if err == nil || user != nil {
@@ -68,22 +90,12 @@ func validateUser(usersRepo Repo, user User) (bool, error) {
 }
 
 /**
-Make sure that the password is valid
-*/
-func validatePassword(password string) error {
-	if len(password) < 6 {
-		return errors.New("validate_password_insufficient")
-	}
-	return nil
-}
-
-/**
 Updates everything from the password
 */
-func updateUser(usersRepo Repo, userId int, newUser User) (User, error) {
+func (helper *Helper) updateUser(userId int, newUser User) (User, error) {
 
 	//Load up the user
-	oldUser, err := usersRepo.GetUser(userId)
+	oldUser, err := helper.usersRepo.GetUser(userId)
 
 	//Check for err
 	if err != nil {
@@ -108,7 +120,7 @@ func updateUser(usersRepo Repo, userId int, newUser User) (User, error) {
 	//Make sure we
 
 	//Now update in the repo
-	newUser, err = usersRepo.UpdateUser(newUser)
+	newUser, err = helper.usersRepo.UpdateUser(newUser)
 
 	return newUser, err
 
@@ -126,13 +138,13 @@ type updatePasswordChangeStruct struct {
 /**
 Updates everything from the password
 */
-func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordChangeStruct) error {
+func (helper *Helper) passwordChange(userId int, passwordChange updatePasswordChangeStruct) error {
 
 	//Clean up the email
 	passwordChange.Email = strings.TrimSpace(strings.ToLower(passwordChange.Email))
 
 	//Load up the user
-	oldUser, err := usersRepo.GetUser(userId)
+	oldUser, err := helper.usersRepo.GetUser(userId)
 
 	//Make sure the user can login with password
 	if !oldUser.PasswordLogin() {
@@ -145,7 +157,7 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 	}
 
 	//Make sure the old password matches
-	passwordsMath := passwords.ComparePasswords(oldUser.Password(), passwordChange.PasswordOld)
+	passwordsMath := helper.passwordHelper.ComparePasswords(oldUser.Password(), passwordChange.PasswordOld)
 
 	//Make sure that the emails match
 	if !passwordsMath {
@@ -153,7 +165,7 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 	}
 
 	//Make sure the new password is valid
-	err = validatePassword(passwordChange.Password)
+	err = helper.passwordHelper.ValidatePassword(passwordChange.Password)
 
 	//If the password is bad
 	if err != nil {
@@ -161,10 +173,10 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 	}
 
 	//So it looks like we can update it, so hash the new password
-	oldUser.SetPassword(passwords.HashPassword(passwordChange.Password))
+	oldUser.SetPassword(helper.passwordHelper.HashPassword(passwordChange.Password))
 
 	//Now update in the repo
-	_, err = usersRepo.UpdateUser(oldUser)
+	_, err = helper.usersRepo.UpdateUser(oldUser)
 
 	return err
 
@@ -173,13 +185,13 @@ func passwordChange(usersRepo Repo, userId int, passwordChange updatePasswordCha
 /**
 Updates everything from the password
 */
-func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword string) error {
+func (helper *Helper) passwordChangeForced(userId int, email string, newPassword string) error {
 
 	//Clean up the email
 	email = strings.TrimSpace(strings.ToLower(email))
 
 	//Load up the user
-	oldUser, err := usersRepo.GetUser(userId)
+	oldUser, err := helper.usersRepo.GetUser(userId)
 
 	//Make sure the user can login with password
 	//if !oldUser.PasswordLogin() {
@@ -187,7 +199,7 @@ func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword 
 	//}
 
 	//Make sure the new password is valid
-	err = validatePassword(newPassword)
+	err = helper.passwordHelper.ValidatePassword(newPassword)
 
 	//If the password is bad
 	if err != nil {
@@ -195,10 +207,10 @@ func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword 
 	}
 
 	//So it looks like we can update it, so hash the new password
-	oldUser.SetPassword(passwords.HashPassword(newPassword))
+	oldUser.SetPassword(helper.passwordHelper.HashPassword(newPassword))
 
 	//Now update in the repo
-	_, err = usersRepo.UpdateUser(oldUser)
+	_, err = helper.usersRepo.UpdateUser(oldUser)
 
 	return err
 
@@ -207,7 +219,7 @@ func passwordChangeForced(usersRepo Repo, userId int, email string, newPassword 
 /**
 Login in the user
 */
-func login(userPassword string, user User) (User, error) {
+func (helper *Helper) login(userPassword string, user User) (User, error) {
 
 	//Make sure the user can login with password
 	if !user.PasswordLogin() {
@@ -220,7 +232,7 @@ func login(userPassword string, user User) (User, error) {
 	}
 
 	//Make sure the new password is valid
-	err := validatePassword(userPassword)
+	err := helper.passwordHelper.ValidatePassword(userPassword)
 
 	//If the password is bad
 	if err != nil {
@@ -228,7 +240,7 @@ func login(userPassword string, user User) (User, error) {
 	}
 
 	//Now see if we login
-	passwordsMath := passwords.ComparePasswords(user.Password(), userPassword)
+	passwordsMath := helper.passwordHelper.ComparePasswords(user.Password(), userPassword)
 
 	//Blank out the password before returning
 	user.SetPassword("")
@@ -239,7 +251,7 @@ func login(userPassword string, user User) (User, error) {
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(passwords.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(helper.passwordHelper.CreateJWTToken(user.Id(), user.Email()))
 
 	return user, nil
 }

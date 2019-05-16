@@ -12,7 +12,7 @@ import (
 /**
 Define a struct for Repo for use with users
 */
-type PasswordResetRepoSql struct {
+type ResetRepoSql struct {
 	//Hold on to the sql databased
 	db *sql.DB
 
@@ -41,7 +41,7 @@ const (
 )
 
 //Provide a method to make a new UserRepoSql
-func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configFile string) *PasswordResetRepoSql {
+func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configFile string) *ResetRepoSql {
 
 	//Create a config
 	config, err := configuration.NewConfiguration(configFile)
@@ -60,7 +60,7 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configF
 	config.GetStruct("user_activation", &activationEmailConfig)
 
 	//Define a new repo
-	newRepo := PasswordResetRepoSql{
+	newRepo := ResetRepoSql{
 		db:                    db,
 		tableName:             tableName,
 		emailer:               emailer,
@@ -108,7 +108,7 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configF
 }
 
 //Provide a method to make a new UserRepoSql
-func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, configFile ...string) *PasswordResetRepoSql {
+func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, configFile ...string) *ResetRepoSql {
 
 	//Create a config
 	config, err := configuration.NewConfiguration(configFile...)
@@ -127,7 +127,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, c
 	config.GetStruct("user_activation", &activationEmailConfig)
 
 	//Define a new repo
-	newRepo := PasswordResetRepoSql{
+	newRepo := ResetRepoSql{
 		db:                    db,
 		tableName:             tableName,
 		emailer:               emailer,
@@ -178,10 +178,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, c
 /**
 Look up the user and return if they were found
 */
-func (repo *PasswordResetRepoSql) IssueResetRequest(userId int, emailAddress string) error {
-
-	//Get a new token
-	token := TokenGenerator()
+func (repo *ResetRepoSql) IssueResetRequest(token string, userId int, emailAddress string) error {
 
 	//Now add it to the database
 	//Add the info
@@ -210,10 +207,7 @@ func (repo *PasswordResetRepoSql) IssueResetRequest(userId int, emailAddress str
 /**
 Look up the user and return if they were found
 */
-func (repo *PasswordResetRepoSql) IssueActivationRequest(userId int, emailAddress string) error {
-
-	//Get a new token
-	token := TokenGenerator()
+func (repo *ResetRepoSql) IssueActivationRequest(token string, userId int, emailAddress string) error {
 
 	//Now add it to the database
 	//Add the info
@@ -242,7 +236,7 @@ func (repo *PasswordResetRepoSql) IssueActivationRequest(userId int, emailAddres
 /**
 Use the taken to validate
 */
-func (repo *PasswordResetRepoSql) CheckForResetToken(userId int, token string) (int, error) {
+func (repo *ResetRepoSql) CheckForResetToken(userId int, token string) (int, error) {
 
 	//Get the id and errors
 	id, err := repo.checkForToken(userId, token, reset)
@@ -259,7 +253,7 @@ func (repo *PasswordResetRepoSql) CheckForResetToken(userId int, token string) (
 /**
 Use the taken to validate
 */
-func (repo *PasswordResetRepoSql) CheckForActivationToken(userId int, token string) (int, error) {
+func (repo *ResetRepoSql) CheckForActivationToken(userId int, token string) (int, error) {
 
 	//Get the id and errors
 	id, err := repo.checkForToken(userId, token, activation)
@@ -276,7 +270,7 @@ func (repo *PasswordResetRepoSql) CheckForActivationToken(userId int, token stri
 /**
 Use the taken to validate
 */
-func (repo *PasswordResetRepoSql) checkForToken(userId int, token string, tkType tokenType) (int, error) {
+func (repo *ResetRepoSql) checkForToken(userId int, token string, tkType tokenType) (int, error) {
 
 	//Prepare to get values
 	//id,  userId int, email TEXT, token TEXT, issued DATE,
@@ -307,7 +301,7 @@ func (repo *PasswordResetRepoSql) checkForToken(userId int, token string, tkType
 	return id, nil
 }
 
-func (repo *PasswordResetRepoSql) UseToken(id int) error {
+func (repo *ResetRepoSql) UseToken(id int) error {
 
 	//Remove the token
 	_, err := repo.rmRequestStatement.Exec(id)
@@ -322,7 +316,7 @@ func (repo *PasswordResetRepoSql) UseToken(id int) error {
 /**
 Clean up the database, nothing much to do
 */
-func (repo *PasswordResetRepoSql) CleanUp() {
+func (repo *ResetRepoSql) CleanUp() {
 	repo.getRequestStatement.Close()
 	repo.addRequestStatement.Close()
 	repo.rmRequestStatement.Close()

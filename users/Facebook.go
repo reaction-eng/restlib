@@ -57,7 +57,8 @@ type facebookMeResponse struct {
  */
 type FacebookHandler struct {
 	// The user handler needs to have access to user repo
-	userRepo Repo
+	userRepo   Repo
+	passHelper passwords.Helper
 
 	//Store the facebook info
 	clientId     string
@@ -67,13 +68,14 @@ type FacebookHandler struct {
 /**
  * This struct is used
  */
-func NewFacebookHandler(userRepo Repo, configFiles ...string) *FacebookHandler {
+func NewFacebookHandler(userRepo Repo, passHelper passwords.Helper, configFiles ...string) *FacebookHandler {
 	//Create a new config
 	config, _ := configuration.NewConfiguration(configFiles...)
 
 	//Create a new
 	facebook := &FacebookHandler{
 		userRepo:     userRepo,
+		passHelper:   passHelper,
 		clientId:     config.GetString("facebook_client_id"),
 		clientSecret: config.GetString("facebook_client_secret"),
 	}
@@ -244,7 +246,7 @@ func (fbHandler *FacebookHandler) handleUserLoginFacebook(w http.ResponseWriter,
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(passwords.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(fbHandler.passHelper.CreateJWTToken(user.Id(), user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {

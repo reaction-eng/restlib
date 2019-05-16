@@ -16,6 +16,11 @@ import (
 File of static support functions for passwords creating, editing, hashing, etc.
 */
 
+type BasicHelper struct {
+	//Keep a global password config
+	jwtTokenPassword []byte
+}
+
 /*
 JWT claims struct
 */
@@ -25,13 +30,10 @@ type Token struct {
 	jwt.StandardClaims
 }
 
-//Keep a global password config
-var jwtTokenPassword []byte
-
 //Load it during init
-func init() {
+func NewBasicHelper() *BasicHelper {
 	//Load in a config file
-	config, err := configuration.NewConfiguration("config.auth.json")
+	config, err := configuration.NewConfiguration()
 
 	//If there is an error
 	if err != nil {
@@ -47,14 +49,16 @@ func init() {
 
 	}
 	//Store the byte array
-	jwtTokenPassword = []byte(jwtTokenPasswordString)
+	return &BasicHelper{
+		jwtTokenPassword: []byte(jwtTokenPasswordString),
+	}
 
 }
 
 /**
 Support function to hash the password
 */
-func HashPassword(password string) string {
+func (helper *BasicHelper) HashPassword(password string) string {
 
 	//Hash the password, there should be a salt
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -65,12 +69,12 @@ func HashPassword(password string) string {
 /**
   Support function to generate a JWT token
 */
-func CreateJWTToken(userId int, email string) string {
+func (helper *BasicHelper) CreateJWTToken(userId int, email string) string {
 
 	//Create new JWT token for the newly registered account
 	tk := &Token{UserId: userId, Email: email}
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
-	tokenString, _ := token.SignedString(jwtTokenPassword)
+	tokenString, _ := token.SignedString(helper.jwtTokenPassword)
 
 	return tokenString
 
@@ -79,7 +83,7 @@ func CreateJWTToken(userId int, email string) string {
 /**
   Compare passwords.  Determine if they match
 */
-func ComparePasswords(currentPwHash string, testingPassword string) bool {
+func (helper *BasicHelper) ComparePasswords(currentPwHash string, testingPassword string) bool {
 
 	//Now take the password and encrypt it
 	err := bcrypt.CompareHashAndPassword([]byte(currentPwHash), []byte(testingPassword))
@@ -94,7 +98,7 @@ func ComparePasswords(currentPwHash string, testingPassword string) bool {
 /**
  * Get a random token
  */
-func TokenGenerator() string {
+func (helper *BasicHelper) TokenGenerator() string {
 	b := make([]byte, 4)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
@@ -103,7 +107,7 @@ func TokenGenerator() string {
 /**
   Compare passwords.  Determine if they match
 */
-func ValidateToken(tokenHeader string) (int, string, error) {
+func (helper *BasicHelper) ValidateToken(tokenHeader string) (int, string, error) {
 
 	//Token is missing, returns with error code 403 Unauthorized
 	if tokenHeader == "" {
@@ -126,7 +130,7 @@ func ValidateToken(tokenHeader string) (int, string, error) {
 	//Now parse the token
 	token, err := jwt.ParseWithClaims(tokenPart, tk,
 		func(token *jwt.Token) (interface{}, error) {
-			return jwtTokenPassword, nil
+			return helper.jwtTokenPassword, nil
 		})
 
 	//check for mailformed data
@@ -144,4 +148,14 @@ func ValidateToken(tokenHeader string) (int, string, error) {
 
 	return tk.UserId, tk.Email, nil
 
+}
+
+/**
+Make sure that the password is valid
+*/
+func (helper *BasicHelper) ValidatePassword(password string) error {
+	if len(password) < 6 {
+		return errors.New("validate_password_insufficient")
+	}
+	return nil
 }

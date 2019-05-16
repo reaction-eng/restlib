@@ -14,7 +14,7 @@ import (
 /**
 Define a function to handle checking for auth
 */
-func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo roles.Repo) mux.MiddlewareFunc {
+func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo roles.Repo, passHelper passwords.Helper) mux.MiddlewareFunc {
 
 	//Return an instance
 	return func(next http.Handler) http.Handler {
@@ -49,7 +49,7 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 			tokenHeader := r.Header.Get("Authorization") //Grab the token from the header
 
 			//Validate and get the user id
-			userId, tokenEmail, err := passwords.ValidateToken(tokenHeader)
+			userId, tokenEmail, err := passHelper.ValidateToken(tokenHeader)
 
 			//If there is an error return
 			if err != nil {
