@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 	"net/http"
+	"strings"
 )
 
 /**
@@ -38,15 +39,26 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 				return
 			}
 
-			//check if request does not need middleware, serve the request if it doesn't need it
-			if route.Public {
-				//Just serve it
-				next.ServeHTTP(w, r)
-				return
-			}
+			//tokenHeader will get set here if we have a websocket. If this isn't a websocket, tokenHeader will be ""
+			//var tokenHeader string
+			tokenHeader := r.Header.Get("Sec-Websocket-Protocol")
 
-			//Get the header for auth
-			tokenHeader := r.Header.Get("Authorization") //Grab the token from the header
+			//if true, it's not a websocket. If it has something, we are dealing with a websocket.
+			if tokenHeader == "" {
+
+				//check if request does not need middleware, serve the request if it doesn't need it
+				if route.Public {
+					//Just serve it
+					next.ServeHTTP(w, r)
+					return
+				}
+				//Get the header for auth
+				tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
+			} else {
+				tokenHeader = strings.Replace(tokenHeader, "_Space_", " ", -1)
+				locOfComma := strings.Index(tokenHeader, ",")
+				tokenHeader = tokenHeader[0:locOfComma]
+			}
 
 			//Validate and get the user id
 			userId, tokenEmail, err := passHelper.ValidateToken(tokenHeader)

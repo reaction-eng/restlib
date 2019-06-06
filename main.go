@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bitbucket.org/reidev/restlib/Notification"
 	"bitbucket.org/reidev/restlib/stl"
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 //Define the global variables that are setup in the main
@@ -38,7 +40,7 @@ func main2() {
 
 }
 
-func main() {
+func main3() {
 
 	//Layout some points
 	pts := []stl.Vertex{
@@ -84,5 +86,22 @@ func main() {
 	mesh.WriteMeshAscii(out)
 	mesh.WriteUintahPts(ptsout)
 	mesh.WriteUintahTri(triout)
+
+}
+
+func main() {
+
+	greetingNotif := Notification.Notification{
+		Message:    "Sup my man!",
+		Priority:   5,
+		Expiration: time.Now(),
+		Send:       time.Now(),
+	}
+
+	dumNotifier := Notification.NewDummyNotifier()
+	err := dumNotifier.Notify(greetingNotif)
+	if err != nil {
+		log.Println("Somehow got an error ->", err.Error())
+	}
 
 }
