@@ -10,11 +10,11 @@ type Notifier interface {
 	Notify(notification Notification) error
 }
 
+///////////////////////
 type dummyNotifier struct {
 	NotfierType string
 }
 
-///////////////////////
 func NewDummyNotifier() *dummyNotifier {
 
 	newDummy := dummyNotifier{
@@ -30,5 +30,3 @@ func (notif *dummyNotifier) Notify(notification Notification) error {
 	return nil
 
 }
-
-/////////////////////////

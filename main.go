@@ -96,12 +96,17 @@ func main() {
 		Priority:   5,
 		Expiration: time.Now(),
 		Send:       time.Now(),
+		User:       "It's G",
 	}
 
 	dumNotifier := Notification.NewDummyNotifier()
+	mailNotifier := Notification.NewSlackNotifier()
+
 	err := dumNotifier.Notify(greetingNotif)
 	if err != nil {
 		log.Println("Somehow got an error ->", err.Error())
 	}
+
+	err = mailNotifier.Notify(greetingNotif)
 
 }
