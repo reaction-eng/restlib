@@ -9,5 +9,5 @@ type Notification struct {
 	Send       time.Time
 	Expiration time.Time
 	Message    string
-	User       string
+	UserID     int
 }

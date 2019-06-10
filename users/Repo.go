@@ -10,7 +10,7 @@ type Repo interface {
 	GetUserByEmail(email string) (User, error)
 
 	/**
-	Get the user with the email.  An error is thrown is not found
+	Get the user with the ID.  An error is thrown is not found
 	*/
 	GetUser(id int) (User, error)
 

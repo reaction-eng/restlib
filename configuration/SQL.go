@@ -12,7 +12,7 @@ func (config *Configuration) GetMySqlDataBaseSourceName() string {
 		config.GetString("db_name"),
 	)
 
-	return dbString
+	return dbString ////"root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true"
 }
 
 //Build the dbString //username:password@protocol(address)/dbname

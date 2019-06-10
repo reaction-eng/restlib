@@ -3,7 +3,10 @@ package main
 import (
 	"bitbucket.org/reidev/restlib/Notification"
 	"bitbucket.org/reidev/restlib/stl"
+	"bitbucket.org/reidev/restlib/users"
+	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"os"
 	"time"
@@ -96,17 +99,33 @@ func main() {
 		Priority:   5,
 		Expiration: time.Now(),
 		Send:       time.Now(),
-		User:       "It's G",
+		UserID:     1,
+	}
+
+	//userGrant := users.BasicUser{
+	//	Id_:2,
+	//	Email_:"keller@reaction-eng.com",
+	//	Token_:"1234567890",
+	//}
+	//config, _ := configuration.NewConfiguration("config.mysql.json", "config.host.json")
+	localSql, err := sql.Open("mysql", "root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true") //"root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true"
+
+	sqlConnectiont := users.NewRepoMySql(localSql, "users")
+	//include some kind of db call to get email to who'm we send to
+	userG, err := sqlConnectiont.GetUser(2)
+
+	if err != nil {
+		log.Println("Getting user through error. ", err.Error())
 	}
 
 	dumNotifier := Notification.NewDummyNotifier()
-	mailNotifier := Notification.NewSlackNotifier()
+	mailNotifier := Notification.NewEmailNotifier()
 
-	err := dumNotifier.Notify(greetingNotif)
+	err = dumNotifier.Notify(greetingNotif, userG)
 	if err != nil {
 		log.Println("Somehow got an error ->", err.Error())
 	}
 
-	err = mailNotifier.Notify(greetingNotif)
+	err = mailNotifier.Notify(greetingNotif, userG)
 
 }

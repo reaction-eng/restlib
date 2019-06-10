@@ -1,13 +1,16 @@
 package Notification
 
-import "log"
+import (
+	"bitbucket.org/reidev/restlib/users"
+	"log"
+)
 
 type NotifierStruct struct {
 	NotfierType string
 }
 
 type Notifier interface {
-	Notify(notification Notification) error
+	Notify(notification Notification, user users.User) error
 }
 
 ///////////////////////
@@ -23,10 +26,9 @@ func NewDummyNotifier() *dummyNotifier {
 	return &newDummy
 }
 
-func (notif *dummyNotifier) Notify(notification Notification) error {
+func (notif *dummyNotifier) Notify(notification Notification, user users.User) error {
 
 	log.Println("Sending message...->", notification.Message)
 
 	return nil
-
 }

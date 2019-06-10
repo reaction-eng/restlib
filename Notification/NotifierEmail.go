@@ -1,6 +1,7 @@
 package Notification
 
 import (
+	"bitbucket.org/reidev/restlib/users"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -19,8 +20,6 @@ type EmailNotifier struct {
 	NotfierType string
 	Serv        *gmail.Service
 }
-
-//[]Link up DB
 
 func NewEmailNotifier() *EmailNotifier {
 	b, err := ioutil.ReadFile("Notification/credentials.json")
@@ -104,15 +103,15 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func (notif *EmailNotifier) Notify(notification Notification) error {
+func (notif *EmailNotifier) Notify(notification Notification, user users.User) error {
 
 	var message gmail.Message
 
-	//include some kind of db call to get email to who'm we send to
+	usersEmail := user.Email()
 
 	messageStr := []byte("From: 'me'\r\n" +
 		//"reply-to: uttam.gandhi@synerzip.com\r\n" +
-		"To:keller@reaction-eng.com\r\n" +
+		"To:" + usersEmail + "\r\n" +
 		"Subject: Gmail API Better Test\r\n" +
 		"\r\n" + notification.Message)
 

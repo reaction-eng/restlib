@@ -1,6 +1,7 @@
 package Notification
 
 import (
+	"bitbucket.org/reidev/restlib/users"
 	"fmt"
 	"github.com/nlopes/slack"
 )
@@ -20,7 +21,7 @@ func NewSlackNotifier() *SlackNotifier {
 	return &slackNotifier
 }
 
-func (notif *SlackNotifier) Notify(notification Notification) error {
+func (notif *SlackNotifier) Notify(notification Notification, user users.User) error {
 
 	//include some kind of db call to get userID and SlackAuthto who'm we send to
 	api := slack.New("xoxp-539969220354-621210039441-658880912709-46de6eb8aeacd6fc51b6582ce395eeac")
