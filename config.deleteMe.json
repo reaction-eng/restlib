@@ -1,0 +1,55 @@
+{
+  "id": "root",
+  "name": "Flares Preferences",
+  "description": "Use this section to set and update Flares UI Preferences",
+  "options": [
+    {
+      "id":"showIntroOnLaunch",
+      "hidden": true,
+      "type": "bool",
+      "defaultValue": "true"
+    }
+  ],
+
+  "subgroups": [
+    {
+      "id": "view",
+      "name":"View",
+      "Description": "Control how the Flares looks to you.",
+      "Options":[
+        {
+          "id": "darkMode",
+          "name":"Enable Dark Mode In the UI",
+          "description": "Enhance the view by using dark mode?",
+          "type": "bool",
+          "defaultValue": "false"
+        }
+      ]
+
+
+  },
+    {
+      "id": "Notification",
+      "name":"Notification",
+      "Description": "Control your notification settings",
+      "Options":[
+        {
+          "id": "webPushNotifications",
+          "name":"Enable web push notifications",
+          "description": "Allows REI to send your browser notifications?",
+          "type": "bool",
+          "defaultValue": "false"
+        },
+        {
+          "id": "webSubscription",
+          "name":"webSubscription",
+          "hidden": true,
+          "description": "REI web subscription to connect with web servers.",
+          "type": "string",
+          "defaultValue": ""
+        }
+      ]
+    }
+  ]
+
+}

@@ -16,8 +16,12 @@ type CalendarNotifier struct {
 	Serv         *calendar.Service
 }
 
+/*
+All calendar events are created on whichever users calendar is linked to the server and the recipient for the event is added as an 'Attenddee'.
+*/
 func (notif *CalendarNotifier) Notify(notification Notification, user users.User) error {
 
+	//create new Calendar event.
 	newEvent := &calendar.Event{
 		Summary:     "REI Event",
 		Location:    "University of Utah",
@@ -37,30 +41,12 @@ func (notif *CalendarNotifier) Notify(notification Notification, user users.User
 		},
 	}
 
+	//Send calendar.
 	_, err := notif.Serv.Events.Insert("primary", newEvent).Do()
 	if err != nil {
 		log.Println("Error in calendar Notify ->", err.Error())
 	}
 
-	//getting all events
-	//t := time.Now().Format(time.RFC3339)
-	//events, err := notif.Serv.Events.List("primary").ShowDeleted(false).
-	//	SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
-	//if err != nil {
-	//	log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
-	//}
-	//log.Println("Upcoming events:")
-	//if len(events.Items) == 0 {
-	//	log.Println("No upcoming events found.")
-	//} else {
-	//	for _, item := range events.Items {
-	//		date := item.Start.DateTime
-	//		if date == "" {
-	//			date = item.Start.Date
-	//		}
-	//		log.Printf("%v (%v)\n", item.Summary, date)
-	//	}
-	//}
 	return err
 }
 

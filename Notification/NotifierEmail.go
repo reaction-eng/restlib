@@ -105,22 +105,26 @@ func saveToken(path string, token *oauth2.Token) {
 
 func (notif *EmailNotifier) Notify(notification Notification, user users.User) error {
 
+	//create a gmail message
 	var message gmail.Message
 
+	//get user's email
 	usersEmail := user.Email()
 
+	//Format the message such that it will map to an email.
 	messageStr := []byte("From: 'me'\r\n" +
 		//"reply-to: uttam.gandhi@synerzip.com\r\n" +
 		"To:" + usersEmail + "\r\n" +
 		"Subject: Gmail API Better Test\r\n" +
 		"\r\n" + notification.Message)
 
-	//temp := base64.StdEncoding.EncodeToString(messageStr)
+	//Encode string.
 	message.Raw = base64.StdEncoding.EncodeToString(messageStr)
 	message.Raw = strings.Replace(message.Raw, "/", "_", -1)
 	message.Raw = strings.Replace(message.Raw, "+", "-", -1)
 	message.Raw = strings.Replace(message.Raw, "=", "", -1)
 
+	//Launch message.
 	_, err := notif.Serv.Users.Messages.Send("me", &message).Do()
 	if err != nil {
 		log.Fatalf("Unable to send. %v", err)
