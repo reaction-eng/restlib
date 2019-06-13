@@ -111,6 +111,7 @@ func main() {
 	localSql, err := sql.Open("mysql", "root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true") //"root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true"
 
 	sqlConnectiont := users.NewRepoMySql(localSql, "users")
+
 	//include some kind of db call to get email to who'm we send to
 	userG, err := sqlConnectiont.GetUser(2)
 
@@ -119,13 +120,10 @@ func main() {
 	}
 
 	dumNotifier := Notification.NewDummyNotifier()
-	mailNotifier := Notification.NewEmailNotifier()
+	webNotif := Notification.NewWebPushNotifier("config.deleteME.json", localSql)
+	//mailNotifier := Notification.NewEmailNotifier()
 
 	err = dumNotifier.Notify(greetingNotif, userG)
-	if err != nil {
-		log.Println("Somehow got an error ->", err.Error())
-	}
-
-	err = mailNotifier.Notify(greetingNotif, userG)
+	err = webNotif.Notify(greetingNotif, userG)
 
 }
