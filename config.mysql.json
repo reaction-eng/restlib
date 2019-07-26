@@ -1,8 +1,0 @@
-{
-  "db_username": "root",
-  "db_protocol": "tcp",
-  "db_address": ":3306",
-  "db_name": "localDB",
-  "host_port": ":9000",
-  "db_password": "P1p3sh0p"
-}
