@@ -4,9 +4,10 @@
 package google
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"github.com/reaction-eng/restlib/configuration"
 	"golang.org/x/net/context"
 	"golang.org/x/net/html"
 	"golang.org/x/oauth2/google"

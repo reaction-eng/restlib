@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 )
 
 //Simple struct to hold the role
