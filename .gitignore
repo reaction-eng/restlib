@@ -20,9 +20,10 @@
 *.tar
 *.zip
 
-# Ide #
+# IDE / Editor #
 ############
 .idea
+*.sw[po]
 
 # Logs and databases #
 ######################
