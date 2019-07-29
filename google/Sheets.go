@@ -78,6 +78,66 @@ func (sheetsCon *Sheets) AppendToSheet(sheetId string, sheetName string, data in
 }
 
 /**
+Simple method to sync the headers
+*/
+func (sheetsCon *Sheets) SyncHeaders(sheetId string, sheetName string, headers []string) error {
+	//Get an empty row
+	rowData, err := sheetsCon.GetEmptyDataRow(sheetId, sheetName)
+
+	//If there was no error
+	if err != nil {
+		return err
+	}
+
+	//Make a list of headers that we need to add
+	headersToAdd := make([]string, 0)
+
+	//Check each header
+	for _, header := range headers {
+		if !stringInSlice(header, rowData.Headers) {
+			headersToAdd = append(headersToAdd, header)
+		}
+	}
+
+	//If there are any
+	if len(headersToAdd) > 0 {
+
+		//Set the row to the header row
+		rowData.RowNumber = 1
+
+		//Copy the headers to data
+		rowData.Values = make([]interface{}, len(rowData.Headers))
+
+		//Copy over the data
+		for c, headerName := range rowData.Headers {
+			rowData.Values[c] = headerName
+		}
+
+		//Add the new headers
+		for _, headerName := range headersToAdd {
+
+			rowData.Values = append(rowData.Values, headerName)
+		}
+
+		//Now append the data
+		err = sheetsCon.uploadToDataSheet(rowData, sheetId, sheetName)
+
+	}
+
+	return err
+}
+
+//Simple support string
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+/**
 Append to the sheet with the name and id split with a /
 */
 func (sheetsCon *Sheets) AppendToSheetIdAndName(sheetIdAndName string, data interface{}) error {
@@ -159,6 +219,11 @@ func (sheetsCon *Sheets) GetEmptyDataRow(sheetId string, sheetName string) (*She
 	//If there was an error return
 	if err != nil {
 		return nil, err
+	}
+
+	//Make sure there are headers
+	if len(rowData.Values) == 0 {
+		return nil, errors.New("missing headers from sheet " + sheetName)
 	}
 
 	//Now build a new empty row

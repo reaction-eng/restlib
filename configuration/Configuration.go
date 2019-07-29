@@ -102,8 +102,15 @@ func (config *Configuration) GetFatal(key string) interface{} {
  * Add function to get item
  */
 func (config *Configuration) GetString(key string) string {
-	//Get the key from the
-	return fmt.Sprint(config.Get(key))
+	//Get the value
+	value := config.Get(key)
+
+	if value == nil {
+		return ""
+	} else {
+		//Get the key from the
+		return fmt.Sprint(value)
+	}
 
 }
 

@@ -31,6 +31,19 @@ func NewObjectMemCache() *ObjectMemCache {
 
 }
 
+//Provide a method to make a new AnimalRepoSql
+func NewObjectMemCacheWithTime(interval time.Duration) *ObjectMemCache {
+
+	//Define a new repo
+	infoRepo := ObjectMemCache{
+		cache: cache.New(interval/2.0, interval),
+	}
+
+	//Return a point
+	return &infoRepo
+
+}
+
 /**
 Get all of the news
 */

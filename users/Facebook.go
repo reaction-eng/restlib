@@ -117,7 +117,7 @@ func (fbHandler *FacebookHandler) tokenToEmail(token FacebookLoginToken) (string
 	if err != nil {
 		return "", err
 	}
-
+	defer response.Body.Close()
 	//Now convert to a FacebookAccessTokenResponse
 	myToken := facebookAccessTokenResponse{}
 

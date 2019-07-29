@@ -55,3 +55,25 @@ func ReturnJson(w http.ResponseWriter, statusCode int, data interface{}) {
 	}
 
 }
+
+/**
+Provide a support method to return json
+*/
+func ReturnJsonNoEscape(w http.ResponseWriter, statusCode int, data interface{}) {
+
+	//Assume it is always json
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	//Pass in the code
+	w.WriteHeader(statusCode) // unprocessable entity
+
+	//Setup a new encoder
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+
+	//Now encode the json object
+	if err := encoder.Encode(data); err != nil {
+		panic(err)
+	}
+
+}

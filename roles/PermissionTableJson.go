@@ -65,7 +65,7 @@ func (repo *PermissionTableJson) LookUpRoleId(roleLookUp string) (int, error) {
 	//March over each config
 	for index, role := range repo.Roles {
 		//If the role equals
-		if roleLookUp == role.Name {
+		if strings.EqualFold(roleLookUp, role.Name) {
 			return index, nil
 		}
 	}

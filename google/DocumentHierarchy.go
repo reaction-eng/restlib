@@ -228,6 +228,8 @@ type FormMetaData struct {
 
 	EmailTemplate string `json:"emailTemplate"`
 
+	EmailSubjectField string `json:"emailSubjectField"`
+
 	DriveInfo []FormDriveInfo `json:"driveInfo"`
 
 	RequiredPerm []string `json:"requiredPerm"`

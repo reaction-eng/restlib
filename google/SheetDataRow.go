@@ -169,6 +169,20 @@ func (row *SheetDataRow) GetValue(s string) interface{} {
 }
 
 /**
+ * Looks up the value and sets it
+ */
+func (row *SheetDataRow) SetValue(s string, v string) {
+	col, found := row.headersLoc[s]
+
+	if found {
+		if col < len(row.Values) {
+			row.Values[col] = v
+		}
+	}
+
+}
+
+/**
  * Looks up the value
  */
 func (row *SheetDataRow) GetValueAsString(s string) string {

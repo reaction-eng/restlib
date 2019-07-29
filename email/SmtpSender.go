@@ -57,7 +57,12 @@ func (repo *SmtpSender) SendEmail(email *HeaderInfo, body string, attachments ma
 
 	//Set the to info
 	mail.To(email.To...)
+	//If there are any bcc
+	if email.Bcc != nil {
+		mail.Bcc(email.Bcc...)
+	}
 	mail.Subject(email.Subject)
+	mail.From(repo.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -80,7 +85,12 @@ func (repo *SmtpSender) SendEmailTemplateString(email *HeaderInfo, templateStrin
 
 	//Set the to info
 	mail.To(email.To...)
+	//If there are any bcc
+	if email.Bcc != nil {
+		mail.Bcc(email.Bcc...)
+	}
 	mail.Subject(email.Subject)
+	mail.From(repo.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -126,7 +136,14 @@ func (repo *SmtpSender) SendEmailTemplateFile(email *HeaderInfo, templateFile st
 
 	//Set the to info
 	mail.To(email.To...)
+
+	//If there are any bcc
+	if email.Bcc != nil {
+		mail.Bcc(email.Bcc...)
+	}
+
 	mail.Subject(email.Subject)
+	mail.From(repo.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -170,7 +187,12 @@ func (repo *SmtpSender) SendEmailTable(email *HeaderInfo, tableData TableInfo, a
 
 	//Set the to info
 	mail.To(email.To...)
+	//If there are any bcc
+	if email.Bcc != nil {
+		mail.Bcc(email.Bcc...)
+	}
 	mail.Subject(email.Subject)
+	mail.From(repo.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -280,7 +302,8 @@ func TableizeData(args ...interface{}) template.HTML {
 
 	//If is is a table
 	if ok {
-		return template.HTML(tableizeTalbeInfo(tableInfo))
+		html := template.HTML(tableizeTalbeInfo(tableInfo))
+		return html
 	} else {
 		return "Unknown Table Title"
 	}
@@ -303,9 +326,9 @@ func tableizeTalbeInfo(info TableInfo) string {
 	for _, childInfo := range info.GetChildren() {
 		//If it is a node just add it
 		if childInfo.IsNode() {
-			html += `<tr>`
+			html += `<tr><td>`
 			html += tableizeTalbeInfo(childInfo)
-			html += `</tr>`
+			html += `</td></tr>`
 
 		} else {
 			//Add the table row

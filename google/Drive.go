@@ -5,7 +5,9 @@ package google
 
 import (
 	"bitbucket.org/reidev/restlib/configuration"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"golang.org/x/net/context"
 	"golang.org/x/net/html"
 	"golang.org/x/oauth2/google"
@@ -27,6 +29,9 @@ type Drive struct {
 
 	//Store the preview length
 	previewLength int
+
+	//Store the timezone
+	timeZone string
 }
 
 //Get a new interface
@@ -35,12 +40,14 @@ func NewDrive(configFiles ...string) *Drive {
 	config, err := configuration.NewConfiguration(configFiles...)
 
 	//Create a new
-	gInter := &Drive{}
+	gInter := &Drive{
+		timeZone: config.GetStringFatal("default_time_zone"),
+	}
 
 	//Open the client
 	jwtConfig := &jwt.Config{
-		Email:      config.GetString("google_auth_email"),
-		PrivateKey: []byte(config.GetString("google_auth_key")),
+		Email:      config.GetStringFatal("google_auth_email"),
+		PrivateKey: []byte(config.GetStringFatal("google_auth_key")),
 		Scopes: []string{
 			drive.DriveMetadataReadonlyScope,
 			drive.DriveReadonlyScope,
@@ -66,7 +73,7 @@ func NewDrive(configFiles ...string) *Drive {
 }
 
 //See if starts with a date and name
-func splitNameAndDate(nameIn string) (string, *time.Time) {
+func (gog *Drive) splitNameAndDate(nameIn string) (string, *time.Time) {
 
 	//Trime the name in
 	nameIn = strings.TrimSpace(nameIn)
@@ -93,6 +100,24 @@ func splitNameAndDate(nameIn string) (string, *time.Time) {
 
 		//If we got a date return it
 		if err == nil {
+			loc, err := time.LoadLocation(gog.timeZone)
+
+			//convert to the local time zone
+			if err == nil {
+				//Move the dat
+				date = date.In(loc)
+
+				//Get the offset for that time
+				_, offset := date.Zone()
+
+				//update the offset
+				offset = -offset
+
+				//Add the offset to the date
+				date = date.Add(time.Duration(offset) * time.Second)
+
+			}
+
 			return strings.TrimSpace(nameIn[splitLoc:]), &date
 		} else {
 			//Just return the name
@@ -123,7 +148,7 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 	}
 
 	//Split the name and see if it is to be used
-	name, date := splitNameAndDate(folderInfo.Name)
+	name, date := gog.splitNameAndDate(folderInfo.Name)
 
 	//Get all of the files in this folder
 	dir := &Directory{
@@ -144,7 +169,7 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 	files, err := gog.connection.Files.List().
 		SupportsTeamDrives(true).
 		IncludeTeamDriveItems(true).
-		Q("'" + dirId + "' in parents").
+		Q("'" + dirId + "' in parents and trashed=false").
 		Do()
 
 	//If there is an error just return
@@ -170,7 +195,7 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 
 			} else if includeFilter(item.MimeType) { ////Else check the filter
 				//Split the name and see if it is to be used
-				name, date := splitNameAndDate(item.Name)
+				name, date := gog.splitNameAndDate(item.Name)
 
 				//Create a new document
 				doc := &Document{
@@ -255,8 +280,12 @@ func (gog *Drive) BuildFormHierarchy(dirId string) *Directory {
 				//Now set the parent id to this
 				childFolder.ParentId = dir.Id
 
-				//Just add the child
-				dir.Items = append(dir.Items, childFolder)
+				//Only add the form is there are any children
+				if len(childFolder.Items) > 0 {
+
+					//Just add the child
+					dir.Items = append(dir.Items, childFolder)
+				}
 
 			} else if item.MimeType == "application/json" {
 				//Now download the forms
@@ -291,6 +320,17 @@ func (gog *Drive) BuildFormHierarchy(dirId string) *Directory {
 * Method to get the information hierarchy
  */
 func (gog *Drive) GetFilePreview(id string) string {
+	//Get the file type
+	fileInfo, err := gog.connection.Files.Get(id).SupportsTeamDrives(true).Do()
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return ""
+	}
+
+	//Only get the preview if it is a google doc
+	if fileInfo.MimeType != "application/vnd.google-apps.document" {
+		return ""
+	}
 
 	//Get the plain text version of the file
 	resp, err := gog.connection.Files.Export(id, "text/plain").Download()
@@ -355,7 +395,19 @@ func (gog *Drive) downloadForm(id string) (*Form, error) {
  */
 func (gog *Drive) GetFileThumbnailUrl(id string) string {
 
-	//Start up by getting the html
+	//Get the file type
+	fileInfo, err := gog.connection.Files.Get(id).SupportsTeamDrives(true).Do()
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return ""
+	}
+
+	//Only get the preview if it is a google doc
+	if fileInfo.MimeType != "application/vnd.google-apps.document" {
+		return ""
+	}
+
+	//Start up by getting the
 	resp, err := gog.connection.Files.Export(id, "text/html").Download()
 
 	//If there was an error just don't do anything
@@ -397,19 +449,58 @@ func (gog *Drive) GetFileThumbnailUrl(id string) string {
  */
 func (gog *Drive) GetFileHtml(id string) string {
 
-	//Get the plain text version of the file
-	resp, err := gog.connection.Files.Export(id, "text/html").Download()
-
-	//If there was an error just don't do anything
+	//Get the file type
+	fileInfo, err := gog.connection.Files.Get(id).SupportsTeamDrives(true).Do()
 	if err != nil {
 		log.Printf("Error: %v", err)
 		return ""
 	}
-	//Get the entire thing
-	result, _ := ioutil.ReadAll(resp.Body)
 
-	//Return only the first specified number of chars
-	return string(result)
+	//If it is a pdf, get it is a pdf,
+	switch fileInfo.MimeType {
+	case "application/pdf":
+		{
+
+			//Get the plain text version of the file
+			resp, err := gog.connection.Files.Get(id).Download()
+
+			//If there was an error return
+			if err != nil {
+				return ""
+			}
+			defer resp.Body.Close()
+			//Get the entire thing
+			result, _ := ioutil.ReadAll(resp.Body)
+
+			//Convert to base 64
+			pdfBase64Str := base64.StdEncoding.EncodeToString(result)
+			//Build the srcData
+			srcData := "data:application/pdf;base64," + pdfBase64Str
+
+			//Wrap in html
+			html := "<embed  style=\"width:100%; height:80vh;\" type=\"application/pdf\" src=\"" + srcData + "\" />"
+			html += "<a href=\"" + srcData + "\"> Open " + fileInfo.Name + " in full page view </a>"
+			//Return only the first specified number of chars
+			return html
+
+		}
+	default: //"application/vnd.google-apps.document"
+		//Get the plain text version of the file
+		resp, err := gog.connection.Files.Export(id, "text/html").Download()
+
+		//If there was an error just don't do anything
+		if err != nil {
+			log.Printf("Error: %v", err)
+			return ""
+		}
+
+		//Get the entire thing
+		result, _ := ioutil.ReadAll(resp.Body)
+
+		//Return only the first specified number of chars
+		return string(result)
+	}
+
 }
 
 /**
@@ -419,6 +510,42 @@ func (gog *Drive) GetArbitraryFile(id string) (io.ReadCloser, error) {
 
 	//Get the plain text version of the file
 	rep, err := gog.connection.Files.Get(id).Download()
+
+	//If there was an error return
+	if err != nil {
+		return nil, err
+	}
+
+	//Ok return the read and closer
+	return rep.Body, nil
+}
+
+/**
+* Method to get the file html
+ */
+func (gog *Drive) GetMostRecentFileInDir(dirId string) (io.ReadCloser, error) {
+
+	//Now get all of the files
+	files, err := gog.connection.Files.List().
+		SupportsTeamDrives(true).
+		IncludeTeamDriveItems(true).
+		Q("'" + dirId + "' in parents").
+		OrderBy("recency desc").
+		PageSize(1).
+		Do()
+
+	//If there is an error just return
+	if err != nil {
+		return nil, err
+	}
+
+	//There needs to be at least one file found
+	if len(files.Files) < 1 {
+		return nil, errors.New("no files not found in dir " + dirId)
+	}
+
+	//Get the plain text version of the file
+	rep, err := gog.connection.Files.Get(files.Files[0].Id).Download()
 
 	//If there was an error return
 	if err != nil {
@@ -457,16 +584,11 @@ func (gog *Drive) GetFileAsInterface(id string, inter interface{}) error {
 /**
 * Method to upload a file
  */
-func (gog *Drive) PostArbitraryFile(fileName string, parent string, file io.Reader, mime string) (string, error) {
+func (gog *Drive) PostArbitraryFile(fileName string, parent string, file io.Reader) (string, error) {
 	//Create the file
 	myFile := drive.File{
 		Parents: []string{parent},
 		Name:    fileName,
-	}
-
-	//If there is a mime type use it
-	if len(mime) > 0 {
-		myFile.MimeType = mime
 	}
 
 	//Upload the file
@@ -476,5 +598,32 @@ func (gog *Drive) PostArbitraryFile(fileName string, parent string, file io.Read
 	}
 	//Now return the link
 	return createdFile.Id, nil
+
+}
+
+/**
+  Gets the files matching the search in the dir
+
+*/
+func (gog *Drive) GetFirstFileMatching(dirId string, name string) (io.ReadCloser, error) {
+
+	//Now get all of the files
+	files, err := gog.connection.Files.List().
+		SupportsTeamDrives(true).
+		IncludeTeamDriveItems(true).
+		Q("'" + dirId + "' in parents and trashed=false and fullText contains '" + name + "'").
+		Do()
+
+	if err != nil {
+		return nil, err
+	}
+
+	//If there are no files
+	if len(files.Files) < 1 {
+		return nil, errors.New("no matching file found in for " + name)
+	}
+
+	//Now just return the file
+	return gog.GetArbitraryFile(files.Files[0].Id)
 
 }

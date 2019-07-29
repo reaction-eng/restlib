@@ -4,6 +4,7 @@
 package static
 
 import (
+	"bitbucket.org/cawsorg/cawsapi/cawsDrive"
 	"bitbucket.org/reidev/restlib/cache"
 	"bitbucket.org/reidev/restlib/configuration"
 	"bitbucket.org/reidev/restlib/google"
@@ -12,7 +13,7 @@ import (
 /**
 Define a struct for RepoMem for news
 */
-type RepoGoogleCache struct {
+type RepoCache struct {
 	//Store the cache
 	cas cache.ObjectCache
 
@@ -25,14 +26,14 @@ type RepoGoogleCache struct {
 }
 
 //Provide a method to make a new AnimalRepoSql
-func NewRepoCache(drive *google.Drive, cas cache.ObjectCache, privateConfigFile string, publicConfigFile string) *RepoGoogleCache {
+func NewRepoCache(drive *google.Drive, cas cache.ObjectCache, privateConfigFile string, publicConfigFile string) *RepoCache {
 
 	//Create a new config
 	privateConfig, _ := configuration.NewConfiguration(privateConfigFile)
 	publicConfig, _ := configuration.NewConfiguration(publicConfigFile)
 
 	//Define a new repo
-	newRepo := RepoGoogleCache{
+	newRepo := RepoCache{
 		cas:           cas,
 		drive:         drive,
 		privateConfig: privateConfig,
@@ -47,7 +48,7 @@ func NewRepoCache(drive *google.Drive, cas cache.ObjectCache, privateConfigFile 
 /**
 Get the public static
 */
-func (repo *RepoGoogleCache) GetStaticPublicDocument(path string) (string, error) {
+func (repo *RepoCache) GetStaticPublicDocument(path string) (string, error) {
 
 	//Look up the document id from the config
 	documentId, err := repo.publicConfig.GetStringError(path)
@@ -79,7 +80,7 @@ func (repo *RepoGoogleCache) GetStaticPublicDocument(path string) (string, error
 /**
 Get the public static
 */
-func (repo *RepoGoogleCache) GetStaticPrivateDocument(path string) (string, error) {
+func (repo *RepoCache) GetStaticPrivateDocument(path string) (string, error) {
 
 	//Look up the document id from the config
 	documentId, err := repo.privateConfig.GetStringError(path)
@@ -111,6 +112,6 @@ func (repo *RepoGoogleCache) GetStaticPrivateDocument(path string) (string, erro
 /**
 Nothing much to do for the clean up
 */
-func (repo *RepoGoogleCache) CleanUp() {
+func (repo *RepoCache) CleanUp() {
 
 }

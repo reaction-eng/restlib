@@ -10,6 +10,7 @@ Simple struct for email
 */
 type HeaderInfo struct {
 	To      []string
+	Bcc     []string
 	Subject string
 	ReplyTo string
 }
