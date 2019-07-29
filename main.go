@@ -4,12 +4,12 @@
 package main
 
 import (
-	"github.com/reaction-eng/restlib/Notification"
-	"github.com/reaction-eng/restlib/stl"
-	"github.com/reaction-eng/restlib/users"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/reaction-eng/restlib/Notification"
+	"github.com/reaction-eng/restlib/stl"
+	"github.com/reaction-eng/restlib/users"
 	"log"
 	"os"
 	"time"
