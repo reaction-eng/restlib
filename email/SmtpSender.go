@@ -4,8 +4,8 @@
 package email
 
 import (
-	"bitbucket.org/reidev/restlib/configuration"
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/utils"
 	"encoding/json"
 	"github.com/domodwyer/mailyak"
 	"html/template"

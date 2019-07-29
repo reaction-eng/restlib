@@ -4,8 +4,8 @@
 package Notification
 
 import (
-	"bitbucket.org/reidev/restlib/preferences"
-	"bitbucket.org/reidev/restlib/users"
+	"github.com/reaction-eng/restlib/preferences"
+	"github.com/reaction-eng/restlib/users"
 	"database/sql"
 	"encoding/json"
 	"github.com/SherClockHolmes/webpush-go"

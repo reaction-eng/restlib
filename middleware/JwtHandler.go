@@ -4,11 +4,11 @@
 package middleware
 
 import (
-	"bitbucket.org/reidev/restlib/passwords"
-	"bitbucket.org/reidev/restlib/roles"
-	"bitbucket.org/reidev/restlib/routing"
-	"bitbucket.org/reidev/restlib/users"
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/passwords"
+	"github.com/reaction-eng/restlib/roles"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/users"
+	"github.com/reaction-eng/restlib/utils"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 	"net/http"

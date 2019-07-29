@@ -4,7 +4,7 @@
 package stl
 
 import (
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/utils"
 	"bufio"
 	"bytes"
 	"encoding/binary"

@@ -4,7 +4,7 @@
 package users
 
 import (
-	"bitbucket.org/reidev/restlib/passwords"
+	"github.com/reaction-eng/restlib/passwords"
 	"errors"
 	"strings"
 )

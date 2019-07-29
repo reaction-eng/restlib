@@ -4,7 +4,7 @@
 package Notification
 
 import (
-	"bitbucket.org/reidev/restlib/users"
+	"github.com/reaction-eng/restlib/users"
 	"context"
 	"encoding/base64"
 	"encoding/json"

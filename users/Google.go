@@ -4,9 +4,9 @@
 package users
 
 import (
-	"bitbucket.org/reidev/restlib/configuration"
-	"bitbucket.org/reidev/restlib/routing"
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 	"context"
 	"encoding/json"
 	"errors"

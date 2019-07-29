@@ -4,7 +4,7 @@
 package roles
 
 import (
-	"bitbucket.org/reidev/restlib/users"
+	"github.com/reaction-eng/restlib/users"
 	"database/sql"
 	"log"
 )

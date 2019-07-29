@@ -4,8 +4,8 @@
 package static
 
 import (
-	"bitbucket.org/reidev/restlib/routing"
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"

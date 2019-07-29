@@ -4,9 +4,9 @@
 package main
 
 import (
-	"bitbucket.org/reidev/restlib/Notification"
-	"bitbucket.org/reidev/restlib/stl"
-	"bitbucket.org/reidev/restlib/users"
+	"github.com/reaction-eng/restlib/Notification"
+	"github.com/reaction-eng/restlib/stl"
+	"github.com/reaction-eng/restlib/users"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"

@@ -4,9 +4,9 @@
 package roles
 
 import (
-	"bitbucket.org/reidev/restlib/routing"
-	"bitbucket.org/reidev/restlib/users"
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/users"
+	"github.com/reaction-eng/restlib/utils"
 	"net/http"
 )
 

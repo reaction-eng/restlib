@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"bitbucket.org/reidev/restlib/configuration"
+	"github.com/reaction-eng/restlib/configuration"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )

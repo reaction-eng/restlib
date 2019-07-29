@@ -4,7 +4,7 @@
 package Notification
 
 import (
-	"bitbucket.org/reidev/restlib/users"
+	"github.com/reaction-eng/restlib/users"
 	"context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

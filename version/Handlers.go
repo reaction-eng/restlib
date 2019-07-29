@@ -8,8 +8,8 @@ import (
 	"log"
 	"net/http"
 
-	"bitbucket.org/reidev/restlib/routing"
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 )
 
 func GetRoutes() []routing.Route {

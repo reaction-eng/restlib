@@ -3,7 +3,7 @@
 
 package email
 
-import "bitbucket.org/reidev/restlib/utils"
+import "github.com/reaction-eng/restlib/utils"
 
 /**
 Simple struct for email
