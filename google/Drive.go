@@ -4,8 +4,7 @@
 package google
 
 import (
-	"bitbucket.org/reidev/restlib/configuration"
-	"encoding/base64"
+	"github.com/reaction-eng/restlib/configuration"
 	"encoding/json"
 	"errors"
 	"golang.org/x/net/context"

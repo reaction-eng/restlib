@@ -3,7 +3,7 @@
 
 package roles
 
-import "bitbucket.org/reidev/restlib/users"
+import "github.com/reaction-eng/restlib/users"
 
 /**
 Define an interface for roles

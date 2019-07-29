@@ -4,8 +4,8 @@
 package passwords
 
 import (
-	"bitbucket.org/reidev/restlib/configuration"
-	"bitbucket.org/reidev/restlib/email"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/email"
 	"database/sql"
 	"errors"
 	"log"

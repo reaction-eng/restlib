@@ -4,7 +4,7 @@
 package google
 
 import (
-	"bitbucket.org/reidev/restlib/configuration"
+	"github.com/reaction-eng/restlib/configuration"
 	"errors"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"

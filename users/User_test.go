@@ -4,10 +4,10 @@
 package users_test
 
 import (
-	"bitbucket.org/reidev/restlib/middleware"
-	"bitbucket.org/reidev/restlib/passwords"
-	"bitbucket.org/reidev/restlib/routing"
-	"bitbucket.org/reidev/restlib/users"
+	"github.com/reaction-eng/restlib/middleware"
+	"github.com/reaction-eng/restlib/passwords"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/users"
 	"net/http"
 	"net/http/httptest"
 	"testing"

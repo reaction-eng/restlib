@@ -4,10 +4,9 @@
 package static
 
 import (
-	"bitbucket.org/cawsorg/cawsapi/cawsDrive"
-	"bitbucket.org/reidev/restlib/cache"
-	"bitbucket.org/reidev/restlib/configuration"
-	"bitbucket.org/reidev/restlib/google"
+	"github.com/reaction-eng/restlib/cache"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/google"
 )
 
 /**

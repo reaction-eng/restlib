@@ -4,7 +4,7 @@
 package users
 
 import (
-	"bitbucket.org/reidev/restlib/utils"
+	"github.com/reaction-eng/restlib/utils"
 	"database/sql"
 	"errors"
 	"log"
