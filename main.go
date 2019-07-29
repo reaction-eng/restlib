@@ -7,7 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/reaction-eng/restlib/Notification"
+	"github.com/reaction-eng/restlib/notification"
 	"github.com/reaction-eng/restlib/stl"
 	"github.com/reaction-eng/restlib/users"
 	"log"
@@ -97,7 +97,7 @@ func main3() {
 
 func main() {
 
-	greetingNotif := Notification.Notification{
+	greetingNotif := notification.Notification{
 		Message:    "Sup my man!",
 		Priority:   5,
 		Expiration: time.Now(),
@@ -122,8 +122,8 @@ func main() {
 		log.Println("Getting user through error. ", err.Error())
 	}
 
-	dumNotifier := Notification.NewDummyNotifier()
-	webNotif := Notification.NewWebPushNotifier("config.deleteME.json", localSql)
+	dumNotifier := notification.NewDummyNotifier()
+	webNotif := notification.NewWebPushNotifier("config.deleteME.json", localSql)
 	//mailNotifier := Notification.NewEmailNotifier()
 
 	err = dumNotifier.Notify(greetingNotif, userG)
