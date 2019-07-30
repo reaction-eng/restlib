@@ -42,41 +42,12 @@ Function used to get routes
 func (handler *Handler) GetRoutes() []routing.Route {
 
 	//Provide the user update and documentation by default
-	var routes = []routing.Route{
-		{ //Allow for the user to login
-			Name:        "User Api Documentation",
-			Method:      "GET",
-			Pattern:     "/api/users",
-			HandlerFunc: handler.handleUserDocumentation,
-			Public:      true,
-		},
-		{ //Allow for the user to update them selves
-			Name:        "UserUpdate",
-			Method:      "PUT",
-			Pattern:     "/users",
-			HandlerFunc: handler.handleUserUpdate,
-			Public:      false,
-		},
-		{ //Allow for the user to get an update of them selves
-			Name:        "UserGet",
-			Method:      "GET",
-			Pattern:     "/users",
-			HandlerFunc: handler.handleUserGet,
-			Public:      false,
-		},
-	}
+	var routes = make([]routing.Route, 0)
 
 	//If the user can create users append the routes
 	if handler.allowUserCreation {
 
 		routes = append(routes,
-			routing.Route{ //Allow for the user to login
-				Name:        "User Api Documentation",
-				Method:      "GET",
-				Pattern:     "/api/users",
-				HandlerFunc: handler.handleUserDocumentation,
-				Public:      true,
-			},
 			routing.Route{ //Now for the user info
 				Name:        "UserCreate",
 				Method:      "POST",
@@ -136,6 +107,31 @@ func (handler *Handler) GetRoutes() []routing.Route {
 		)
 
 	}
+
+	//Add in the normal routes
+	routes = append(routes,
+		routing.Route{ //Allow for the user to login
+			Name:        "User Api Documentation",
+			Method:      "GET",
+			Pattern:     "/api/users",
+			HandlerFunc: handler.handleUserDocumentation,
+			Public:      true,
+		},
+		routing.Route{ //Allow for the user to update them selves
+			Name:        "UserUpdate",
+			Method:      "PUT",
+			Pattern:     "/users/",
+			HandlerFunc: handler.handleUserUpdate,
+			Public:      false,
+		},
+		routing.Route{ //Allow for the user to get an update of them selves
+			Name:        "UserGet",
+			Method:      "GET",
+			Pattern:     "/users/",
+			HandlerFunc: handler.handleUserGet,
+			Public:      false,
+		},
+	)
 
 	return routes
 
