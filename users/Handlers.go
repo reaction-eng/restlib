@@ -4,9 +4,9 @@
 package users
 
 import (
+	"encoding/json"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/utils"
-	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -53,14 +53,14 @@ func (handler *Handler) GetRoutes() []routing.Route {
 		{ //Allow for the user to update them selves
 			Name:        "UserUpdate",
 			Method:      "PUT",
-			Pattern:     "/users/",
+			Pattern:     "/users",
 			HandlerFunc: handler.handleUserUpdate,
 			Public:      false,
 		},
 		{ //Allow for the user to get an update of them selves
 			Name:        "UserGet",
 			Method:      "GET",
-			Pattern:     "/users/",
+			Pattern:     "/users",
 			HandlerFunc: handler.handleUserGet,
 			Public:      false,
 		},
