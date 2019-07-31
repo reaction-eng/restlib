@@ -116,6 +116,23 @@ func (sheet *SheetData) FilterSheet(header string, value string) *SheetData {
 }
 
 //Create a new sheet data
+func (sheet *SheetData) GetColumn(col int) []interface{} {
+	//We need to transpose the data
+	colData := make([]interface{}, 0)
+
+	//March over each row
+	for r := range sheet.Values {
+		//If it has the column add it
+		if len(sheet.Values[r]) > col+1 {
+			colData = append(colData, sheet.Values[r][col])
+		}
+
+	}
+
+	return colData
+}
+
+//Create a new sheet data
 func (sheet *SheetData) GetRow(row int) *SheetDataRow {
 	//Look up the row number
 	indexNumber := -1
