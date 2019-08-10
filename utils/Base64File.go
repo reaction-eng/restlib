@@ -4,8 +4,11 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
+	"io/ioutil"
+	"mime/multipart"
 	"regexp"
 	"strings"
 )
@@ -14,6 +17,29 @@ type Base64File struct {
 	data []byte
 
 	name string
+
+	//Hold the mime data if known
+	mime string
+}
+
+/**
+Decode the base 64 string
+*/
+func NewBase64FileFromForm(file multipart.File, fileInfo *multipart.FileHeader) (*Base64File, error) {
+	//Store the file name and mime
+	// Read entire JPG into byte slice.
+	reader := bufio.NewReader(file)
+	content, error := ioutil.ReadAll(reader)
+
+	//Now create the info
+	b64File := Base64File{
+		data: content,
+		name: fileInfo.Filename,
+		mime: fileInfo.Header.Get("Content-Type"),
+	}
+
+	return &b64File, error
+
 }
 
 /**
@@ -51,6 +77,7 @@ func NewBase64File(data string) (*Base64File, error) {
 	file := Base64File{
 		data: dataBytes,
 		name: nameString,
+		mime: "",
 	}
 
 	return &file, err
@@ -58,6 +85,14 @@ func NewBase64File(data string) (*Base64File, error) {
 
 func (file *Base64File) GetDataBytes() []byte {
 	return file.data
+}
+
+func (file *Base64File) GetEncodedData() string {
+	return base64.StdEncoding.EncodeToString(file.data)
+}
+
+func (file *Base64File) GetMime() string {
+	return file.mime
 }
 
 func (file *Base64File) GetDataReader() *bytes.Reader {
