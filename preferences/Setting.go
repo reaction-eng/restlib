@@ -95,6 +95,21 @@ func (setGroup *SettingGroup) GetSettingAsBool(tree []string) (bool, error) {
 }
 
 //Provide a way to get the sub group
+func (setGroup *SettingGroup) GetSettingAsString(tree []string) (string, error) {
+	//Start with the current subGroup
+	subGroup := setGroup
+
+	//March down the list of subgroups until we get the tree
+	for i := 0; i < len(tree)-1; i++ {
+		subGroup = subGroup.GetSubGroup(tree[i])
+
+	}
+
+	//Now get the last value
+	return subGroup.GetValueAsString(tree[len(tree)-1])
+}
+
+//Provide a way to get the sub group
 func (setGroup *SettingGroup) checkAndSetDefaultValues(options *OptionGroup) {
 
 	//Now march over and set each value
