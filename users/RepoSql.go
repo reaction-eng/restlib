@@ -4,10 +4,11 @@
 package users
 
 import (
-	"github.com/reaction-eng/restlib/utils"
 	"database/sql"
 	"errors"
+	"github.com/reaction-eng/restlib/utils"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -183,6 +184,9 @@ func NewRepoPostgresSql(db *sql.DB, tableName string) *RepoSql {
 Look up the user and return if they were found
 */
 func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
+	//Clean up the string
+	email = strings.TrimSpace(strings.ToLower(email))
+
 	//var dataResult string
 	var user BasicUser
 
