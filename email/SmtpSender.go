@@ -77,7 +77,11 @@ func (repo *SmtpSender) SendEmail(email *HeaderInfo, body string, attachments ma
 
 }
 
-func formatInTimeZone(dateTime time.Time, timeZone string, format string) string {
+func formatInTimeZone(dateTime *time.Time, timeZone string, format string) string {
+	if dateTime == nil {
+		return ""
+	}
+
 	currentTimeZone, _ := time.LoadLocation(timeZone)
 	//Convert the time
 	timeInZone := dateTime.In(currentTimeZone)
