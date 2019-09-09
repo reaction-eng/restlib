@@ -4,13 +4,15 @@
 package email
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/utils"
 	"encoding/json"
 	"github.com/domodwyer/mailyak"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/utils"
 	"html/template"
 	"log"
 	"net/smtp"
+	"path/filepath"
+	"time"
 )
 
 /**
@@ -75,6 +77,15 @@ func (repo *SmtpSender) SendEmail(email *HeaderInfo, body string, attachments ma
 
 }
 
+func formatInTimeZone(dateTime time.Time, timeZone string, format string) string {
+	currentTimeZone, _ := time.LoadLocation(timeZone)
+	//Convert the time
+	timeInZone := dateTime.In(currentTimeZone)
+
+	return timeInZone.Format(format)
+
+}
+
 /**
 Get all of the news
 */
@@ -95,8 +106,14 @@ func (repo *SmtpSender) SendEmailTemplateString(email *HeaderInfo, templateStrin
 		mail.ReplyTo(email.ReplyTo)
 	}
 
+	//Define a template function map for general time
+	funcMap := template.FuncMap{
+		"now":              time.Now,
+		"formatInTimeZone": formatInTimeZone,
+	}
+
 	//Execute the table file
-	t := template.New("Basic Table Template")
+	t := template.New("Basic Table Template").Funcs(funcMap)
 
 	//Parse the file
 	t, err := t.Parse(templateString)
@@ -148,12 +165,17 @@ func (repo *SmtpSender) SendEmailTemplateFile(email *HeaderInfo, templateFile st
 		mail.ReplyTo(email.ReplyTo)
 	}
 
+	//Define a template function map for general time
+	funcMap := template.FuncMap{
+		"now":              time.Now,
+		"formatInTimeZone": formatInTimeZone,
+	}
+
 	//Parse the file
-	t, err := template.ParseFiles(templateFile)
+	t, err := template.New(filepath.Base(templateFile)).Funcs(funcMap).ParseFiles(templateFile)
 	if err != nil {
 		return err
 	}
-
 	//Now add the html table
 	err = t.Execute(mail.HTML(), data)
 	if err != nil {
