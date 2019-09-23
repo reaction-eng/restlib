@@ -96,7 +96,7 @@ func NewRepoMySql(db *sql.DB, tableName string) *RepoSql {
 	newRepo.activateStatement = activateStatement
 
 	//update the user
-	listAllUsers, err := db.Prepare("SELECT id FROM " + tableName)
+	listAllUsers, err := db.Prepare("SELECT id, activation FROM " + tableName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -169,7 +169,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string) *RepoSql {
 	newRepo.activateStatement = activateStatement
 
 	//update the user
-	listAllUsers, err := db.Prepare("SELECT id FROM " + tableName)
+	listAllUsers, err := db.Prepare("SELECT id, activation FROM " + tableName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -251,8 +251,10 @@ func (repo *RepoSql) ListAllUsers() ([]int, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var id int
+		//Store the sql time
+		var activationDate utils.NullTime
 
-		err := rows.Scan(&id)
+		err := rows.Scan(&id, &activationDate)
 		if err != nil {
 			return nil, err
 		}
@@ -260,6 +262,39 @@ func (repo *RepoSql) ListAllUsers() ([]int, error) {
 		//Append the row
 		list = append(list, id)
 
+	}
+	err = rows.Err()
+
+	return list, err
+}
+
+/**
+List all of the users
+*/
+func (repo *RepoSql) ListAllActiveUsers() ([]int, error) {
+	//Put in the list
+	list := make([]int, 0)
+
+	//Get the value //id int NOT NULL AUTO_INCREMENT, email TEXT, password TEXT, PRIMARY KEY (id)
+	rows, err := repo.listAllUsersStatement.Query()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		//Store the sql time
+		var activationDate utils.NullTime
+
+		err := rows.Scan(&id, &activationDate)
+		if err != nil {
+			return nil, err
+		}
+
+		//Append the row
+		if activationDate.Valid {
+			list = append(list, id)
+		}
 	}
 	err = rows.Err()
 

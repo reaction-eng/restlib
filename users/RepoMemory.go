@@ -119,6 +119,10 @@ func (repo *RepoMemory) ListAllUsers() ([]int, error) {
 	return list, nil
 }
 
+func (repo *RepoMemory) ListAllActiveUsers() ([]int, error) {
+	return repo.ListAllUsers()
+}
+
 /**
 List all users
 */

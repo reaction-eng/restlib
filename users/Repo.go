@@ -46,4 +46,5 @@ type Repo interface {
 	List all users
 	*/
 	ListAllUsers() ([]int, error)
+	ListAllActiveUsers() ([]int, error)
 }
