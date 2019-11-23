@@ -4,12 +4,12 @@
 package middleware
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/reaction-eng/restlib/passwords"
 	"github.com/reaction-eng/restlib/roles"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/users"
 	"github.com/reaction-eng/restlib/utils"
-	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 	"net/http"
 	"strings"

@@ -3,8 +3,8 @@
 
 package cache
 
-type ObjectCache interface {
-	Get(key string, item interface{})
+type Cache interface {
+	Get(key string, item interface{}) bool
 
 	Set(key string, item interface{}) error
 

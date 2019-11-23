@@ -4,12 +4,12 @@
 package users
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/routing"
-	"github.com/reaction-eng/restlib/utils"
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 	"golang.org/x/oauth2/google"
 	"net/http"
 

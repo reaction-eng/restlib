@@ -54,10 +54,9 @@ func (ele Element) GetNormalReverse() Vertex {
 func (ele Element) Translation(normTrans *Vertex, ExtrudLen float64) *Element {
 
 	return &Element{
-		Nodes: [3]Vertex{ ele.Nodes[0].trans(normTrans,ExtrudLen),
-			              ele.Nodes[2].trans(normTrans,ExtrudLen),
-			              ele.Nodes[1].trans(normTrans,ExtrudLen),
-
+		Nodes: [3]Vertex{ele.Nodes[0].trans(normTrans, ExtrudLen),
+			ele.Nodes[2].trans(normTrans, ExtrudLen),
+			ele.Nodes[1].trans(normTrans, ExtrudLen),
 		},
 	}
 }
@@ -66,11 +65,9 @@ func (ele Element) Translation(normTrans *Vertex, ExtrudLen float64) *Element {
 func (ele Element) Move(normTrans *Vertex, ExtrudLen float64) *Element {
 
 	return &Element{
-		Nodes: [3]Vertex{ ele.Nodes[0].trans(normTrans,ExtrudLen),
-			              ele.Nodes[1].trans(normTrans,ExtrudLen),
-			              ele.Nodes[2].trans(normTrans,ExtrudLen),
-
-
+		Nodes: [3]Vertex{ele.Nodes[0].trans(normTrans, ExtrudLen),
+			ele.Nodes[1].trans(normTrans, ExtrudLen),
+			ele.Nodes[2].trans(normTrans, ExtrudLen),
 		},
 	}
 }

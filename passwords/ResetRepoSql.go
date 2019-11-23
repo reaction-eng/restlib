@@ -4,10 +4,10 @@
 package passwords
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/email"
 	"database/sql"
 	"errors"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/email"
 	"log"
 	"time"
 )

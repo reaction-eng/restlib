@@ -4,8 +4,8 @@
 package google
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
 	"errors"
+	"github.com/reaction-eng/restlib/configuration"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"

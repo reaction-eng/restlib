@@ -4,11 +4,11 @@
 package stl
 
 import (
-	"github.com/reaction-eng/restlib/utils"
 	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/reaction-eng/restlib/utils"
 	"io"
 	"regexp"
 	"strconv"

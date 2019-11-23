@@ -5,27 +5,37 @@ package configuration
 
 import "fmt"
 
+type Sql struct {
+	Configuration
+}
+
+func NewSql(configuration Configuration) *Sql {
+	return &Sql{
+		configuration,
+	}
+}
+
 //Build the dbString //username:password@protocol(address)/dbname
-func (config *Configuration) GetMySqlDataBaseSourceName() string {
+func (sqlConfig Sql) GetMySqlDataBaseSourceName() string {
 	dbString := fmt.Sprintf("%s:%s@%s(%s)/%s?parseTime=true",
-		config.GetString("db_username"),
-		config.GetString("db_password"),
-		config.GetString("db_protocol"),
-		config.GetString("db_address"),
-		config.GetString("db_name"),
+		sqlConfig.GetString("db_username"),
+		sqlConfig.GetString("db_password"),
+		sqlConfig.GetString("db_protocol"),
+		sqlConfig.GetString("db_address"),
+		sqlConfig.GetString("db_name"),
 	)
 
 	return dbString ////"root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true"
 }
 
 //Build the dbString //username:password@protocol(address)/dbname
-func (config *Configuration) GetPostgresDataBaseSourceName() string {
+func (sqlConfig Sql) GetPostgresDataBaseSourceName() string {
 	//dbString :=   "postgres://postgres:kOVGMnoS3iIk@localhost/postgres?sslmode=disable"
 	dbString := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
-		config.GetString("db_username"),
-		config.GetString("db_password"),
-		config.GetString("db_address"),
-		config.GetString("db_name"),
+		sqlConfig.GetString("db_username"),
+		sqlConfig.GetString("db_password"),
+		sqlConfig.GetString("db_address"),
+		sqlConfig.GetString("db_name"),
 	)
 
 	return dbString

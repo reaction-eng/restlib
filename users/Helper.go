@@ -4,8 +4,8 @@
 package users
 
 import (
-	"github.com/reaction-eng/restlib/passwords"
 	"errors"
+	"github.com/reaction-eng/restlib/passwords"
 	"strings"
 )
 

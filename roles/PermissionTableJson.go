@@ -36,7 +36,7 @@ func NewPermissionTableJson(fileName string) *PermissionTableJson {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//Get the json and add to the Params
+	//Get the json and add to the params
 	jsonParser := json.NewDecoder(configFileStream)
 	err = jsonParser.Decode(&permTable)
 

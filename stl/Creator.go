@@ -177,9 +177,9 @@ func ExtrudeTriAndCreateMesh(pts []Vertex, normExtrude *Vertex, ExtrudLen float6
 	var ThirStretch Vertex
 
 	//
-	OneStretch =OneCap.trans(normExtrude,ExtrudLen)
-	TwoStretch =TwoCap.trans(normExtrude,ExtrudLen)
-	ThirStretch=ThirCap.trans(normExtrude,ExtrudLen)
+	OneStretch = OneCap.trans(normExtrude, ExtrudLen)
+	TwoStretch = TwoCap.trans(normExtrude, ExtrudLen)
+	ThirStretch = ThirCap.trans(normExtrude, ExtrudLen)
 	//
 	//OneStretch[0] = OneCap[0]+ normExtrude[0]*ExtrudLen
 	//OneStretch[1] = OneCap[1]+ normExtrude[1]*ExtrudLen
@@ -211,14 +211,14 @@ func ExtrudeTriAndCreateMesh(pts []Vertex, normExtrude *Vertex, ExtrudLen float6
 		),
 	)
 
-	for lineIndex:=0; lineIndex< len(pts)-1;lineIndex++{
-		OneFace :=Extrude(pts[lineIndex], pts[lineIndex+1] , normExtrude, ExtrudLen)
-		left:= NewElement(
+	for lineIndex := 0; lineIndex < len(pts)-1; lineIndex++ {
+		OneFace := Extrude(pts[lineIndex], pts[lineIndex+1], normExtrude, ExtrudLen)
+		left := NewElement(
 			OneFace.end,
 			OneFace.start,
 			OneFace.startStrech,
 		)
-		right:= NewElement(
+		right := NewElement(
 			OneFace.end,
 			OneFace.startStrech,
 			OneFace.endStrecth,
@@ -228,21 +228,20 @@ func ExtrudeTriAndCreateMesh(pts []Vertex, normExtrude *Vertex, ExtrudLen float6
 
 	}
 	//Add the face based from endpoint to staring point
-	OneFace :=Extrude(pts[len(pts)-1], pts[0] , normExtrude, ExtrudLen)
-	leftEndLoop:= NewElement(
+	OneFace := Extrude(pts[len(pts)-1], pts[0], normExtrude, ExtrudLen)
+	leftEndLoop := NewElement(
 		OneFace.end,
 		OneFace.start,
 		OneFace.startStrech,
 	)
-	rightEndLoop:= NewElement(
+	rightEndLoop := NewElement(
 		OneFace.end,
 		OneFace.startStrech,
 		OneFace.endStrecth,
 	)
 	elements = append(elements, *leftEndLoop, *rightEndLoop)
 
-
-   // Add the parallel top hat
+	// Add the parallel top hat
 	elements = append(elements,
 		*NewElement(
 			OneStretch,
@@ -258,63 +257,63 @@ func ExtrudeTriAndCreateMesh(pts []Vertex, normExtrude *Vertex, ExtrudLen float6
 
 }
 
-func (facemesh *Mesh)ExtrudeFaceAndCreateMesh(normExtrude *Vertex, ExtrudLen float64) (*Mesh, error) {
+func (facemesh *Mesh) ExtrudeFaceAndCreateMesh(normExtrude *Vertex, ExtrudLen float64) (*Mesh, error) {
 
 	//We need at least three pts
 	if len(facemesh.Elements) < 1 {
 		return nil, errors.New(" NOT Empty face for generating mesh")
 	}
-	bottomFace := make([]Element,0)
+	bottomFace := make([]Element, 0)
 
 	faceEdge := make([]TriLine, 0)
 
-	for  _,ele := range facemesh.Elements{
+	for _, ele := range facemesh.Elements {
 		// creat the corresponding triLine object to store the corresponding edge of triangular
-		faceEdge =append(faceEdge, *ele.GetEdge())
+		faceEdge = append(faceEdge, *ele.GetEdge())
 
-		bottomFace = append(bottomFace, *ele.Translation( normExtrude, ExtrudLen) )
+		bottomFace = append(bottomFace, *ele.Translation(normExtrude, ExtrudLen))
 		// translation the top face to bottom face, also reverse direciton
-	}// the index of faceEdge is same as the element of face mesh
+	} // the index of faceEdge is same as the element of face mesh
 
 	// storing the edge of face
-	boundEdge := make([]Edge,0)
-	for ind, TriangEle := range  faceEdge {
+	boundEdge := make([]Edge, 0)
+	for ind, TriangEle := range faceEdge {
 
-		for indSec := ind+1; indSec<len(faceEdge); indSec++{
+		for indSec := ind + 1; indSec < len(faceEdge); indSec++ {
 
-            if TriangEle.FaceTriEdge[0].count ==0{
-            	 TriangEle.FaceTriEdge[0].HasEdge(&faceEdge[indSec])
+			if TriangEle.FaceTriEdge[0].count == 0 {
+				TriangEle.FaceTriEdge[0].HasEdge(&faceEdge[indSec])
 			}
-			if TriangEle.FaceTriEdge[1].count ==0{
+			if TriangEle.FaceTriEdge[1].count == 0 {
 				TriangEle.FaceTriEdge[1].HasEdge(&faceEdge[indSec])
 			}
-			if TriangEle.FaceTriEdge[2].count ==0{
+			if TriangEle.FaceTriEdge[2].count == 0 {
 				TriangEle.FaceTriEdge[2].HasEdge(&faceEdge[indSec])
 			}
-		}// for each face edge search
+		} // for each face edge search
 
 		// after loop, add the edge into boundEdge that isnot included in other faceEdge
-		if TriangEle.FaceTriEdge[0].count==0 {
-			boundEdge =append(boundEdge, TriangEle.FaceTriEdge[0])
+		if TriangEle.FaceTriEdge[0].count == 0 {
+			boundEdge = append(boundEdge, TriangEle.FaceTriEdge[0])
 		}
-		if TriangEle.FaceTriEdge[1].count==0 {
-			boundEdge =append(boundEdge, TriangEle.FaceTriEdge[1])
+		if TriangEle.FaceTriEdge[1].count == 0 {
+			boundEdge = append(boundEdge, TriangEle.FaceTriEdge[1])
 		}
-		if TriangEle.FaceTriEdge[2].count==0  {
-			boundEdge =append(boundEdge, TriangEle.FaceTriEdge[2])
+		if TriangEle.FaceTriEdge[2].count == 0 {
+			boundEdge = append(boundEdge, TriangEle.FaceTriEdge[2])
 		}
 
-	}// end of total search
+	} // end of total search
 
 	//based on the bound edge and create the corrponding face/elemnt
-	for _, line := range boundEdge{
-		OneFace :=Extrude(line.starPoint, line.endPoint, normExtrude, ExtrudLen)
-		left:= NewElement(
+	for _, line := range boundEdge {
+		OneFace := Extrude(line.starPoint, line.endPoint, normExtrude, ExtrudLen)
+		left := NewElement(
 			OneFace.end,
 			OneFace.start,
 			OneFace.startStrech,
 		)
-		right:= NewElement(
+		right := NewElement(
 			OneFace.end,
 			OneFace.startStrech,
 			OneFace.endStrecth,
@@ -323,7 +322,7 @@ func (facemesh *Mesh)ExtrudeFaceAndCreateMesh(normExtrude *Vertex, ExtrudLen flo
 		facemesh.Elements = append(facemesh.Elements, *left, *right)
 	}
 	// Add the parallel bottom surface
-	facemesh.Elements = append(facemesh.Elements,bottomFace...)
+	facemesh.Elements = append(facemesh.Elements, bottomFace...)
 
 	//Return the stl
 	return facemesh, nil

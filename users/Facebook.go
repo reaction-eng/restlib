@@ -4,12 +4,12 @@
 package users
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/routing"
-	"github.com/reaction-eng/restlib/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 	"net/http"
 	"net/url"
 )

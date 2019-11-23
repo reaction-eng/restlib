@@ -4,9 +4,9 @@
 package static
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/utils"
-	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
 )

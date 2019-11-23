@@ -4,10 +4,10 @@
 package preferences
 
 import (
+	"encoding/json"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/users"
 	"github.com/reaction-eng/restlib/utils"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 )

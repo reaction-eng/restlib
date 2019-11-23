@@ -4,8 +4,8 @@
 package preferences
 
 import (
-	"github.com/reaction-eng/restlib/users"
 	"database/sql"
+	"github.com/reaction-eng/restlib/users"
 	"log"
 )
 

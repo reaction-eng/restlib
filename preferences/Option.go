@@ -27,7 +27,7 @@ func LoadOptionsGroup(jsonFile string) *OptionGroup {
 	configFileStream, err := os.Open(jsonFile)
 
 	if err == nil {
-		//Get the json and add to the Params
+		//Get the json and add to the params
 		jsonParser := json.NewDecoder(configFileStream)
 		jsonParser.Decode(&optGroup)
 		configFileStream.Close()

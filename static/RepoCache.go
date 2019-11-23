@@ -14,7 +14,7 @@ Define a struct for RepoMem for news
 */
 type RepoCache struct {
 	//Store the cache
-	cas cache.ObjectCache
+	cas cache.Cache
 
 	//We also need googl
 	drive *google.Drive
@@ -25,7 +25,7 @@ type RepoCache struct {
 }
 
 //Provide a method to make a new AnimalRepoSql
-func NewRepoCache(drive *google.Drive, cas cache.ObjectCache, privateConfigFile string, publicConfigFile string) *RepoCache {
+func NewRepoCache(drive *google.Drive, cas cache.Cache, privateConfigFile string, publicConfigFile string) *RepoCache {
 
 	//Create a new config
 	privateConfig, _ := configuration.NewConfiguration(privateConfigFile)
