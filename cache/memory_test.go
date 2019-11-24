@@ -27,7 +27,7 @@ func TestNewMemory(t *testing.T) {
 	assert.Equal(t, mockMemoryCache, memory.rawMemoryCache)
 }
 
-func TestSet(t *testing.T) {
+func TestMemory_Set(t *testing.T) {
 	testCases := []struct {
 		key  string
 		item interface{}
@@ -54,7 +54,7 @@ func TestSet(t *testing.T) {
 	mockCtrl.Finish()
 }
 
-func TestSetString(t *testing.T) {
+func TestMemory_SetString(t *testing.T) {
 	testCases := []struct {
 		key  string
 		item string
@@ -79,7 +79,7 @@ func TestSetString(t *testing.T) {
 	mockCtrl.Finish()
 }
 
-func TestGet(t *testing.T) {
+func TestMemory_Get(t *testing.T) {
 	testCases := []struct {
 		key      string
 		get      interface{}
@@ -130,7 +130,7 @@ func TestGet(t *testing.T) {
 	mockCtrl.Finish()
 }
 
-func TestGetString(t *testing.T) {
+func TestMemory_GetString(t *testing.T) {
 	testCases := []struct {
 		key      string
 		get      string

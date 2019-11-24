@@ -1,5 +1,7 @@
 package file
 
+//go:generate mockgen -destination=../mocks/mock_storage.go -package=mocks github.com/reaction-eng/restlib/file Storage
+
 import "io"
 
 type Storage interface {

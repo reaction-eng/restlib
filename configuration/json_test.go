@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGet(t *testing.T) {
+func TestJson_Get(t *testing.T) {
 	testCases := []struct {
 		configString   string
 		key            string
@@ -56,7 +56,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestGetFatal(t *testing.T) {
+func TestJson_GetFatal(t *testing.T) {
 	testCases := []struct {
 		configString   string
 		key            string
@@ -90,7 +90,7 @@ func TestGetFatal(t *testing.T) {
 	}
 }
 
-func TestGetString(t *testing.T) {
+func TestJson_GetString(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -117,7 +117,7 @@ func TestGetString(t *testing.T) {
 	}
 }
 
-func TestGetError(t *testing.T) {
+func TestJson_GetError(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -147,7 +147,7 @@ func TestGetError(t *testing.T) {
 	}
 }
 
-func TestGetStringFatal(t *testing.T) {
+func TestJson_GetStringFatal(t *testing.T) {
 	testCases := []struct {
 		configString   string
 		key            string
@@ -181,7 +181,7 @@ func TestGetStringFatal(t *testing.T) {
 	}
 }
 
-func TestGetInt(t *testing.T) {
+func TestJson_GetInt(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -212,7 +212,7 @@ func TestGetInt(t *testing.T) {
 	}
 }
 
-func TestGetIntFatal(t *testing.T) {
+func TestJson_GetIntFatal(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -248,7 +248,7 @@ func TestGetIntFatal(t *testing.T) {
 	}
 }
 
-func TestGetFloat(t *testing.T) {
+func TestJson_GetFloat(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -280,7 +280,7 @@ func TestGetFloat(t *testing.T) {
 	}
 }
 
-func TestGetKeys(t *testing.T) {
+func TestJson_GetKeys(t *testing.T) {
 	testCases := []struct {
 		configString string
 		expected     []string
@@ -307,7 +307,7 @@ func TestGetKeys(t *testing.T) {
 	}
 }
 
-func TestGetConfig(t *testing.T) {
+func TestJson_GetConfig(t *testing.T) {
 	testCases := []struct {
 		configString   string
 		key            string
@@ -341,7 +341,7 @@ func TestGetConfig(t *testing.T) {
 	}
 }
 
-func TestGetStruct(t *testing.T) {
+func TestJson_GetStruct(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -369,7 +369,7 @@ func TestGetStruct(t *testing.T) {
 	}
 }
 
-func TestGetStringArray(t *testing.T) {
+func TestJson_GetStringArray(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string
@@ -394,7 +394,7 @@ func TestGetStringArray(t *testing.T) {
 	}
 }
 
-func TestGetBool(t *testing.T) {
+func TestJson_GetBool(t *testing.T) {
 	testCases := []struct {
 		configString string
 		key          string

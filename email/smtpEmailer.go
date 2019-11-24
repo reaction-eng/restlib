@@ -5,57 +5,47 @@ package email
 
 import (
 	"encoding/json"
-	"github.com/domodwyer/mailyak"
+	"html/template"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/reaction-eng/restlib/configuration"
 	"github.com/reaction-eng/restlib/utils"
-	"html/template"
-	"log"
-	"net/smtp"
-	"path/filepath"
-	"time"
 )
 
-/**
-Simple struct for email
-*/
-type SmtpSender struct {
-	smtpServer   string
-	smtpUser     string
-	smtpPassword string
-	smtpFrom     string
-	smtpPort     string
+type SmtpEmailer struct {
+	smtpServer            string
+	smtpUser              string
+	smtpPassword          string
+	smtpFrom              string
+	smtpPort              string
+	smtpConnectionManager SmtpConnection
 }
 
-//Provide a method to make a new AnimalRepoSql
-func NewSmtpSender(configFile ...string) *SmtpSender {
+func NewSmtpEmailer(configuration configuration.Configuration, smtpConnectionManager SmtpConnection) *SmtpEmailer {
 
-	//Load up the config
-	config, err := configuration.NewConfiguration(configFile...)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sender := SmtpSender{
-		smtpServer:   config.GetStringFatal("smtp_server"),
-		smtpPort:     config.GetStringFatal("smtp_port"),
-		smtpUser:     config.GetStringFatal("smtp_user"),
-		smtpPassword: config.GetStringFatal("smtp_password"),
-		smtpFrom:     config.GetStringFatal("smtp_from"),
+	sender := SmtpEmailer{
+		smtpServer:            configuration.GetStringFatal("smtp_server"),
+		smtpPort:              configuration.GetStringFatal("smtp_port"),
+		smtpUser:              configuration.GetStringFatal("smtp_user"),
+		smtpPassword:          configuration.GetStringFatal("smtp_password"),
+		smtpFrom:              configuration.GetStringFatal("smtp_from"),
+		smtpConnectionManager: smtpConnectionManager,
 	}
 
 	return &sender
-
 }
 
-/**
-Get all of the news
-*/
-func (repo *SmtpSender) SendEmail(email *HeaderInfo, body string, attachments map[string][]*utils.Base64File) error {
+func (smtpEmailer *SmtpEmailer) Send(email *HeaderInfo, body string, attachments map[string][]*utils.Base64File) error {
 
-	// Create a new email - specify the SMTP host and auth
-	mail := mailyak.New(repo.smtpServer+repo.smtpPort,
-		smtp.PlainAuth("", repo.smtpUser, repo.smtpPassword, repo.smtpServer)) //authentication
+	mail := smtpEmailer.smtpConnectionManager.New(
+		smtpEmailer.smtpServer,
+		smtpEmailer.smtpUser,
+		smtpEmailer.smtpPassword,
+		smtpEmailer.smtpFrom,
+		smtpEmailer.smtpPort,
+	)
 
 	//Set the to info
 	mail.To(email.To...)
@@ -64,17 +54,23 @@ func (repo *SmtpSender) SendEmail(email *HeaderInfo, body string, attachments ma
 		mail.Bcc(email.Bcc...)
 	}
 	mail.Subject(email.Subject)
-	mail.From(repo.smtpFrom)
+	mail.From(smtpEmailer.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
 
 	//Set the body
-	mail.Plain().Set(body)
+	mail.SetPlain(body)
+
+	for _, values := range attachments {
+		for _, value := range values {
+			//Save it to the mail
+			mail.Attach(value.GetName(), value.GetDataReader())
+		}
+	}
 
 	//Now Send
 	return mail.Send()
-
 }
 
 func formatInTimeZone(dateTime *time.Time, timeZone string, format string) string {
@@ -90,13 +86,14 @@ func formatInTimeZone(dateTime *time.Time, timeZone string, format string) strin
 
 }
 
-/**
-Get all of the news
-*/
-func (repo *SmtpSender) SendEmailTemplateString(email *HeaderInfo, templateString string, data interface{}, attachments map[string][]*utils.Base64File) error {
-	// Create a new email - specify the SMTP host and auth
-	mail := mailyak.New(repo.smtpServer+repo.smtpPort,
-		smtp.PlainAuth("", repo.smtpUser, repo.smtpPassword, repo.smtpServer)) //authentication
+func (smtpEmailer *SmtpEmailer) SendTemplateString(email *HeaderInfo, templateString string, data interface{}, attachments map[string][]*utils.Base64File) error {
+	mail := smtpEmailer.smtpConnectionManager.New(
+		smtpEmailer.smtpServer,
+		smtpEmailer.smtpUser,
+		smtpEmailer.smtpPassword,
+		smtpEmailer.smtpFrom,
+		smtpEmailer.smtpPort,
+	)
 
 	//Set the to info
 	mail.To(email.To...)
@@ -105,7 +102,7 @@ func (repo *SmtpSender) SendEmailTemplateString(email *HeaderInfo, templateStrin
 		mail.Bcc(email.Bcc...)
 	}
 	mail.Subject(email.Subject)
-	mail.From(repo.smtpFrom)
+	mail.From(smtpEmailer.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -126,14 +123,13 @@ func (repo *SmtpSender) SendEmailTemplateString(email *HeaderInfo, templateStrin
 	}
 
 	//Now add the html table
-	err = t.Execute(mail.HTML(), data)
+	err = t.Execute(mail.Html(), data)
 	if err != nil {
 		return err
 	}
 
-	//Set an error
 	tryJsonString, _ := json.Marshal(data)
-	mail.Plain().Set(string(tryJsonString))
+	mail.SetPlain(string(tryJsonString))
 
 	//March over each attachment and add it
 	for _, values := range attachments {
@@ -150,10 +146,14 @@ func (repo *SmtpSender) SendEmailTemplateString(email *HeaderInfo, templateStrin
 /**
 Get all of the news
 */
-func (repo *SmtpSender) SendEmailTemplateFile(email *HeaderInfo, templateFile string, data interface{}, attachments map[string][]*utils.Base64File) error {
-	// Create a new email - specify the SMTP host and auth
-	mail := mailyak.New(repo.smtpServer+repo.smtpPort,
-		smtp.PlainAuth("", repo.smtpUser, repo.smtpPassword, repo.smtpServer)) //authentication
+func (smtpEmailer *SmtpEmailer) SendTemplateFile(email *HeaderInfo, templateFile string, data interface{}, attachments map[string][]*utils.Base64File) error {
+	mail := smtpEmailer.smtpConnectionManager.New(
+		smtpEmailer.smtpServer,
+		smtpEmailer.smtpUser,
+		smtpEmailer.smtpPassword,
+		smtpEmailer.smtpFrom,
+		smtpEmailer.smtpPort,
+	)
 
 	//Set the to info
 	mail.To(email.To...)
@@ -164,7 +164,7 @@ func (repo *SmtpSender) SendEmailTemplateFile(email *HeaderInfo, templateFile st
 	}
 
 	mail.Subject(email.Subject)
-	mail.From(repo.smtpFrom)
+	mail.From(smtpEmailer.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -181,14 +181,14 @@ func (repo *SmtpSender) SendEmailTemplateFile(email *HeaderInfo, templateFile st
 		return err
 	}
 	//Now add the html table
-	err = t.Execute(mail.HTML(), data)
+	err = t.Execute(mail.Html(), data)
 	if err != nil {
 		return err
 	}
 
 	//Set an error
 	tryJsonString, _ := json.Marshal(data)
-	mail.Plain().Set(string(tryJsonString))
+	mail.SetPlain(string(tryJsonString))
 
 	//March over each attachment and add it
 	for _, values := range attachments {
@@ -205,11 +205,14 @@ func (repo *SmtpSender) SendEmailTemplateFile(email *HeaderInfo, templateFile st
 /**
 Get all of the news
 */
-func (repo *SmtpSender) SendEmailTable(email *HeaderInfo, tableData TableInfo, attachments map[string][]*utils.Base64File) error {
-
-	// Create a new email - specify the SMTP host and auth
-	mail := mailyak.New(repo.smtpServer+repo.smtpPort,
-		smtp.PlainAuth("", repo.smtpUser, repo.smtpPassword, repo.smtpServer)) //authentication
+func (smtpEmailer *SmtpEmailer) SendTable(email *HeaderInfo, tableData TableInfo, attachments map[string][]*utils.Base64File) error {
+	mail := smtpEmailer.smtpConnectionManager.New(
+		smtpEmailer.smtpServer,
+		smtpEmailer.smtpUser,
+		smtpEmailer.smtpPassword,
+		smtpEmailer.smtpFrom,
+		smtpEmailer.smtpPort,
+	)
 
 	//Set the to info
 	mail.To(email.To...)
@@ -218,7 +221,7 @@ func (repo *SmtpSender) SendEmailTable(email *HeaderInfo, tableData TableInfo, a
 		mail.Bcc(email.Bcc...)
 	}
 	mail.Subject(email.Subject)
-	mail.From(repo.smtpFrom)
+	mail.From(smtpEmailer.smtpFrom)
 	if len(email.ReplyTo) > 0 {
 		mail.ReplyTo(email.ReplyTo)
 	}
@@ -227,8 +230,8 @@ func (repo *SmtpSender) SendEmailTable(email *HeaderInfo, tableData TableInfo, a
 
 	//Add the required functions
 	t.Funcs(template.FuncMap{
-		"GetTable": TableizeData,
-		"GetTitle": GetTableTitle,
+		"GetTable": tableizeData,
+		"GetTitle": getTableTitle,
 	})
 
 	//Parse the file
@@ -238,21 +241,19 @@ func (repo *SmtpSender) SendEmailTable(email *HeaderInfo, tableData TableInfo, a
 	}
 
 	//Now add the html table
-	err = t.Execute(mail.HTML(), tableData)
+	err = t.Execute(mail.Html(), tableData)
 	if err != nil {
 		return err
 	}
 
 	//Set an error
-	mail.Plain().Set("HTML Email Required")
+	mail.SetPlain("HTML Email Required")
 
 	//March over each attachment and add it
 	for _, values := range attachments {
 		for _, value := range values {
-
 			//Save it to the mail
 			mail.Attach(value.GetName(), value.GetDataReader())
-
 		}
 	}
 
@@ -266,7 +267,7 @@ Function to tableize the data
 */
 func getTableHtml() string {
 
-	return `
+	return strings.ReplaceAll(strings.ReplaceAll(`
 		<!DOCTYPE html>
 		<html lang="en">
 		<head>
@@ -298,14 +299,11 @@ func getTableHtml() string {
 		</body>
 		</html>
 
-	`
+	`, "\n", ""), "\t", "")
 
 }
 
-/**
-Function to tableize the data
-*/
-func GetTableTitle(args ...interface{}) string {
+func getTableTitle(args ...interface{}) string {
 
 	//check to see if it is a tableInfo
 	tableInfo, ok := args[0].(TableInfo)
@@ -319,10 +317,7 @@ func GetTableTitle(args ...interface{}) string {
 
 }
 
-/**
-Function to tableize the data
-*/
-func TableizeData(args ...interface{}) template.HTML {
+func tableizeData(args ...interface{}) template.HTML {
 	//check to see if it is a tableInfo
 	tableInfo, ok := args[0].(TableInfo)
 
@@ -335,9 +330,6 @@ func TableizeData(args ...interface{}) template.HTML {
 	}
 }
 
-/**
-Function to tableize the data
-*/
 func tableizeTalbeInfo(info TableInfo) string {
 	//Check to see if it has children
 	html := ""

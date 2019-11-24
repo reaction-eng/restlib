@@ -25,7 +25,7 @@ func TestNewSql(t *testing.T) {
 	assert.Equal(t, mockConfiguration, sqlConfig.Configuration)
 }
 
-func TestGetMySqlDataBaseSourceName(t *testing.T) {
+func TestSql_GetMySqlDataBaseSourceName(t *testing.T) {
 	// arrange
 	mockCtrl := gomock.NewController(t)
 	mockConfiguration := mocks.NewMockConfiguration(mockCtrl)
@@ -44,7 +44,7 @@ func TestGetMySqlDataBaseSourceName(t *testing.T) {
 	assert.Equal(t, "DBUSERNAME:DBPASSWORD@DBPROTOCOL(DBADDRESS)/DBNAME?parseTime=true", dbString)
 }
 
-func TestGetPostgresDataBaseSourceName(t *testing.T) {
+func TestSql_GetPostgresDataBaseSourceName(t *testing.T) {
 	// arrange
 	mockCtrl := gomock.NewController(t)
 	mockConfiguration := mocks.NewMockConfiguration(mockCtrl)
