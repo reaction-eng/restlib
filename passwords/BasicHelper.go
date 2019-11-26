@@ -16,7 +16,7 @@ import (
 )
 
 /**
-File of static support functions for passwords creating, editing, hashing, etc.
+gFile of static support functions for passwords creating, editing, hashing, etc.
 */
 
 type BasicHelper struct {

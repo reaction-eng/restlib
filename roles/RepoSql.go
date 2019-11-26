@@ -5,8 +5,9 @@ package roles
 
 import (
 	"database/sql"
-	"github.com/reaction-eng/restlib/users"
 	"log"
+
+	"github.com/reaction-eng/restlib/users"
 )
 
 /**
@@ -270,7 +271,7 @@ func sameRoles(a, b []int) bool {
 
 //func RepoDestroyCalc(id int) error {
 //	for i, t := range usersList {
-//		if t.Id == id {
+//		if t.id == id {
 //			usersList = append(usersList[:i], usersList[i+1:]...)
 //			return nil
 //		}

@@ -44,7 +44,7 @@ Provide a support method to return json
 func ReturnJson(w http.ResponseWriter, statusCode int, data interface{}) {
 
 	//Assume it is always json
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-GetType", "application/json; charset=UTF-8")
 
 	//Pass in the code
 	w.WriteHeader(statusCode) // unprocessable entity
@@ -62,7 +62,7 @@ Provide a support method to return json
 func ReturnJsonNoEscape(w http.ResponseWriter, statusCode int, data interface{}) {
 
 	//Assume it is always json
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-GetType", "application/json; charset=UTF-8")
 
 	//Pass in the code
 	w.WriteHeader(statusCode) // unprocessable entity

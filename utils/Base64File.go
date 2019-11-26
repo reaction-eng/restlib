@@ -36,7 +36,7 @@ func NewBase64FileFromForm(file multipart.File, fileInfo *multipart.FileHeader) 
 	b64File := Base64File{
 		data: content,
 		name: fileInfo.Filename,
-		mime: fileInfo.Header.Get("Content-Type"),
+		mime: fileInfo.Header.Get("Content-GetType"),
 	}
 
 	return &b64File, error

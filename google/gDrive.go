@@ -7,12 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/reaction-eng/restlib/configuration"
-	"golang.org/x/net/context"
-	"golang.org/x/net/html"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
-	"google.golang.org/api/drive/v3"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,6 +14,14 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/file"
+	"golang.org/x/net/context"
+	"golang.org/x/net/html"
+	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/jwt"
+	"google.golang.org/api/drive/v3"
 )
 
 type Drive struct {
@@ -35,19 +37,16 @@ type Drive struct {
 }
 
 //Get a new interface
-func NewDrive(configFiles ...string) *Drive {
-	//Create a new config
-	config, err := configuration.NewConfiguration(configFiles...)
-
+func NewDrive(configuration configuration.Configuration) *Drive {
 	//Create a new
 	gInter := &Drive{
-		timeZone: config.GetStringFatal("default_time_zone"),
+		timeZone: configuration.GetStringFatal("default_time_zone"),
 	}
 
 	//Open the client
 	jwtConfig := &jwt.Config{
-		Email:      config.GetStringFatal("google_auth_email"),
-		PrivateKey: []byte(config.GetStringFatal("google_auth_key")),
+		Email:      configuration.GetStringFatal("google_auth_email"),
+		PrivateKey: []byte(configuration.GetStringFatal("google_auth_key")),
 		Scopes: []string{
 			drive.DriveMetadataReadonlyScope,
 			drive.DriveReadonlyScope,
@@ -68,7 +67,7 @@ func NewDrive(configFiles ...string) *Drive {
 		log.Fatalf("Unable to retrieve Drive client: %v", err)
 	}
 
-	gInter.previewLength, _ = config.GetInt("preview_length")
+	gInter.previewLength, _ = configuration.GetInt("preview_length")
 	return gInter
 }
 
@@ -134,7 +133,7 @@ func (gog *Drive) splitNameAndDate(nameIn string) (string, *time.Time) {
 /**
 Recursive call to build the file list
 */
-func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFilter func(fileType string) bool) *Directory {
+func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFilter func(fileType string) bool) *gDirectory {
 
 	//Get this item
 	folderInfo, err := gog.connection.Files.
@@ -151,13 +150,13 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 	name, date := gog.splitNameAndDate(folderInfo.Name)
 
 	//Get all of the files in this folder
-	dir := &Directory{
-		File: File{
+	dir := &gDirectory{
+		gFile: gFile{
 			Id:   folderInfo.Id,
 			Name: name,
 		},
 		Type:  folderInfo.MimeType,
-		Items: make([]Item, 0),
+		Items: make([]file.Item, 0),
 	}
 
 	//If there is a date add it
@@ -187,7 +186,7 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 				//Get the child
 				childFolder := gog.BuildFileHierarchy(item.Id, buildPreview, includeFilter)
 
-				//Now set the parent id to this
+				//Now set the parent Id to this
 				childFolder.ParentId = dir.Id
 
 				//Just add the child
@@ -198,8 +197,8 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 				name, date := gog.splitNameAndDate(item.Name)
 
 				//Create a new document
-				doc := &Document{
-					File: File{
+				doc := &gDocument{
+					gFile: gFile{
 						Id:   item.Id,
 						Name: name,
 					},
@@ -221,7 +220,6 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 
 				//Store it
 				dir.Items = append(dir.Items, doc)
-
 			}
 		}
 	}
@@ -232,7 +230,7 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 /**
 Builds all of the forms and downloads them at the same time
 */
-func (gog *Drive) BuildFormHierarchy(dirId string) *Directory {
+func (gog *Drive) BuildFormHierarchy(dirId string) *gDirectory {
 
 	//Get this item
 	folderInfo, err := gog.connection.Files.
@@ -246,13 +244,13 @@ func (gog *Drive) BuildFormHierarchy(dirId string) *Directory {
 	}
 
 	//Get all of the files in this folder
-	dir := &Directory{
-		File: File{
+	dir := &gDirectory{
+		gFile: gFile{
 			Id:   folderInfo.Id,
 			Name: folderInfo.Name,
 		},
 		Type:  folderInfo.MimeType,
-		Items: make([]Item, 0),
+		Items: make([]file.Item, 0),
 	}
 
 	//Now get all of the files
@@ -277,7 +275,7 @@ func (gog *Drive) BuildFormHierarchy(dirId string) *Directory {
 				//Get the child
 				childFolder := gog.BuildFormHierarchy(item.Id)
 
-				//Now set the parent id to this
+				//Now set the parent Id to this
 				childFolder.ParentId = dir.Id
 
 				//Only add the form is there are any children
@@ -298,7 +296,7 @@ func (gog *Drive) BuildFormHierarchy(dirId string) *Directory {
 					//Remove the extention
 					name := strings.TrimSuffix(item.Name, filepath.Ext(item.Name))
 
-					//Add the forms id
+					//Add the forms Id
 					form.Id = item.Id
 					form.Name = name
 					form.ParentId = dir.Id
@@ -361,7 +359,7 @@ func (gog *Drive) GetFilePreview(id string) string {
 /**
 * Method to get the information hierarchy
  */
-func (gog *Drive) downloadForm(id string) (*Form, error) {
+func (gog *Drive) downloadForm(id string) (*gForm, error) {
 
 	//Get the plain text version of the file
 	resp, err := gog.connection.Files.Get(id).Download()
@@ -375,7 +373,7 @@ func (gog *Drive) downloadForm(id string) (*Form, error) {
 	dec := json.NewDecoder(resp.Body)
 
 	//Createa a new forms
-	form := &Form{}
+	form := &gForm{}
 
 	//Now decode the stream into the forms
 	err = dec.Decode(form)

@@ -5,13 +5,14 @@ package notification
 
 import (
 	"context"
+	"io/ioutil"
+	"log"
+	"net/http"
+
 	"github.com/reaction-eng/restlib/users"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
-	"io/ioutil"
-	"log"
-	"net/http"
 )
 
 type CalendarNotifier struct {
@@ -26,7 +27,7 @@ func (notif *CalendarNotifier) Notify(notification Notification, user users.User
 
 	//create new Calendar event.
 	newEvent := &calendar.Event{
-		Summary:     "REI Event",
+		Summary:     "REI gEvent",
 		Location:    "University of Utah",
 		Description: notification.Message,
 		Start: &calendar.EventDateTime{

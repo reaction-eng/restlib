@@ -6,7 +6,6 @@ package static
 import (
 	"github.com/reaction-eng/restlib/cache"
 	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/google"
 )
 
 /**
@@ -17,7 +16,7 @@ type RepoCache struct {
 	cas cache.Cache
 
 	//We also need googl
-	drive *google.Drive
+	drive *google.gDrive
 
 	//Store the public and private
 	privateConfig *configuration.Configuration
@@ -25,7 +24,7 @@ type RepoCache struct {
 }
 
 //Provide a method to make a new AnimalRepoSql
-func NewRepoCache(drive *google.Drive, cas cache.Cache, privateConfigFile string, publicConfigFile string) *RepoCache {
+func NewRepoCache(drive *google.gDrive, cas cache.Cache, privateConfigFile string, publicConfigFile string) *RepoCache {
 
 	//Create a new config
 	privateConfig, _ := configuration.NewConfiguration(privateConfigFile)

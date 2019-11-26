@@ -6,10 +6,11 @@ package users
 import (
 	"database/sql"
 	"errors"
-	"github.com/reaction-eng/restlib/utils"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/reaction-eng/restlib/utils"
 )
 
 /**
@@ -378,7 +379,7 @@ func (repo *RepoSql) NewEmptyUser() User {
 
 //func RepoDestroyCalc(id int) error {
 //	for i, t := range usersList {
-//		if t.Id == id {
+//		if t.id == id {
 //			usersList = append(usersList[:i], usersList[i+1:]...)
 //			return nil
 //		}

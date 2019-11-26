@@ -94,7 +94,7 @@ func (repo *RepoMemory) UpdateUser(user User) (User, error) {
 	////Update the user statement
 	////Just update the info
 	////execute the statement//"UPDATE  " + tableName + " SET email = ?, password = ? WHERE id = ?"
-	//_, err := repo.updateUserStatement.Exec(user.Email(), user.Password(), user.Id())
+	//_, err := repo.updateUserStatement.Exec(user.Email(), user.Password(), user.id())
 	//
 	////Check for error
 	//if err != nil {
@@ -136,7 +136,7 @@ Activate User
 
 //func RepoDestroyCalc(id int) error {
 //	for i, t := range usersList {
-//		if t.Id == id {
+//		if t.id == id {
 //			usersList = append(usersList[:i], usersList[i+1:]...)
 //			return nil
 //		}

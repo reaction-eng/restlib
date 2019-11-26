@@ -6,10 +6,11 @@ package passwords
 import (
 	"database/sql"
 	"errors"
-	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/email"
 	"log"
 	"time"
+
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/email"
 )
 
 /**
@@ -328,7 +329,7 @@ func (repo *ResetRepoSql) CleanUp() {
 
 //func RepoDestroyCalc(id int) error {
 //	for i, t := range usersList {
-//		if t.Id == id {
+//		if t.id == id {
 //			usersList = append(usersList[:i], usersList[i+1:]...)
 //			return nil
 //		}

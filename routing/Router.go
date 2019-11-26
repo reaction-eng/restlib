@@ -33,7 +33,7 @@ type RouteProducer interface {
 	GetRoutes() []Route
 }
 
-//Type def a logger wrapper
+//GetType def a logger wrapper
 type LoggerWrapper func(inner http.Handler, name string) http.Handler
 
 /**

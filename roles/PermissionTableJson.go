@@ -78,7 +78,7 @@ func (repo *PermissionTableJson) LookUpRoleId(roleLookUp string) (int, error) {
 
 //func RepoDestroyCalc(id int) error {
 //	for i, t := range usersList {
-//		if t.Id == id {
+//		if t.id == id {
 //			usersList = append(usersList[:i], usersList[i+1:]...)
 //			return nil
 //		}
