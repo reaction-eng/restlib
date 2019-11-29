@@ -9,9 +9,6 @@ package roles
 type Permissions struct {
 	//Store a list of
 	Permissions []string `json:"permissions"`
-
-	//And s list of Roles
-
 }
 
 /**

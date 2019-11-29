@@ -3,6 +3,8 @@
 
 package users
 
+//go:generate mockgen -destination=../mocks/mock_users_repo.go -package=mocks -mock_names Repo=MockUserRepo github.com/reaction-eng/restlib/users  Repo
+
 /**
 Define an interface that all Calc Repos must follow
 */

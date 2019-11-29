@@ -4,6 +4,10 @@
 package middleware
 
 import (
+	"errors"
+	"net/http"
+	"strings"
+
 	"github.com/gorilla/mux"
 	"github.com/reaction-eng/restlib/passwords"
 	"github.com/reaction-eng/restlib/roles"
@@ -11,14 +15,12 @@ import (
 	"github.com/reaction-eng/restlib/users"
 	"github.com/reaction-eng/restlib/utils"
 	"golang.org/x/net/context"
-	"net/http"
-	"strings"
 )
 
 /**
 Define a function to handle checking for auth
 */
-func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo roles.Repo, passHelper passwords.Helper) mux.MiddlewareFunc {
+func MakeJwtMiddlewareFunc(router routing.Router, userRepo users.Repo, permRepo roles.Repo, passHelper passwords.Helper) mux.MiddlewareFunc {
 
 	//Return an instance
 	return func(next http.Handler) http.Handler {
@@ -42,6 +44,13 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 				return
 			}
 
+			//check if request does not need middleware, serve the request if it doesn't need it
+			if route.Public {
+				//Just serve it
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			//tokenHeader will get set here if we have a websocket. If this isn't a websocket, tokenHeader will be ""
 			//var tokenHeader string
 			tokenHeader := r.Header.Get("Sec-Websocket-Protocol")
@@ -49,18 +58,17 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 			//if true, it's not a websocket. If it has something, we are dealing with a websocket.
 			if tokenHeader == "" {
 
-				//check if request does not need middleware, serve the request if it doesn't need it
-				if route.Public {
-					//Just serve it
-					next.ServeHTTP(w, r)
-					return
-				}
 				//Get the header for auth
 				tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
 			} else {
 				tokenHeader = strings.Replace(tokenHeader, "_Space_", " ", -1)
 				locOfComma := strings.Index(tokenHeader, ",")
 				tokenHeader = tokenHeader[0:locOfComma]
+			}
+
+			if tokenHeader == "" {
+				utils.ReturnJsonError(w, http.StatusForbidden, errors.New("auth_missing_token"))
+				return
 			}
 
 			//Validate and get the user id
@@ -70,7 +78,6 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 			if err != nil {
 				//Return the error
 				utils.ReturnJsonError(w, http.StatusForbidden, err)
-
 				return
 			}
 
@@ -81,14 +88,13 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 			if err != nil {
 				//Return the error
 				utils.ReturnJsonError(w, http.StatusForbidden, err)
-
 				return
 			}
+
 			//Make sure the emails match in the token and logged in user
-			if loggedInUser.Email() != tokenEmail {
+			if loggedInUser == nil || loggedInUser.Email() != tokenEmail {
 				//Return the error
 				utils.ReturnJsonStatus(w, http.StatusForbidden, false, "auth_malformed_token")
-
 				return
 			}
 
@@ -96,6 +102,7 @@ func MakeJwtMiddlewareFunc(router *routing.Router, userRepo users.Repo, permRepo
 			if !loggedInUser.Activated() {
 				//There prob is not a user to return
 				utils.ReturnJsonStatus(w, http.StatusForbidden, false, "user_not_activated")
+				return
 			}
 
 			//Make sure that the user has permission

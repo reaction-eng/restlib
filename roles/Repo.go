@@ -3,6 +3,8 @@
 
 package roles
 
+//go:generate mockgen -destination=../mocks/mock_roles_repo.go -package=mocks -mock_names Repo=MockRolesRepo github.com/reaction-eng/restlib/roles  Repo
+
 import "github.com/reaction-eng/restlib/users"
 
 /**

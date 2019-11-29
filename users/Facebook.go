@@ -7,11 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/reaction-eng/restlib/configuration"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/utils"
-	"net/http"
-	"net/url"
 )
 
 /**
@@ -69,15 +70,12 @@ type FacebookHandler struct {
 /**
  * This struct is used
  */
-func NewFacebookHandler(helper *Helper, configFiles ...string) *FacebookHandler {
-	//Create a new config
-	config, _ := configuration.NewConfiguration(configFiles...)
-
+func NewFacebookHandler(helper *Helper, configuration configuration.Configuration) *FacebookHandler {
 	//Create a new
 	facebook := &FacebookHandler{
 		helper:       helper,
-		clientId:     config.GetString("facebook_client_id"),
-		clientSecret: config.GetString("facebook_client_secret"),
+		clientId:     configuration.GetString("facebook_client_id"),
+		clientSecret: configuration.GetString("facebook_client_secret"),
 	}
 
 	return facebook

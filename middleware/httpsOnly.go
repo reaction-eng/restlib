@@ -1,14 +1,11 @@
 package middleware
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
-/**
-Define a function to allow CORS
-Allow CORS here By * or specific origin
-*/
 func HerokuHttpsOnlyMiddlewareFunc() mux.MiddlewareFunc {
 
 	return func(next http.Handler) http.Handler {
@@ -18,9 +15,7 @@ func HerokuHttpsOnlyMiddlewareFunc() mux.MiddlewareFunc {
 				http.Redirect(w, r, sslUrl, http.StatusTemporaryRedirect)
 				return
 			}
-
 			next.ServeHTTP(w, r)
-
 		})
 	}
 }

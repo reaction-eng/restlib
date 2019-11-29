@@ -15,7 +15,7 @@ import (
 /**
 Create our own router that pulls in the mux router
 */
-type Router struct {
+type MuxRouter struct {
 	// Store the mux router
 	*mux.Router
 
@@ -39,7 +39,7 @@ type LoggerWrapper func(inner http.Handler, name string) http.Handler
 /**
 * Build a new instance of this router.  It contains all of the paths so we can ghceck them later
  */
-func NewRouter(optionsHandler http.HandlerFunc, routes []Route, loggerWrapper LoggerWrapper, routeProducers ...RouteProducer) *Router {
+func NewRouter(optionsHandler http.HandlerFunc, routes []Route, loggerWrapper LoggerWrapper, routeProducers ...RouteProducer) *MuxRouter {
 	muxRouter := mux.NewRouter().StrictSlash(true)
 
 	//Add in an option to handle all options
@@ -48,7 +48,7 @@ func NewRouter(optionsHandler http.HandlerFunc, routes []Route, loggerWrapper Lo
 	}
 
 	//Combine the newrouter into this one
-	router := Router{
+	router := MuxRouter{
 		muxRouter,
 		make([]Route, 0),
 	}
@@ -75,7 +75,7 @@ func NewRouter(optionsHandler http.HandlerFunc, routes []Route, loggerWrapper Lo
 /**
 Determines if it is a public path based upon the routes
 */
-func (router *Router) addRoute(route Route, loggerWrapper LoggerWrapper) {
+func (router *MuxRouter) addRoute(route Route, loggerWrapper LoggerWrapper) {
 
 	// Define a new handler
 	var handler http.Handler = route.HandlerFunc
@@ -99,7 +99,7 @@ func (router *Router) addRoute(route Route, loggerWrapper LoggerWrapper) {
 /**
 Determines if it is a public path based upon the routes
 */
-func (router *Router) GetRoute(req *http.Request) *Route {
+func (router *MuxRouter) GetRoute(req *http.Request) *Route {
 
 	//Get the route name from the req
 	if muxRoute := mux.CurrentRoute(req); muxRoute != nil {

@@ -4,20 +4,21 @@
 package users_test
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/reaction-eng/restlib/middleware"
 	"github.com/reaction-eng/restlib/passwords"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/users"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 /**
 Function to carray along the
 */
 type routingEnv struct {
-	router *routing.Router
+	router *routing.MuxRouter
 }
 
 /**

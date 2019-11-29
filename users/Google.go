@@ -7,11 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/reaction-eng/restlib/configuration"
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/utils"
 	"golang.org/x/oauth2/google"
-	"net/http"
 
 	"golang.org/x/oauth2"
 	goauth2 "google.golang.org/api/oauth2/v2"
@@ -39,16 +40,13 @@ type GoogleHandler struct {
 /**
  * This struct is used
  */
-func NewGoogleHandler(helper *Helper, configFiles ...string) *GoogleHandler {
-	//Create a new config
-	config, _ := configuration.NewConfiguration(configFiles...)
-
+func NewGoogleHandler(helper *Helper, configuration configuration.Configuration) *GoogleHandler {
 	//Create a new
 	google := &GoogleHandler{
 		helper: helper,
 		oAuthConfig: &oauth2.Config{
-			ClientID:     config.GetStringFatal("google_client_id"),
-			ClientSecret: config.GetStringFatal("google_client_secret"),
+			ClientID:     configuration.GetStringFatal("google_client_id"),
+			ClientSecret: configuration.GetStringFatal("google_client_secret"),
 			Scopes:       []string{"email", "profile"},
 			Endpoint:     google.Endpoint,
 		},

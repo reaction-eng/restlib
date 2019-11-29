@@ -34,17 +34,9 @@ type Token struct {
 }
 
 //Load it during init
-func NewBasicHelper(configFiles ...string) *BasicHelper {
-	//Load in a config file
-	config, err := configuration.NewConfiguration(configFiles...)
-
-	//If there is an error
-	if err != nil {
-		log.Fatal("Cannot load config auth file: config.auth.json", err)
-	}
-
+func NewBasicHelper(configuration configuration.Configuration) *BasicHelper {
 	//Now get the token
-	jwtTokenPasswordString := config.GetString("token_password")
+	jwtTokenPasswordString := configuration.GetString("token_password")
 
 	//If it is null error
 	if len(jwtTokenPasswordString) < 60 {

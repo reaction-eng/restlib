@@ -24,7 +24,7 @@ type ResetRepoSql struct {
 	tableName string
 
 	//We need the emailer
-	emailer               email.Interface
+	emailer               email.Emailer
 	resetEmailConfig      PasswordResetConfig
 	activationEmailConfig PasswordResetConfig
 
@@ -45,23 +45,15 @@ const (
 )
 
 //Provide a method to make a new UserRepoSql
-func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configFile string) *ResetRepoSql {
-
-	//Create a config
-	config, err := configuration.NewConfiguration(configFile)
-
-	//If there is no error
-	if err != nil {
-		log.Fatal(err)
-	}
+func NewRepoMySql(db *sql.DB, tableName string, emailer email.Emailer, configuration configuration.Configuration) *ResetRepoSql {
 
 	//Build a reset and activation config
 	resetEmailConfig := PasswordResetConfig{}
 	activationEmailConfig := PasswordResetConfig{}
 
 	//Pull from the config
-	config.GetStruct("password_reset", &resetEmailConfig)
-	config.GetStruct("user_activation", &activationEmailConfig)
+	configuration.GetStruct("password_reset", &resetEmailConfig)
+	configuration.GetStruct("user_activation", &activationEmailConfig)
 
 	//Define a new repo
 	newRepo := ResetRepoSql{
@@ -74,7 +66,7 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configF
 
 	//Create the table if it is not already there
 	//Create a table
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, userId int, email TEXT, token TEXT, issued DATE, type INT, PRIMARY KEY (id) )")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, userId int, email TEXT, token TEXT, issued DATE, type INT, PRIMARY KEY (id) )")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -112,23 +104,14 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Interface, configF
 }
 
 //Provide a method to make a new UserRepoSql
-func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, configFile ...string) *ResetRepoSql {
-
-	//Create a config
-	config, err := configuration.NewConfiguration(configFile...)
-
-	//If there is no error
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Emailer, configuration configuration.Configuration) *ResetRepoSql {
 	//Build a reset and activation config
 	resetEmailConfig := PasswordResetConfig{}
 	activationEmailConfig := PasswordResetConfig{}
 
 	//Pull from the config
-	config.GetStruct("password_reset", &resetEmailConfig)
-	config.GetStruct("user_activation", &activationEmailConfig)
+	configuration.GetStruct("password_reset", &resetEmailConfig)
+	configuration.GetStruct("user_activation", &activationEmailConfig)
 
 	//Define a new repo
 	newRepo := ResetRepoSql{
@@ -141,7 +124,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Interface, c
 
 	//Create the table if it is not already there
 	//Create a table
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, userId int NOT NULL, email TEXT NOT NULL, token TEXT NOT NULL,issued DATE NOT NULL, type int NOT NULL)")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, userId int NOT NULL, email TEXT NOT NULL, token TEXT NOT NULL,issued DATE NOT NULL, type int NOT NULL)")
 
 	if err != nil {
 		log.Fatal(err)
@@ -202,7 +185,7 @@ func (repo *ResetRepoSql) IssueResetRequest(token string, userId int, emailAddre
 	}
 
 	//Now email
-	err = repo.emailer.SendEmailTemplateFile(&header, repo.resetEmailConfig.Template, resetInfo, nil)
+	err = repo.emailer.SendTemplateFile(&header, repo.resetEmailConfig.Template, resetInfo, nil)
 
 	//Return the user calcs
 	return err
@@ -231,7 +214,7 @@ func (repo *ResetRepoSql) IssueActivationRequest(token string, userId int, email
 	}
 
 	//Now email
-	err = repo.emailer.SendEmailTemplateFile(&header, repo.activationEmailConfig.Template, resetInfo, nil)
+	err = repo.emailer.SendTemplateFile(&header, repo.activationEmailConfig.Template, resetInfo, nil)
 
 	//Return the user calcs
 	return err
