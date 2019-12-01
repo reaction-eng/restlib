@@ -3,6 +3,7 @@ module github.com/reaction-eng/restlib
 go 1.12
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/SherClockHolmes/webpush-go v1.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/domodwyer/mailyak v3.1.1+incompatible
@@ -22,7 +23,6 @@ require (
 	github.com/nlopes/slack v0.5.0
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v1.0.0 // indirect
@@ -33,6 +33,5 @@ require (
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/tools v0.0.0-20191122000530-004141db30c2 // indirect
 	google.golang.org/api v0.7.0
 )

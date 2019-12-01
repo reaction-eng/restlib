@@ -7,17 +7,12 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/reaction-eng/restlib/configuration"
 	"golang.org/x/crypto/bcrypt"
 )
-
-/**
-gFile of static support functions for passwords creating, editing, hashing, etc.
-*/
 
 type BasicHelper struct {
 	//Keep a global password config
@@ -34,20 +29,19 @@ type Token struct {
 }
 
 //Load it during init
-func NewBasicHelper(configuration configuration.Configuration) *BasicHelper {
+func NewBasicHelper(configuration configuration.Configuration) (*BasicHelper, error) {
 	//Now get the token
 	jwtTokenPasswordString := configuration.GetString("token_password")
 
 	//If it is null error
 	if len(jwtTokenPasswordString) < 60 {
-		log.Fatal("The jwt token is not specified or not long enough.")
-
+		return nil, errors.New("the jwt token is not specified or not long enough")
 	}
+
 	//Store the byte array
 	return &BasicHelper{
 		jwtTokenPassword: []byte(jwtTokenPasswordString),
-	}
-
+	}, nil
 }
 
 /**
@@ -58,7 +52,6 @@ func (helper *BasicHelper) HashPassword(password string) string {
 	//Hash the password, there should be a salt
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hashedPassword)
-
 }
 
 /**
@@ -87,7 +80,6 @@ func (helper *BasicHelper) ComparePasswords(currentPwHash string, testingPasswor
 	} else {
 		return true
 	}
-
 }
 
 /**
@@ -99,9 +91,6 @@ func (helper *BasicHelper) TokenGenerator() string {
 	return fmt.Sprintf("%x", b)
 }
 
-/**
-  Compare passwords.  Determine if they match
-*/
 func (helper *BasicHelper) ValidateToken(tokenHeader string) (int, string, error) {
 
 	//Token is missing, returns with error code 403 Unauthorized
@@ -138,11 +127,9 @@ func (helper *BasicHelper) ValidateToken(tokenHeader string) (int, string, error
 	if !token.Valid {
 		//Return the error
 		return -1, "", errors.New("auth_forbidden")
-
 	}
 
 	return tk.UserId, tk.Email, nil
-
 }
 
 /**

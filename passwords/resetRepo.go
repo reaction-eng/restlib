@@ -3,39 +3,19 @@
 
 package passwords
 
-/**
-Define an interface that all Calc Repos must follow
-*/
-type ResetRepo interface {
+//go:generate mockgen -destination=../mocks/mock_resetRepo.go -package=mocks github.com/reaction-eng/restlib/passwords ResetRepo
 
-	/**
-	Issues a request for the user
-	*/
+type ResetRepo interface {
 	IssueResetRequest(token string, userId int, email string) error
 
-	/**
-	Issues a request for the user
-	*/
 	CheckForResetToken(userId int, reset_token string) (int, error)
 
-	/**
-	Issues a request for the user
-	*/
 	IssueActivationRequest(token string, userId int, email string) error
 
-	/**
-	Issues a request for the user
-	*/
 	CheckForActivationToken(userId int, activationToken string) (int, error)
 
-	/**
-	Issues a request for the user
-	*/
 	UseToken(id int) error
 
-	/**
-	Allow databases to be closed
-	*/
 	CleanUp()
 }
 
