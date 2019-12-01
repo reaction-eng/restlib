@@ -3,7 +3,7 @@
 
 package passwords
 
-//go:generate mockgen -destination=../mocks/mock_helper.go -package=mocks github.com/reaction-eng/restlib/passwords Helper
+//go:generate mockgen -destination=../mocks/mock_helper.go -package=mocks github.com/reaction-eng/restlib/mysql Helper
 
 type Helper interface {
 	HashPassword(password string) string

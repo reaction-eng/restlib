@@ -69,7 +69,7 @@ func (helper *BasicHelper) CreateJWTToken(userId int, email string) string {
 }
 
 /**
-  Compare passwords.  Determine if they match
+  Compare mysql.  Determine if they match
 */
 func (helper *BasicHelper) ComparePasswords(currentPwHash string, testingPassword string) bool {
 

@@ -123,7 +123,7 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	//Add in middleware/filter that respons to CORS
 	router.Use(middleware.MakeCORSMiddlewareFunc()) //Make sure to add the cross site permission first
 
-	//Add in middleware/filter that checks for user passwords
+	//Add in middleware/filter that checks for user mysql
 	router.Use(middleware.MakeJwtMiddlewareFunc(router, userRepo, nil, passHelper))
 
 	//Define the routing env

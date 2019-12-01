@@ -12,19 +12,18 @@ import (
 	"github.com/reaction-eng/restlib/email"
 )
 
+const TableName = "resetrequests"
+
 type ResetRepoSql struct {
 	//Hold on to the sql databased
 	db *sql.DB
-
-	//Also store the table name
-	tableName string
 
 	//We need the emailer
 	emailer               email.Emailer
 	resetEmailConfig      PasswordResetConfig
 	activationEmailConfig PasswordResetConfig
 
-	//Store the required statements to reduce comput time
+	//Store the required statements to reduce compute time
 	addRequestStatement *sql.Stmt
 	getRequestStatement *sql.Stmt
 	rmRequestStatement  *sql.Stmt
@@ -40,7 +39,7 @@ const (
 	reset      tokenType = 2
 )
 
-func NewRepoMySql(db *sql.DB, tableName string, emailer email.Emailer, configuration configuration.Configuration) (*ResetRepoSql, error) {
+func NewRepoMySql(db *sql.DB, emailer email.Emailer, configuration configuration.Configuration) (*ResetRepoSql, error) {
 
 	//Build a reset and activation config
 	resetEmailConfig := PasswordResetConfig{}
@@ -53,21 +52,13 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Emailer, configura
 	//Define a new repo
 	newRepo := ResetRepoSql{
 		db:                    db,
-		tableName:             tableName,
 		emailer:               emailer,
 		resetEmailConfig:      resetEmailConfig,
 		activationEmailConfig: activationEmailConfig,
 	}
 
-	//Create the table if it is not already there
-	//Create a table
-	//_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id int NOT NULL AUTO_INCREMENT, userId int, email TEXT, token TEXT, issued DATE, type INT, PRIMARY KEY (id) )")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
 	//Add request data to table
-	addRequest, err := db.Prepare("INSERT INTO " + tableName + " (userId,email, token, issued, type) VALUES (?, ?, ?, ?, ?)")
+	addRequest, err := db.Prepare("INSERT INTO " + TableName + " (userId,email, token, issued, type) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +67,7 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Emailer, configura
 	newRepo.addRequestStatement = addRequest
 
 	//pull the request from the table
-	getRequest, err := db.Prepare("SELECT * FROM " + tableName + " where userId = ? AND token = ? AND type = ?")
+	getRequest, err := db.Prepare("SELECT * FROM " + TableName + " where userId = ? AND token = ? AND type = ?")
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +76,7 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Emailer, configura
 	newRepo.getRequestStatement = getRequest
 
 	//pull the request from the table
-	rmRequest, err := db.Prepare("delete FROM " + tableName + " where id = ? limit 1")
+	rmRequest, err := db.Prepare("delete FROM " + TableName + " where id = ? limit 1")
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +89,7 @@ func NewRepoMySql(db *sql.DB, tableName string, emailer email.Emailer, configura
 
 }
 
-func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Emailer, configuration configuration.Configuration) (*ResetRepoSql, error) {
+func NewRepoPostgresSql(db *sql.DB, emailer email.Emailer, configuration configuration.Configuration) (*ResetRepoSql, error) {
 	//Build a reset and activation config
 	resetEmailConfig := PasswordResetConfig{}
 	activationEmailConfig := PasswordResetConfig{}
@@ -110,18 +101,13 @@ func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Emailer, con
 	//Define a new repo
 	newRepo := ResetRepoSql{
 		db:                    db,
-		tableName:             tableName,
 		emailer:               emailer,
 		resetEmailConfig:      resetEmailConfig,
 		activationEmailConfig: activationEmailConfig,
 	}
 
-	//Create the table if it is not already there
-	//Create a table
-	//_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(id SERIAL PRIMARY KEY, userId int NOT NULL, email TEXT NOT NULL, token TEXT NOT NULL,issued DATE NOT NULL, type int NOT NULL)")
-
 	//Add request data to table
-	addRequest, err := db.Prepare("INSERT INTO " + tableName + "(userId,email, token, issued, type) VALUES ($1, $2, $3, $4, $5)")
+	addRequest, err := db.Prepare("INSERT INTO " + TableName + "(userId,email, token, issued, type) VALUES ($1, $2, $3, $4, $5)")
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +116,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Emailer, con
 	newRepo.addRequestStatement = addRequest
 
 	//pull the request from the table
-	getRequest, err := db.Prepare("SELECT * FROM " + tableName + " where userId = $1 AND token = $2 AND type = $3")
+	getRequest, err := db.Prepare("SELECT * FROM " + TableName + " where userId = $1 AND token = $2 AND type = $3")
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +125,7 @@ func NewRepoPostgresSql(db *sql.DB, tableName string, emailer email.Emailer, con
 	newRepo.getRequestStatement = getRequest
 
 	//pull the request from the table
-	rmRequest, err := db.Prepare("delete FROM " + tableName + " where id = $1")
+	rmRequest, err := db.Prepare("delete FROM " + TableName + " where id = $1")
 	if err != nil {
 		return nil, err
 	}

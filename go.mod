@@ -13,6 +13,7 @@ require (
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/golang/mock v1.3.1
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.3
@@ -24,6 +25,7 @@ require (
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
+	github.com/rubenv/sql-migrate v0.0.0-20191121092708-da1cb182f00e
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect

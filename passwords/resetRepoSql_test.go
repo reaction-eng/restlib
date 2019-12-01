@@ -29,10 +29,9 @@ func TestNewRepoMySql(t *testing.T) {
 	}
 	defer db.Close()
 
-	tableName := "resetRepo"
-	mock.ExpectPrepare("INSERT INTO " + tableName)
-	mock.ExpectPrepare("SELECT (.+) FROM " + tableName)
-	mock.ExpectPrepare("delete FROM " + tableName)
+	mock.ExpectPrepare("INSERT INTO " + passwords.TableName)
+	mock.ExpectPrepare("SELECT (.+) FROM " + passwords.TableName)
+	mock.ExpectPrepare("delete FROM " + passwords.TableName)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -51,7 +50,7 @@ func TestNewRepoMySql(t *testing.T) {
 	})
 
 	// act
-	repoMySql, err := passwords.NewRepoMySql(db, tableName, mockEmailer, mockConfiguration)
+	repoMySql, err := passwords.NewRepoMySql(db, mockEmailer, mockConfiguration)
 
 	// assert
 	assert.Nil(t, err)
@@ -66,10 +65,9 @@ func TestNewRepoPostgresSql(t *testing.T) {
 	}
 	defer db.Close()
 
-	tableName := "resetRepo"
-	mock.ExpectPrepare("INSERT INTO " + tableName)
-	mock.ExpectPrepare("SELECT (.+) FROM " + tableName)
-	mock.ExpectPrepare("delete FROM " + tableName)
+	mock.ExpectPrepare("INSERT INTO " + passwords.TableName)
+	mock.ExpectPrepare("SELECT (.+) FROM " + passwords.TableName)
+	mock.ExpectPrepare("delete FROM " + passwords.TableName)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -88,7 +86,7 @@ func TestNewRepoPostgresSql(t *testing.T) {
 	})
 
 	// act
-	repoMySql, err := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+	repoMySql, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 	// assert
 	assert.Nil(t, err)
@@ -171,10 +169,9 @@ func TestResetRepoSql_IssueResetRequest(t *testing.T) {
 		// arrange
 		mockCtrl := gomock.NewController(t)
 
-		tableName := "resetRepo"
-		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, tableName)
+		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, passwords.TableName)
 
-		repo, err := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 		emailHeader := email.HeaderInfo{
 			Subject: "password_reset_subject",
@@ -190,7 +187,7 @@ func TestResetRepoSql_IssueResetRequest(t *testing.T) {
 			mockEmailer.EXPECT().SendTemplateFile(&emailHeader, "password_reset_template", resetInfo, nil).Times(1).Return(testCase.emailError)
 		}
 
-		dbMock.ExpectExec("INSERT INTO "+tableName).
+		dbMock.ExpectExec("INSERT INTO "+passwords.TableName).
 			WithArgs(testCase.userId, testCase.emailAddress, testCase.token, AnyTime{}, 2).
 			WillReturnResult(sqlmock.NewResult(0, 0)).
 			WillReturnError(testCase.execError)
@@ -258,10 +255,9 @@ func TestResetRepoSql_IssueActivationRequest(t *testing.T) {
 		// arrange
 		mockCtrl := gomock.NewController(t)
 
-		tableName := "resetRepo"
-		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, tableName)
+		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, passwords.TableName)
 
-		repo, err := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 		emailHeader := email.HeaderInfo{
 			Subject: "user_activation_subject",
@@ -277,7 +273,7 @@ func TestResetRepoSql_IssueActivationRequest(t *testing.T) {
 			mockEmailer.EXPECT().SendTemplateFile(&emailHeader, "user_activation_template", resetInfo, nil).Times(1).Return(testCase.emailError)
 		}
 
-		dbMock.ExpectExec("INSERT INTO "+tableName).
+		dbMock.ExpectExec("INSERT INTO "+passwords.TableName).
 			WithArgs(testCase.userId, testCase.emailAddress, testCase.token, AnyTime{}, 1). // one for activation
 			WillReturnResult(sqlmock.NewResult(0, 0)).
 			WillReturnError(testCase.execError)
@@ -370,15 +366,14 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 		// arrange
 		mockCtrl := gomock.NewController(t)
 
-		tableName := "resetRepo"
-		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, tableName)
+		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, passwords.TableName)
 
-		repo, err := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 		rows := sqlmock.NewRows([]string{"id", "userId", "email", "token", "issued", "type"}).
 			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, time.Now(), 1)
 
-		dbMock.ExpectQuery("SELECT (.+) FROM " + tableName).
+		dbMock.ExpectQuery("SELECT (.+) FROM " + passwords.TableName).
 			WillReturnRows(rows).
 			WillReturnError(testCase.queryError)
 
@@ -465,15 +460,14 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 		// arrange
 		mockCtrl := gomock.NewController(t)
 
-		tableName := "resetRepo"
-		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, tableName)
+		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, passwords.TableName)
 
-		repo, err := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 		rows := sqlmock.NewRows([]string{"id", "userId", "email", "token", "issued", "type"}).
 			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, time.Now(), 2)
 
-		dbMock.ExpectQuery("SELECT (.+) FROM " + tableName).
+		dbMock.ExpectQuery("SELECT (.+) FROM " + passwords.TableName).
 			WillReturnRows(rows).
 			WillReturnError(testCase.queryError)
 
@@ -512,12 +506,11 @@ func TestResetRepoSql_UseToken(t *testing.T) {
 		// arrange
 		mockCtrl := gomock.NewController(t)
 
-		tableName := "resetRepo"
-		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, tableName)
+		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, passwords.TableName)
 
-		repo, _ := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+		repo, _ := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
-		dbMock.ExpectExec("delete FROM " + tableName).
+		dbMock.ExpectExec("delete FROM " + passwords.TableName).
 			WithArgs(testCase.tokenId). // one for activation
 			WillReturnResult(sqlmock.NewResult(0, 0)).
 			WillReturnError(testCase.error)
@@ -541,16 +534,14 @@ func TestResetRepoSql_CleanUp(t *testing.T) {
 	// arrange
 	mockCtrl := gomock.NewController(t)
 
-	tableName := "resetRepo"
-
 	db, dbMock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dbMock.ExpectPrepare("INSERT INTO " + tableName).WillBeClosed()
-	dbMock.ExpectPrepare("SELECT (.+) FROM " + tableName).WillBeClosed()
-	dbMock.ExpectPrepare("delete FROM " + tableName).WillBeClosed()
+	dbMock.ExpectPrepare("INSERT INTO " + passwords.TableName).WillBeClosed()
+	dbMock.ExpectPrepare("SELECT (.+) FROM " + passwords.TableName).WillBeClosed()
+	dbMock.ExpectPrepare("delete FROM " + passwords.TableName).WillBeClosed()
 
 	mockEmailer := mocks.NewMockEmailer(mockCtrl)
 	mockConfiguration := mocks.NewMockConfiguration(mockCtrl)
@@ -565,7 +556,7 @@ func TestResetRepoSql_CleanUp(t *testing.T) {
 		as.Template = "test email template"
 	})
 
-	repo, _ := passwords.NewRepoPostgresSql(db, tableName, mockEmailer, mockConfiguration)
+	repo, _ := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 	// act
 	repo.CleanUp()

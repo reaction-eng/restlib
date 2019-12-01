@@ -23,3 +23,23 @@ go generate ./...
 
 ## Testing ##
 The Framework uses the builtin testing capabilities in go
+
+## DB Migrations ##
+All db migrations are handled using sql-migrate found at https://github.com/rubenv/sql-migrate. When using this as a library, you can act upon the migrations
+```go
+	db, err := sql.Open("postgres", dbString) //"root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true"
+	if err != nil{
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	restLibMigrations := migrations.Postgres()
+
+	migrate.SetTable("restlib_migrations")
+	n, err := migrate.Exec(db, "postgres", restLibMigrations, migrate.Up)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Applied %d migrations!\n", n)
+
+```
