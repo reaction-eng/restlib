@@ -5,10 +5,11 @@ package users
 
 import (
 	"encoding/json"
-	"github.com/reaction-eng/restlib/routing"
-	"github.com/reaction-eng/restlib/utils"
 	"net/http"
 	"strings"
+
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 )
 
 /**
@@ -76,13 +77,6 @@ func (handler *Handler) GetRoutes() []routing.Route {
 				HandlerFunc: handler.handleUserActivationPut,
 				Public:      true,
 			},
-			routing.Route{ //Allow for the user to login
-				Name:        "UserLogin",
-				Method:      "POST",
-				Pattern:     "/users/login",
-				HandlerFunc: handler.handleUserLogin,
-				Public:      true,
-			},
 			routing.Route{ //Allow for the user to get an update of them selves
 				Name:        "PasswordChange",
 				Method:      "POST",
@@ -110,6 +104,13 @@ func (handler *Handler) GetRoutes() []routing.Route {
 
 	//Add in the normal routes
 	routes = append(routes,
+		routing.Route{ //Allow for the user to login
+			Name:        "UserLogin",
+			Method:      "POST",
+			Pattern:     "/users/login",
+			HandlerFunc: handler.handleUserLogin,
+			Public:      true,
+		},
 		routing.Route{ //Allow for the user to login
 			Name:        "User Api Documentation",
 			Method:      "GET",
