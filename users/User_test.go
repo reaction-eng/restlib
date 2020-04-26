@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/reaction-eng/restlib/configuration"
+
 	"github.com/reaction-eng/restlib/middleware"
 	"github.com/reaction-eng/restlib/passwords"
 	"github.com/reaction-eng/restlib/routing"
@@ -93,7 +95,8 @@ func getDefaultEnv(t *testing.T) *routingEnv {
 	userRepo := users.NewRepoMemory()
 
 	//Make a basic
-	passHelper := passwords.NewBasicHelper(configString)
+	config, _ := configuration.NewJson(configString)
+	passHelper, _ := passwords.NewBasicHelper(config)
 
 	//Make a user helper
 	helper := users.NewUserHelper(userRepo, nil, passHelper)

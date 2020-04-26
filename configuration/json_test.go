@@ -336,7 +336,9 @@ func TestJson_GetConfig(t *testing.T) {
 		if result == nil {
 			assert.Equal(t, expected, result)
 		} else {
-			assert.Equal(t, expected.params, result.params)
+			resultJson, ok := result.(*Json)
+			assert.True(t, ok)
+			assert.Equal(t, expected.params, resultJson.params)
 		}
 	}
 }

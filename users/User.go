@@ -3,7 +3,7 @@
 
 package users
 
-//go:generate mockgen -destination=../mocks/user.go -package=mocks github.com/reaction-eng/restlib/users User
+//go:generate mockgen -destination=../mocks/mock_user.go -package=mocks github.com/reaction-eng/restlib/users User
 
 //a struct to rep user account
 type User interface {

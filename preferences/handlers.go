@@ -5,40 +5,32 @@ package preferences
 
 import (
 	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/users"
 	"github.com/reaction-eng/restlib/utils"
-	"io/ioutil"
-	"net/http"
 )
 
-/**
- * This struct is used
- */
 type Handler struct {
 	// The user handler needs to have access to user repo
 	userRepo users.Repo
 
-	//Store the repo for the roles
-	roleRepo Repo
+	prefRepo Repo
 }
 
-/**
- * This struct is used
- */
-func NewHandler(userRepo users.Repo, roleRepo Repo) *Handler {
+func NewHandler(userRepo users.Repo, prefRepo Repo) *Handler {
 	//Build a new User Handler
 	handler := Handler{
 		userRepo: userRepo,
-		roleRepo: roleRepo,
+		prefRepo: prefRepo,
 	}
 
 	return &handler
 }
 
-/**
-Function used to get routes
-*/
 func (handler *Handler) GetRoutes() []routing.Route {
 
 	var routes = []routing.Route{
@@ -60,12 +52,15 @@ func (handler *Handler) GetRoutes() []routing.Route {
 
 }
 
-/**
-*Get the current up to date user
- */
 func (handler *Handler) handleUserPreferencesGet(w http.ResponseWriter, r *http.Request) {
 
 	//We have gone through the auth, so we should know the id of the logged in user
+	loggedInUserString := r.Context().Value("user")
+	if loggedInUserString == nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, errors.New("no_user_logged_in"))
+		return
+	}
+
 	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
 
 	//Get the user
@@ -77,8 +72,7 @@ func (handler *Handler) handleUserPreferencesGet(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//Get the list of permissions
-	perf, err := handler.roleRepo.GetPreferences(user)
+	perf, err := handler.prefRepo.GetPreferences(user)
 
 	//Check to see if the user was created
 	if err == nil {
@@ -89,9 +83,6 @@ func (handler *Handler) handleUserPreferencesGet(w http.ResponseWriter, r *http.
 
 }
 
-/**
-*Get the current up to date user
- */
 func (handler *Handler) handleUserPreferencesSet(w http.ResponseWriter, r *http.Request) {
 
 	//We have gone through the auth, so we should know the id of the logged in user
@@ -118,8 +109,7 @@ func (handler *Handler) handleUserPreferencesSet(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//Get the list of permissions
-	pref, err := handler.roleRepo.SetPreferences(user, &settings)
+	pref, err := handler.prefRepo.SetPreferences(user, &settings)
 
 	//Check to see if the user was created
 	if err == nil {

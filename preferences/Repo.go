@@ -3,6 +3,8 @@
 
 package preferences
 
+//go:generate mockgen -destination=../mocks/mock_preferencesRepo.go -package=mocks -mock_names Repo=MockPreferencesRepo github.com/reaction-eng/restlib/preferences Repo
+
 import (
 	"github.com/reaction-eng/restlib/users"
 )

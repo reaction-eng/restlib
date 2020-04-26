@@ -3,7 +3,7 @@
 
 package passwords
 
-//go:generate mockgen -destination=../mocks/mock_resetRepo.go -package=mocks github.com/reaction-eng/restlib/mysql ResetRepo
+//go:generate mockgen -destination=../mocks/mock_resetRepo.go -package=mocks github.com/reaction-eng/restlib/passwords ResetRepo
 
 type ResetRepo interface {
 	IssueResetRequest(token string, userId int, email string) error

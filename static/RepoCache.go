@@ -6,31 +6,22 @@ package static
 import (
 	"github.com/reaction-eng/restlib/cache"
 	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/file"
 )
 
-/**
-Define a struct for RepoMem for news
-*/
 type RepoCache struct {
 	//Store the cache
 	cas cache.Cache
 
-	//We also need googl
-	drive *google.gDrive
+	drive file.Storage
 
 	//Store the public and private
-	privateConfig *configuration.Configuration
-	publicConfig  *configuration.Configuration
+	privateConfig configuration.Configuration
+	publicConfig  configuration.Configuration
 }
 
-//Provide a method to make a new AnimalRepoSql
-func NewRepoCache(drive *google.gDrive, cas cache.Cache, privateConfigFile string, publicConfigFile string) *RepoCache {
+func NewRepoCache(drive file.Storage, cas cache.Cache, privateConfig configuration.Configuration, publicConfig configuration.Configuration) *RepoCache {
 
-	//Create a new config
-	privateConfig, _ := configuration.NewConfiguration(privateConfigFile)
-	publicConfig, _ := configuration.NewConfiguration(publicConfigFile)
-
-	//Define a new repo
 	newRepo := RepoCache{
 		cas:           cas,
 		drive:         drive,

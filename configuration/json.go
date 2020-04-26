@@ -170,7 +170,7 @@ func (jsonConfig *Json) GetKeys() []string {
 
 }
 
-func (jsonConfig *Json) GetConfig(key string) *Json {
+func (jsonConfig *Json) GetConfig(key string) Configuration {
 	//Get the child interface
 	childConfigInterface := jsonConfig.Get(key)
 

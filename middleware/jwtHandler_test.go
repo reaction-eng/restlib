@@ -402,7 +402,6 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 		// assert
 		if testCase.next {
-
 			for k, v := range testCase.context {
 				ctx := context.WithValue(r.Context(), k, v)
 				r = r.WithContext(ctx)
