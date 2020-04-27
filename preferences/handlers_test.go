@@ -1,11 +1,11 @@
-// Copyright 2019 Reaction Engineering International. All rights reserved.
-// Use of this source code is governed by the MIT license in the file LICENSE.txt.
-
 package preferences_test
 
 import (
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/reaction-eng/restlib/users"
@@ -34,29 +34,74 @@ func TestHandler_handleUserPreferencesGet(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	testCases := []struct {
-		user     func() users.User
-		status   int
-		response string
+		comment          string
+		user             func() users.User
+		userError        error
+		preferences      *preferences.Preferences
+		preferencesError error
+		expectedStatus   int
+		expectedResponse string
 	}{
-		/*{
-			func() users.User {
+		{
+			comment: "with user error",
+			user: func() users.User {
 				user := mocks.NewMockUser(mockCtrl)
-				user.EXPECT().Id().Return(101).Times(1)
-
+				user.EXPECT().Id().Return(101).MaxTimes(1)
 				return user
 			},
-		},*/
+			userError:        errors.New("user_db_error"),
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"user_db_error\",\"status\":false}\n",
+		},
 		{
-			func() users.User { return nil },
-			http.StatusForbidden,
-			"{\"message\":\"no_user_logged_in\",\"status\":false}\n",
+			comment: "with preferences error",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusServiceUnavailable,
+			expectedResponse: "{\"message\":\"preference_error\",\"status\":false}\n",
+		},
+		{
+			comment: "with user and preferences errors",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			userError:        errors.New("user_db_error"),
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"user_db_error\",\"status\":false}\n",
+		},
+		{
+			comment: "all valid",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			preferences:      &preferences.Preferences{Settings: &preferences.SettingGroup{Settings: map[string]string{"info": "123"}}},
+			expectedStatus:   http.StatusOK,
+			expectedResponse: "{\"settings\":{\"settings\":{\"info\":\"123\"},\"subgroup\":null},\"options\":null}\n",
+		},
+		{
+			comment:          "no user logged in",
+			user:             func() users.User { return nil },
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"no_user_logged_in\",\"status\":false}\n",
 		},
 	}
 
 	// arrange
 	for _, testCase := range testCases {
 		mockUserRepo := mocks.NewMockUserRepo(mockCtrl)
+		mockUserRepo.EXPECT().GetUser(101).MaxTimes(1).Return(testCase.user(), testCase.userError)
+
 		mockPrefRepo := mocks.NewMockPreferencesRepo(mockCtrl)
+		mockPrefRepo.EXPECT().GetPreferences(testCase.user()).MaxTimes(1).Return(testCase.preferences, testCase.preferencesError)
 
 		handler := preferences.NewHandler(mockUserRepo, mockPrefRepo)
 
@@ -72,8 +117,142 @@ func TestHandler_handleUserPreferencesGet(t *testing.T) {
 		assert.NotNil(t, route)
 		assert.Equal(t, false, route.Public)
 		assert.Nil(t, route.ReqPermissions)
-		assert.Equal(t, testCase.status, w.Result().StatusCode)
-		assert.Equal(t, testCase.response, w.Body.String())
+		assert.Equal(t, testCase.expectedStatus, w.Result().StatusCode)
+		assert.Equal(t, testCase.expectedResponse, w.Body.String())
+	}
+
+}
+
+func TestHandler_handleUserPreferencesSet(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testCases := []struct {
+		comment          string
+		user             func() users.User
+		userError        error
+		body             io.Reader
+		preferences      *preferences.Preferences
+		preferencesError error
+		expectedStatus   int
+		expectedResponse string
+	}{
+		{
+			comment:          "no user logged in",
+			user:             func() users.User { return nil },
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"no_user_logged_in\",\"status\":false}\n",
+		},
+
+		{
+			comment: "with user error",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			userError:        errors.New("user_db_error"),
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"user_db_error\",\"status\":false}\n",
+		},
+		{
+			comment: "with user and preference error",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			userError:        errors.New("user_db_error"),
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"user_db_error\",\"status\":false}\n",
+		},
+		{
+			comment: "with preference error and body",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			body:             strings.NewReader("{\"info\":\"123\"}"),
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusServiceUnavailable,
+			expectedResponse: "{\"message\":\"preference_error\",\"status\":false}\n",
+		},
+		{
+			comment: "without body",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: "{\"message\":\"unexpected end of JSON input\",\"status\":false}\n",
+		},
+		{
+			comment: "with bad body",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			body:             strings.NewReader("{\"settings\"null}"),
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: "{\"message\":\"invalid character 'n' after object key\",\"status\":false}\n",
+		},
+		{
+			comment: "with user and preference error and body",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			body:             strings.NewReader("{\"info\":\"123\"}"),
+			userError:        errors.New("user_db_error"),
+			preferencesError: errors.New("preference_error"),
+			expectedStatus:   http.StatusForbidden,
+			expectedResponse: "{\"message\":\"user_db_error\",\"status\":false}\n",
+		},
+		{
+			comment: "all good",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(101).MaxTimes(1)
+				return user
+			},
+			body:             strings.NewReader("{\"info\":\"123\"}"),
+			preferences:      &preferences.Preferences{Settings: &preferences.SettingGroup{Settings: map[string]string{"info": "123"}}},
+			expectedStatus:   http.StatusOK,
+			expectedResponse: "{\"settings\":{\"settings\":{\"info\":\"123\"},\"subgroup\":null},\"options\":null}\n",
+		},
+	}
+
+	// arrange
+	for _, testCase := range testCases {
+		mockUserRepo := mocks.NewMockUserRepo(mockCtrl)
+		mockUserRepo.EXPECT().GetUser(101).MaxTimes(1).Return(testCase.user(), testCase.userError)
+
+		mockPrefRepo := mocks.NewMockPreferencesRepo(mockCtrl)
+		mockPrefRepo.EXPECT().SetPreferences(testCase.user(), gomock.Any()).MaxTimes(1).Return(testCase.preferences, testCase.preferencesError)
+
+		handler := preferences.NewHandler(mockUserRepo, mockPrefRepo)
+
+		router := mocks.NewTestRouter(handler, testCase.user())
+
+		req := httptest.NewRequest("POST", "http://localhost/users/preferences", testCase.body)
+		w := httptest.NewRecorder()
+
+		// act
+		route := router.Handle(w, req)
+
+		// assert
+		assert.NotNil(t, route)
+		assert.Equal(t, false, route.Public)
+		assert.Nil(t, route.ReqPermissions)
+		assert.Equal(t, testCase.expectedStatus, w.Result().StatusCode)
+		assert.Equal(t, testCase.expectedResponse, w.Body.String())
 	}
 
 }

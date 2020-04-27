@@ -34,13 +34,13 @@ func NewHandler(userRepo users.Repo, prefRepo Repo) *Handler {
 func (handler *Handler) GetRoutes() []routing.Route {
 
 	var routes = []routing.Route{
-		{ //Allow for the user to login
+		{
 			Name:        "Get the User Preferences",
 			Method:      "GET",
 			Pattern:     "/users/preferences",
 			HandlerFunc: handler.handleUserPreferencesGet,
 		},
-		{ //Allow for the user to login
+		{
 			Name:        "Set the User Preferences",
 			Method:      "POST",
 			Pattern:     "/users/preferences",
@@ -68,7 +68,7 @@ func (handler *Handler) handleUserPreferencesGet(w http.ResponseWriter, r *http.
 
 	//If there is no error
 	if err != nil {
-		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (handler *Handler) handleUserPreferencesGet(w http.ResponseWriter, r *http.
 	if err == nil {
 		utils.ReturnJson(w, http.StatusOK, perf)
 	} else {
-		utils.ReturnJsonStatus(w, http.StatusUnsupportedMediaType, false, err.Error())
+		utils.ReturnJsonStatus(w, http.StatusServiceUnavailable, false, err.Error())
 	}
 
 }
@@ -86,6 +86,11 @@ func (handler *Handler) handleUserPreferencesGet(w http.ResponseWriter, r *http.
 func (handler *Handler) handleUserPreferencesSet(w http.ResponseWriter, r *http.Request) {
 
 	//We have gone through the auth, so we should know the id of the logged in user
+	loggedInUserString := r.Context().Value("user") //Grab the id of the user that send the request
+	if loggedInUserString == nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, errors.New("no_user_logged_in"))
+		return
+	}
 	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
 
 	//Get the user
@@ -93,11 +98,10 @@ func (handler *Handler) handleUserPreferencesSet(w http.ResponseWriter, r *http.
 
 	//If there is no error
 	if err != nil {
-		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
 		return
 	}
 
-	//Load in a limited amount of data from the body
 	body, err := ioutil.ReadAll(r.Body)
 
 	//Create an empty new calc
@@ -105,7 +109,7 @@ func (handler *Handler) handleUserPreferencesSet(w http.ResponseWriter, r *http.
 
 	//Now marshal it into the body
 	if err := json.Unmarshal(body, &settings); err != nil {
-		utils.ReturnJsonStatus(w, http.StatusForbidden, false, err.Error())
+		utils.ReturnJsonStatus(w, http.StatusBadRequest, false, err.Error())
 		return
 	}
 
@@ -115,7 +119,7 @@ func (handler *Handler) handleUserPreferencesSet(w http.ResponseWriter, r *http.
 	if err == nil {
 		utils.ReturnJson(w, http.StatusOK, pref)
 	} else {
-		utils.ReturnJsonStatus(w, http.StatusUnsupportedMediaType, false, err.Error())
+		utils.ReturnJsonStatus(w, http.StatusServiceUnavailable, false, err.Error())
 	}
 
 }
