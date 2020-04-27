@@ -329,16 +329,18 @@ func TestJson_GetConfig(t *testing.T) {
 		result := jsonConfig.GetConfig(testCase.key)
 
 		// assert
-		var expected *Json
+		var expected Configuration
 		if len(testCase.expectedConfig) > 0 {
 			expected, _ = NewJson(testCase.expectedConfig)
 		}
 		if result == nil {
 			assert.Equal(t, expected, result)
 		} else {
+			expectedJson, ok := expected.(*Json)
+			assert.True(t, ok)
 			resultJson, ok := result.(*Json)
 			assert.True(t, ok)
-			assert.Equal(t, expected.params, resultJson.params)
+			assert.Equal(t, expectedJson.params, resultJson.params)
 		}
 	}
 }
