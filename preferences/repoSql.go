@@ -5,13 +5,12 @@ package preferences
 
 import (
 	"database/sql"
+
 	"github.com/reaction-eng/restlib/users"
-	"log"
 )
 
-/**
-Define a struct for Repo for use with users
-*/
+const TableName = "userpref"
+
 type RepoSql struct {
 	//Hold on to the sql databased
 	db *sql.DB
@@ -27,85 +26,55 @@ type RepoSql struct {
 	baseOptions *OptionGroup
 }
 
-//Provide a method to make a new UserRepoSql
-func NewRepoMySql(db *sql.DB, tableName string, baseOptions *OptionGroup) *RepoSql {
-
+func NewRepoMySql(db *sql.DB, baseOptions *OptionGroup) (*RepoSql, error) {
 	//Define a new repo
 	newRepo := RepoSql{
 		db:          db,
-		tableName:   tableName,
 		baseOptions: baseOptions,
 	}
 
-	//Create the table if it is not already there
-	//Create a table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(userId int NOT NULL, settings TEXT NOT NULL, PRIMARY KEY (userId) )")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	//Get the settings
-	getSetting, err := db.Prepare("SELECT settings FROM " + tableName + " WHERE userID = ?")
+	getSetting, err := db.Prepare("SELECT settings FROM " + TableName + " WHERE userID = ?")
 	//Check for error
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
+	}
+	newRepo.getSettingFromDbCmd = getSetting
+
+	setSetting, err := db.Prepare("INSERT INTO " + TableName + "(userId,settings) VALUES (?,?) ON DUPLICATE KEY UPDATE settings = VALUES(settings)")
+	//Check for error
+	if err != nil {
+		return nil, err
+	}
+	newRepo.setSettingIntoDbCmd = setSetting
+
+	return &newRepo, nil
+}
+
+func NewRepoPostgresSql(db *sql.DB, baseOptions *OptionGroup) (*RepoSql, error) {
+	//Define a new repo
+	newRepo := RepoSql{
+		db:          db,
+		baseOptions: baseOptions,
+	}
+
+	getSetting, err := db.Prepare("SELECT settings FROM " + TableName + " WHERE userID = $1")
+	//Check for error
+	if err != nil {
+		return nil, err
 	}
 	newRepo.getSettingFromDbCmd = getSetting
 
 	//Get the settings
-	setSetting, err := db.Prepare("INSERT INTO " + tableName + "(userId,settings) VALUES (?,?) ON DUPLICATE KEY UPDATE settings = VALUES(settings)")
+	setSetting, err := db.Prepare("INSERT INTO " + TableName + "(userId,settings) VALUES ($1, $2) ON CONFLICT (userId) DO UPDATE SET settings = $2")
 	//Check for error
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	newRepo.setSettingIntoDbCmd = setSetting
 
-	//Return a point
-	return &newRepo
-
+	return &newRepo, nil
 }
 
-//Provide a method to make a new UserRepoSql
-func NewRepoPostgresSql(db *sql.DB, tableName string, baseOptions *OptionGroup) *RepoSql {
-
-	//Define a new repo
-	newRepo := RepoSql{
-		db:          db,
-		tableName:   tableName,
-		baseOptions: baseOptions,
-	}
-
-	//Create the table if it is not already there
-	//Create a table
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + "(userId SERIAL PRIMARY KEY, settings TEXT NOT NULL)")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	//Get the settings
-	getSetting, err := db.Prepare("SELECT settings FROM " + tableName + " WHERE userID = $1")
-	//Check for error
-	if err != nil {
-		log.Fatal(err)
-	}
-	newRepo.getSettingFromDbCmd = getSetting
-
-	//Get the settings
-	setSetting, err := db.Prepare("INSERT INTO " + tableName + "(userId,settings) VALUES ($1, $2) ON CONFLICT (userId) DO UPDATE SET settings = $2")
-	//Check for error
-	if err != nil {
-		log.Fatal(err)
-	}
-	newRepo.setSettingIntoDbCmd = setSetting
-
-	//Return a point
-	return &newRepo
-
-}
-
-/**
-Get the user with the email.  An error is thrown is not found
-*/
 func (repo *RepoSql) GetPreferences(user users.User) (*Preferences, error) {
 	//Get the settings from the db
 	settings, err := repo.getSettingsFromDb(user)
@@ -126,9 +95,6 @@ func (repo *RepoSql) GetPreferences(user users.User) (*Preferences, error) {
 
 }
 
-/**
-Get the user with the email.  An error is thrown is not found
-*/
 func (repo *RepoSql) getSettingsFromDb(user users.User) (*SettingGroup, error) {
 	//Get the id
 	var setting *SettingGroup
@@ -158,11 +124,8 @@ func (repo *RepoSql) SetPreferences(user users.User, userSetting *SettingGroup) 
 
 }
 
-/**
-Nothing much to do for the clean up
-*/
 func (repo *RepoSql) CleanUp() {
 	//Close all of the prepared statements
 	repo.getSettingFromDbCmd.Close()
-
+	repo.setSettingIntoDbCmd.Close()
 }

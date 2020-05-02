@@ -5,7 +5,6 @@ package preferences
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 )
 
@@ -18,8 +17,8 @@ const (
 	Bool   OptionType = "bool"
 )
 
-//Restore an optiosn group from a file
-func LoadOptionsGroup(jsonFile string) *OptionGroup {
+//Restore an options group from a file
+func LoadOptionsGroup(jsonFile string) (*OptionGroup, error) {
 
 	optGroup := &OptionGroup{}
 
@@ -29,13 +28,17 @@ func LoadOptionsGroup(jsonFile string) *OptionGroup {
 	if err == nil {
 		//Get the json and add to the params
 		jsonParser := json.NewDecoder(configFileStream)
-		jsonParser.Decode(&optGroup)
+		err = jsonParser.Decode(&optGroup)
+		if err != nil {
+			return nil, err
+		}
+
 		configFileStream.Close()
 	} else {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return optGroup
+	return optGroup, nil
 }
 
 type Option struct {

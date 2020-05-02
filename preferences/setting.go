@@ -10,12 +10,9 @@ import (
 	"strconv"
 )
 
-//Get the setting group
 type SettingGroup struct {
-	//And the value
 	Settings map[string]string `json:"settings"`
 
-	//We can also old other groups
 	SubGroup map[string]*SettingGroup `json:"subgroup"`
 }
 
@@ -55,7 +52,6 @@ func (setGroup *SettingGroup) GetSubGroup(id string) *SettingGroup {
 	}
 }
 
-//Provide a way to get the sub group
 func (setGroup *SettingGroup) GetValueAsString(id string) (string, error) {
 	//See if there is a settings group
 	if group, found := setGroup.Settings[id]; found {
@@ -65,7 +61,6 @@ func (setGroup *SettingGroup) GetValueAsString(id string) (string, error) {
 	}
 }
 
-//Provide a way to get the sub group
 func (setGroup *SettingGroup) GetValueAsBool(id string) (bool, error) {
 	//Get the value
 	value, err := setGroup.GetValueAsString(id)
@@ -74,12 +69,11 @@ func (setGroup *SettingGroup) GetValueAsBool(id string) (bool, error) {
 	}
 
 	//Now convert to bool
-	valueBool, err := strconv.ParseBool(value)
+	valueBool, _ := strconv.ParseBool(value)
 	return valueBool, nil
 
 }
 
-//Provide a way to get the sub group
 func (setGroup *SettingGroup) GetSettingAsBool(tree []string) (bool, error) {
 	//Start with the current subGroup
 	subGroup := setGroup
@@ -102,7 +96,6 @@ func (setGroup *SettingGroup) GetSettingAsString(tree []string) (string, error) 
 	//March down the list of subgroups until we get the tree
 	for i := 0; i < len(tree)-1; i++ {
 		subGroup = subGroup.GetSubGroup(tree[i])
-
 	}
 
 	//Now get the last value

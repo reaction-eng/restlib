@@ -9,9 +9,6 @@ import (
 	"github.com/reaction-eng/restlib/users"
 )
 
-/**
-Define an interface for roles
-*/
 type Repo interface {
 	/**
 	Get the preferences for this repo
