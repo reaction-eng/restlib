@@ -5,6 +5,7 @@ package users
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -12,13 +13,9 @@ import (
 	"github.com/reaction-eng/restlib/utils"
 )
 
-/**
- * This struct is used
- */
 type Handler struct {
-
 	//Store the user helper
-	userHelper *Helper
+	userHelper Helper
 
 	//Keep track if we want to allow userCreation
 	allowUserCreation bool
@@ -27,7 +24,7 @@ type Handler struct {
 /**
  * This struct is used
  */
-func NewHandler(userHelper *Helper, allowUserCreation bool) *Handler {
+func NewHandler(userHelper Helper, allowUserCreation bool) *Handler {
 	//Build a new User Handler
 	handler := Handler{
 		userHelper:        userHelper,
@@ -146,12 +143,10 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	//Create an empty new user
 	newUser := handler.userHelper.NewEmptyUser()
 
-	/**
-	Define a struct for just updating password
-	*/
 	type newUserStruct struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email          string `json:"email"`
+		Password       string `json:"password"`
+		OrganizationId int    `json:"organizationId`
 	}
 
 	//Create the new user
@@ -162,41 +157,31 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, err.Error())
 		return
-
 	}
 
 	//Copy over the new user data
 	newUser.SetEmail(newUserInfo.Email)
 	newUser.SetPassword(newUserInfo.Password)
+	newUser.AddOrganization(newUserInfo.OrganizationId)
 
-	//Now create the new suer
-	err = handler.userHelper.createUser(newUser)
+	//Now create the new user
+	err = handler.userHelper.CreateUser(newUser)
 
 	if err != nil {
 		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, err.Error())
 		return
 	}
-
-	//Check to see if the user was created
-	if err == nil {
-		utils.ReturnJsonStatus(w, http.StatusCreated, true, "create_user_added")
-	} else {
-		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, err.Error())
-	}
-
+	utils.ReturnJsonStatus(w, http.StatusCreated, true, "create_user_added")
 }
 
 /**
 Function used to create new user
 */
 func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) {
-
-	/**
-	Define a struct for just updating password
-	*/
 	type loginUserStruct struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email          string `json:"email"`
+		Password       string `json:"password"`
+		OrganizationId int    `json:"organizationId"`
 	}
 
 	userCred := &loginUserStruct{}
@@ -209,7 +194,6 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 
 	}
 
-	//Now look up the user
 	user, err := handler.userHelper.GetUserByEmail(strings.TrimSpace(strings.ToLower(userCred.Email)))
 
 	//check for an error
@@ -220,7 +204,7 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//We have the user, try to login
-	user, err = handler.userHelper.login(userCred.Password, user)
+	user, err = handler.userHelper.Login(userCred.Password, userCred.OrganizationId, user)
 
 	//If there is an error, don't login
 	if err != nil {
@@ -229,29 +213,29 @@ func (handler *Handler) handleUserLogin(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	//Check to see if the user was created
-	if err == nil {
-		utils.ReturnJson(w, http.StatusCreated, user)
-	} else {
-		utils.ReturnJsonError(w, http.StatusForbidden, err)
-	}
-
+	utils.ReturnJson(w, http.StatusCreated, user)
 }
 
 /**
-Updates the password for this user
+updates everything but the password for the user
 */
 func (handler *Handler) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 
+	loggedInUserString := r.Context().Value("user") //Grab the id of the user that send the request
+	if loggedInUserString == nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, errors.New("no_user_logged_in"))
+		return
+	}
+
 	//We have gone through the auth, so we should know the id of the logged in user
-	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+	loggedInUser := loggedInUserString.(int) //Grab the id of the user that send the request
 
 	//Now load the current user from the repo
 	user, err := handler.userHelper.GetUser(loggedInUser)
 
 	//Check for an error
 	if err != nil {
-		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
 		return
 	}
 
@@ -264,13 +248,13 @@ func (handler *Handler) handleUserUpdate(w http.ResponseWriter, r *http.Request)
 	}
 
 	//Now update the user
-	user, err = handler.userHelper.updateUser(loggedInUser, user)
+	user, err = handler.userHelper.Update(loggedInUser, user)
 
 	//Check to see if the user was created
 	if err == nil {
 		utils.ReturnJson(w, http.StatusAccepted, user)
 	} else {
-		utils.ReturnJsonError(w, http.StatusForbidden, err)
+		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
 	}
 
 }
@@ -280,18 +264,22 @@ Get the current up to date user
 */
 func (handler *Handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 
-	//We have gone through the auth, so we should know the id of the logged in user
-	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+	loggedInUserString := r.Context().Value("user") //Grab the id of the user that send the request
+	if loggedInUserString == nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, errors.New("no_user_logged_in"))
+		return
+	}
+	loggedInUser := loggedInUserString.(int) //Grab the id of the user that send the request
 
 	//Get the user
 	user, err := handler.userHelper.GetUser(loggedInUser)
 
-	//Make sure we null the password
-	//Blank out the password before returning
-	user.SetPassword("")
-
 	//Check to see if the user was created
 	if err == nil {
+		//Make sure we null the password
+		//Blank out the password before returning
+		user.SetPassword("")
+
 		utils.ReturnJson(w, http.StatusOK, user)
 	} else {
 		utils.ReturnJsonStatus(w, http.StatusUnsupportedMediaType, false, err.Error())
@@ -303,11 +291,19 @@ func (handler *Handler) handleUserGet(w http.ResponseWriter, r *http.Request) {
 Updates the password for this user
 */
 func (handler *Handler) handlePasswordUpdate(w http.ResponseWriter, r *http.Request) {
-
-	//We have gone through the auth, so we should know the id of the logged in user
-	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+	loggedInUserString := r.Context().Value("user") //Grab the id of the user that send the request
+	if loggedInUserString == nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, errors.New("no_user_logged_in"))
+		return
+	}
+	loggedInUser := loggedInUserString.(int) //Grab the id of the user that send the request
 
 	//Create a new password change object
+	type updatePasswordChangeStruct struct {
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		PasswordOld string `json:"passwordold"`
+	}
 	info := updatePasswordChangeStruct{}
 
 	//Now get the json info
@@ -319,7 +315,7 @@ func (handler *Handler) handlePasswordUpdate(w http.ResponseWriter, r *http.Requ
 	}
 
 	//Now update the password
-	err = handler.userHelper.passwordChange(loggedInUser, info)
+	err = handler.userHelper.PasswordChange(loggedInUser, info.Email, info.Password, info.PasswordOld)
 
 	//Check to see if the user was created
 	if err == nil {
@@ -341,6 +337,7 @@ func (handler *Handler) handlePasswordResetGet(w http.ResponseWriter, r *http.Re
 	//Only take the first one
 	if !ok || len(keys[0]) < 1 {
 		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, "password_change_missing_email")
+		return
 	}
 
 	//Get the email
@@ -356,11 +353,11 @@ func (handler *Handler) handlePasswordResetGet(w http.ResponseWriter, r *http.Re
 	}
 
 	//Now issue a request
-	err = handler.userHelper.IssueResetRequest(handler.userHelper.passwordHelper.TokenGenerator(), user.Id(), user.Email())
+	err = handler.userHelper.IssueResetRequest(handler.userHelper.TokenGenerator(), user.Id(), user.Email())
 
 	//There was a real error return
 	if err != nil {
-		utils.ReturnJsonError(w, http.StatusNotFound, err)
+		utils.ReturnJsonError(w, http.StatusServiceUnavailable, err)
 		return
 	}
 
@@ -369,9 +366,6 @@ func (handler *Handler) handlePasswordResetGet(w http.ResponseWriter, r *http.Re
 
 }
 
-/**
-Function to request a password change
-*/
 func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Request) {
 
 	//Define a local struct to get the email out of the request
@@ -411,7 +405,7 @@ func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Re
 	}
 
 	//Now update the password
-	err = handler.userHelper.passwordChangeForced(user.Id(), user.Email(), info.Password)
+	err = handler.userHelper.PasswordChangeForced(user.Id(), user.Email(), info.Password)
 	//Return the error
 	if err != nil {
 		utils.ReturnJsonError(w, http.StatusForbidden, err)
@@ -428,9 +422,6 @@ func (handler *Handler) handlePasswordResetPut(w http.ResponseWriter, r *http.Re
 	}
 }
 
-/**
-Function to request a password change
-*/
 func (handler *Handler) handleUserActivationPut(w http.ResponseWriter, r *http.Request) {
 
 	//Define a local struct to get the email out of the request
@@ -497,6 +488,7 @@ func (handler *Handler) handleUserActivationGet(w http.ResponseWriter, r *http.R
 	//Only take the first one
 	if !ok || len(keys[0]) < 1 {
 		utils.ReturnJsonStatus(w, http.StatusUnprocessableEntity, false, "activation_token_missing_email")
+		return
 	}
 
 	//Get the email
@@ -515,13 +507,13 @@ func (handler *Handler) handleUserActivationGet(w http.ResponseWriter, r *http.R
 	//If the user is not already active
 	if user.Activated() {
 		utils.ReturnJsonStatus(w, http.StatusOK, true, "activation_token_request_received")
+		return
 	}
 	//Else issue the request
-	err = handler.userHelper.IssueActivationRequest(handler.userHelper.passwordHelper.TokenGenerator(), user.Id(), user.Email())
+	err = handler.userHelper.IssueActivationRequest(handler.userHelper.TokenGenerator(), user.Id(), user.Email())
 
-	//There was a real error return
 	if err != nil {
-		utils.ReturnJsonError(w, http.StatusNotFound, err)
+		utils.ReturnJsonError(w, http.StatusServiceUnavailable, err)
 		return
 	}
 

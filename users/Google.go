@@ -31,7 +31,7 @@ type GoogleLoginToken struct {
  */
 type GoogleHandler struct {
 	// The user handler needs to have access to user repo
-	helper *Helper
+	helper Helper
 
 	//We need the oauth config
 	oAuthConfig *oauth2.Config
@@ -40,7 +40,7 @@ type GoogleHandler struct {
 /**
  * This struct is used
  */
-func NewGoogleHandler(helper *Helper, configuration configuration.Configuration) *GoogleHandler {
+func NewGoogleHandler(helper Helper, configuration configuration.Configuration) *GoogleHandler {
 	//Create a new
 	google := &GoogleHandler{
 		helper: helper,
@@ -156,7 +156,7 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(gHandler.helper.passwordHelper.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(gHandler.helper.CreateJWTToken(user.Id(), user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {
@@ -164,5 +164,4 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 	} else {
 		utils.ReturnJsonError(w, http.StatusForbidden, err)
 	}
-
 }

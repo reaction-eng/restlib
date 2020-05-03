@@ -5,9 +5,9 @@ package users
 
 import "strings"
 
-//a struct to rep user account
 type BasicUser struct {
 	Id_            int    `json:"id"`
+	Organizations_ []int  `json:"organizations"`
 	Email_         string `json:"email"`
 	password_      string `json:"-"`
 	Token_         string `json:"token";sql:"-"`
@@ -55,6 +55,33 @@ func (basic *BasicUser) PasswordLogin() bool {
 	return basic.passwordlogin_
 }
 
+func (basic *BasicUser) AddOrganization(org int) {
+	if basic.Organizations_ == nil {
+		basic.Organizations_ = make([]int, 0)
+	}
+	basic.Organizations_ = append(basic.Organizations_, org)
+}
+
+func (basic *BasicUser) RemoveOrganization(org int) {
+	if basic.Organizations_ == nil {
+		return
+	}
+
+	updatedList := make([]int, 0)
+	for _, orgIdOld := range basic.Organizations_ {
+		if orgIdOld != org {
+			updatedList = append(updatedList, orgIdOld)
+		}
+	}
+
+	basic.Organizations_ = updatedList
+
+}
+
+func (basic *BasicUser) Organizations() []int {
+	return basic.Organizations_
+}
+
 /**
 Provide code to copy the user into this user
 */
@@ -68,5 +95,5 @@ func (basic *BasicUser) CopyFrom(from User) {
 	basic.Token_ = from.Token()
 	basic.activated_ = from.Activated()
 	basic.passwordlogin_ = from.PasswordLogin()
-
+	basic.Organizations_ = from.Organizations()
 }

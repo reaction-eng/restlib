@@ -46,6 +46,18 @@ func (mr *MockUserMockRecorder) Activated() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Activated", reflect.TypeOf((*MockUser)(nil).Activated))
 }
 
+// AddOrganization mocks base method
+func (m *MockUser) AddOrganization(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddOrganization", arg0)
+}
+
+// AddOrganization indicates an expected call of AddOrganization
+func (mr *MockUserMockRecorder) AddOrganization(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrganization", reflect.TypeOf((*MockUser)(nil).AddOrganization), arg0)
+}
+
 // Email mocks base method
 func (m *MockUser) Email() string {
 	m.ctrl.T.Helper()
@@ -74,6 +86,20 @@ func (mr *MockUserMockRecorder) Id() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Id", reflect.TypeOf((*MockUser)(nil).Id))
 }
 
+// Organizations mocks base method
+func (m *MockUser) Organizations() []int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Organizations")
+	ret0, _ := ret[0].([]int)
+	return ret0
+}
+
+// Organizations indicates an expected call of Organizations
+func (mr *MockUserMockRecorder) Organizations() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Organizations", reflect.TypeOf((*MockUser)(nil).Organizations))
+}
+
 // Password mocks base method
 func (m *MockUser) Password() string {
 	m.ctrl.T.Helper()
@@ -100,6 +126,18 @@ func (m *MockUser) PasswordLogin() bool {
 func (mr *MockUserMockRecorder) PasswordLogin() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PasswordLogin", reflect.TypeOf((*MockUser)(nil).PasswordLogin))
+}
+
+// RemoveOrganization mocks base method
+func (m *MockUser) RemoveOrganization(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RemoveOrganization", arg0)
+}
+
+// RemoveOrganization indicates an expected call of RemoveOrganization
+func (mr *MockUserMockRecorder) RemoveOrganization(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveOrganization", reflect.TypeOf((*MockUser)(nil).RemoveOrganization), arg0)
 }
 
 // SetEmail mocks base method

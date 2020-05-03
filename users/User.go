@@ -19,9 +19,12 @@ type User interface {
 	Password() string
 	SetPassword(password string)
 
-	//Return the user email
 	Token() string
 	SetToken(token string)
+
+	AddOrganization(org int)
+	RemoveOrganization(org int)
+	Organizations() []int
 
 	//Check if the user was activated
 	Activated() bool

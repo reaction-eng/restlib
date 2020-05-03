@@ -16,16 +16,10 @@ import (
 	"github.com/reaction-eng/restlib/users"
 )
 
-/**
-Function to carray along the
-*/
 type routingEnv struct {
 	router *routing.MuxRouter
 }
 
-/**
-Perform the testing
-*/
 func TestUserRoutes(t *testing.T) {
 
 	//Define the list of routes we testing

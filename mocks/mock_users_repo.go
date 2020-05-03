@@ -62,18 +62,6 @@ func (mr *MockUserRepoMockRecorder) AddUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUserRepo)(nil).AddUser), arg0)
 }
 
-// CleanUp mocks base method
-func (m *MockUserRepo) CleanUp() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "CleanUp")
-}
-
-// CleanUp indicates an expected call of CleanUp
-func (mr *MockUserRepoMockRecorder) CleanUp() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUp", reflect.TypeOf((*MockUserRepo)(nil).CleanUp))
-}
-
 // GetUser mocks base method
 func (m *MockUserRepo) GetUser(arg0 int) (users.User, error) {
 	m.ctrl.T.Helper()

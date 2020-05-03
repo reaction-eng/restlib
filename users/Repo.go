@@ -5,9 +5,6 @@ package users
 
 //go:generate mockgen -destination=../mocks/mock_users_repo.go -package=mocks -mock_names Repo=MockUserRepo github.com/reaction-eng/restlib/users  Repo
 
-/**
-Define an interface that all Calc Repos must follow
-*/
 type Repo interface {
 	/**
 	Get the user with the email.  An error is thrown is not found
@@ -33,11 +30,6 @@ type Repo interface {
 	Activate User
 	*/
 	ActivateUser(user User) error
-
-	/**
-	Allow databases to be closed
-	*/
-	CleanUp()
 
 	/**
 	Create empty user

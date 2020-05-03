@@ -4,15 +4,13 @@
 package roles
 
 import (
+	"net/http"
+
 	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/users"
 	"github.com/reaction-eng/restlib/utils"
-	"net/http"
 )
 
-/**
- * This struct is used
- */
 type Handler struct {
 	// The user handler needs to have access to user repo
 	userRepo users.Repo
@@ -21,9 +19,6 @@ type Handler struct {
 	roleRepo Repo
 }
 
-/**
- * This struct is used
- */
 func NewHandler(userRepo users.Repo, roleRepo Repo) *Handler {
 	//Build a new User Handler
 	handler := Handler{
@@ -34,9 +29,6 @@ func NewHandler(userRepo users.Repo, roleRepo Repo) *Handler {
 	return &handler
 }
 
-/**
-Function used to get routes
-*/
 func (handler *Handler) GetRoutes() []routing.Route {
 
 	var routes = []routing.Route{
@@ -59,9 +51,6 @@ func (handler *Handler) GetRoutes() []routing.Route {
 
 }
 
-/**
-*Get the current up to date user
- */
 func (handler *Handler) handleUserPermissionsGet(w http.ResponseWriter, r *http.Request) {
 
 	//We have gone through the auth, so we should know the id of the logged in user
@@ -85,5 +74,4 @@ func (handler *Handler) handleUserPermissionsGet(w http.ResponseWriter, r *http.
 	} else {
 		utils.ReturnJsonStatus(w, http.StatusUnsupportedMediaType, false, err.Error())
 	}
-
 }
