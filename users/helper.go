@@ -12,7 +12,6 @@ type Helper interface {
 	passwords.Helper
 
 	CreateUser(user User) error
-	ValidateUser(user User) (bool, error)
 	Update(userId int, newUser User) (User, error)
 	PasswordChange(userId int, email string, newPassword string, oldPassword string) error
 	PasswordChangeForced(userId int, email string, newPassword string) error

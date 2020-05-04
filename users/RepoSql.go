@@ -307,6 +307,8 @@ Add the user to the database
 */
 func (repo *RepoSql) AddUser(newUser User) (User, error) {
 
+	//TODO: make sure user is not already here
+
 	//Add the info
 	//execute the statement//(userId,name,input,flow)
 	_, err := repo.addUserStatement.Exec(newUser.Email(), newUser.Password())

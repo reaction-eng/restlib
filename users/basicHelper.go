@@ -29,18 +29,15 @@ func NewUserHelper(usersRepo Repo, passRepo passwords.ResetRepo, passwordHelper 
 	}
 }
 
-/**
-Static method to create a new user
-*/
 func (helper *BasicHelper) CreateUser(user User) error {
 
 	//Make sure the info being passed in is valid
-	if ok, err := helper.ValidateUser(user); !ok {
+	if err := helper.validateUser(user); err != nil {
 		return err
 	}
 
 	//Now hash the password
-	user.SetPassword(helper.Helper.HashPassword(user.Password()))
+	user.SetPassword(helper.HashPassword(user.Password()))
 
 	//Now store it
 	newUser, err := helper.AddUser(user)
@@ -51,48 +48,25 @@ func (helper *BasicHelper) CreateUser(user User) error {
 	}
 
 	//Else issue the request
-	err = helper.IssueActivationRequest(helper.Helper.TokenGenerator(), newUser.Id(), newUser.Email())
+	err = helper.IssueActivationRequest(helper.TokenGenerator(), newUser.Id(), newUser.Email())
 
-	if err != nil {
-		return err
-	}
-
-	return nil
-
+	return err
 }
 
 /**
 Validate incoming user details to make sure it has an email address and stuff,
-//TODO: add organization check
 */
-func (helper *BasicHelper) ValidateUser(user User) (bool, error) {
+func (helper *BasicHelper) validateUser(user User) error {
 
 	if !strings.Contains(user.Email(), "@") {
-		return false, errors.New("validate_missing_email")
+		return errors.New("validate_missing_email")
 	}
 
-	//Check the password
-	err := helper.Helper.ValidatePassword(user.Password())
-
-	//If the user already exists
-	if err != nil {
-		return false, err
-	}
-
-	//Now look up a possible user
-	user, err = helper.GetUserByEmail(user.Email())
-
-	//If the user already exists
-	if err == nil || user != nil {
-		return false, errors.New("validate_email_in_use")
-	}
-
-	//All is good
-	return true, nil
+	return helper.ValidatePassword(user.Password())
 }
 
 /**
-Updates everything from the password
+Updates everything but the password
 */
 func (helper *BasicHelper) Update(userId int, newUser User) (User, error) {
 
@@ -119,13 +93,27 @@ func (helper *BasicHelper) Update(userId int, newUser User) (User, error) {
 		return nil, errors.New("update_forbidden")
 	}
 
-	//Make sure we
+	//Don't add new orgs
+	if !equal(newUser.Organizations(), oldUser.Organizations()) {
+		return nil, errors.New("update_forbidden")
+	}
 
 	//Now update in the repo
 	newUser, err = helper.UpdateUser(newUser)
 
 	return newUser, err
+}
 
+func equal(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 /**
