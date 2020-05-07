@@ -22,8 +22,7 @@ type User interface {
 	Token() string
 	SetToken(token string)
 
-	AddOrganization(org int)
-	RemoveOrganization(org int)
+	SetOrganizations(organizations ...int)
 	Organizations() []int
 
 	//Check if the user was activated

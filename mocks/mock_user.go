@@ -46,18 +46,6 @@ func (mr *MockUserMockRecorder) Activated() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Activated", reflect.TypeOf((*MockUser)(nil).Activated))
 }
 
-// AddOrganization mocks base method
-func (m *MockUser) AddOrganization(arg0 int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddOrganization", arg0)
-}
-
-// AddOrganization indicates an expected call of AddOrganization
-func (mr *MockUserMockRecorder) AddOrganization(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrganization", reflect.TypeOf((*MockUser)(nil).AddOrganization), arg0)
-}
-
 // Email mocks base method
 func (m *MockUser) Email() string {
 	m.ctrl.T.Helper()
@@ -128,18 +116,6 @@ func (mr *MockUserMockRecorder) PasswordLogin() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PasswordLogin", reflect.TypeOf((*MockUser)(nil).PasswordLogin))
 }
 
-// RemoveOrganization mocks base method
-func (m *MockUser) RemoveOrganization(arg0 int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RemoveOrganization", arg0)
-}
-
-// RemoveOrganization indicates an expected call of RemoveOrganization
-func (mr *MockUserMockRecorder) RemoveOrganization(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveOrganization", reflect.TypeOf((*MockUser)(nil).RemoveOrganization), arg0)
-}
-
 // SetEmail mocks base method
 func (m *MockUser) SetEmail(arg0 string) {
 	m.ctrl.T.Helper()
@@ -162,6 +138,22 @@ func (m *MockUser) SetId(arg0 int) {
 func (mr *MockUserMockRecorder) SetId(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetId", reflect.TypeOf((*MockUser)(nil).SetId), arg0)
+}
+
+// SetOrganizations mocks base method
+func (m *MockUser) SetOrganizations(arg0 ...int) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{}
+	for _, a := range arg0 {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "SetOrganizations", varargs...)
+}
+
+// SetOrganizations indicates an expected call of SetOrganizations
+func (mr *MockUserMockRecorder) SetOrganizations(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOrganizations", reflect.TypeOf((*MockUser)(nil).SetOrganizations), arg0...)
 }
 
 // SetPassword mocks base method

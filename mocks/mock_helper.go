@@ -47,17 +47,17 @@ func (mr *MockHelperMockRecorder) ComparePasswords(arg0, arg1 interface{}) *gomo
 }
 
 // CreateJWTToken mocks base method
-func (m *MockHelper) CreateJWTToken(arg0 int, arg1 string) string {
+func (m *MockHelper) CreateJWTToken(arg0, arg1 int, arg2 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateJWTToken", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateJWTToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // CreateJWTToken indicates an expected call of CreateJWTToken
-func (mr *MockHelperMockRecorder) CreateJWTToken(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockHelperMockRecorder) CreateJWTToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWTToken", reflect.TypeOf((*MockHelper)(nil).CreateJWTToken), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWTToken", reflect.TypeOf((*MockHelper)(nil).CreateJWTToken), arg0, arg1, arg2)
 }
 
 // HashPassword mocks base method

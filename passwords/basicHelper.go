@@ -23,8 +23,9 @@ type BasicHelper struct {
 JWT claims struct
 */
 type Token struct {
-	UserId int
-	Email  string
+	UserId         int
+	OrganizationId int
+	Email          string
 	jwt.StandardClaims
 }
 
@@ -57,10 +58,10 @@ func (helper *BasicHelper) HashPassword(password string) string {
 /**
   Support function to generate a JWT token
 */
-func (helper *BasicHelper) CreateJWTToken(userId int, email string) string {
+func (helper *BasicHelper) CreateJWTToken(userId int, organizationId int, email string) string {
 
 	//Create new JWT token for the newly registered account
-	tk := &Token{UserId: userId, Email: email}
+	tk := &Token{UserId: userId, OrganizationId: organizationId, Email: email}
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
 	tokenString, _ := token.SignedString(helper.jwtTokenPassword)
 

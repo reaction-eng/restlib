@@ -5,11 +5,12 @@ package users
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"time"
 )
 
 /**
@@ -89,7 +90,7 @@ Get the user with the ID.  An error is thrown is not found
 ///**
 //List all users
 //*/
-//func (repo *RepoMongo)ListAllUsers() ([]int, error){}
+//func (repo *RepoMongo)ListUsers() ([]int, error){}
 
 //Connect to a db, returns pointer to db
 func ConnectToDB(locOfDB string, dbName string) *mongo.Database {

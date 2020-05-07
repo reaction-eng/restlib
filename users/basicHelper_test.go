@@ -107,6 +107,46 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			expectedError:               errors.New("validate_missing_email"),
 		},
 		{
+			comment: "empty email",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(1).Return("")
+				user.EXPECT().Password().Times(0).Return("password 123")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				return user
+			},
+			validatePasswordCount:       0,
+			validatePasswordError:       nil,
+			hashPasswordCount:           0,
+			addUserCount:                0,
+			addUserError:                nil,
+			issueActivationRequestCount: 0,
+			issueActivationRequestError: nil,
+			tokenGeneratorCount:         0,
+			expectedError:               errors.New("validate_missing_email"),
+		},
+		{
+			comment: "all white space",
+			user: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(1).Return("  			 ")
+				user.EXPECT().Password().Times(0).Return("password 123")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				return user
+			},
+			validatePasswordCount:       0,
+			validatePasswordError:       nil,
+			hashPasswordCount:           0,
+			addUserCount:                0,
+			addUserError:                nil,
+			issueActivationRequestCount: 0,
+			issueActivationRequestError: nil,
+			tokenGeneratorCount:         0,
+			expectedError:               errors.New("validate_missing_email"),
+		},
+		{
 			comment: "add user error, user already there",
 			user: func() users.User {
 				user := mocks.NewMockUser(mockCtrl)
@@ -362,13 +402,585 @@ func TestBasicHelper_Update(t *testing.T) {
 }
 
 func TestBasicHelper_PasswordChange(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
-}
+	testCases := []struct {
+		comment                  string
+		userId                   int
+		email                    string
+		newPassword              string
+		oldPassword              string
+		getUserUser              func() users.User
+		getUserError             error
+		comparePasswordsCount    int
+		comparePasswordsResponse bool
+		validatePasswordCount    int
+		validatePasswordError    error
+		hashPasswordCount        int
+		hashPasswordResponse     string
+		updateUserCount          int
+		updateUserError          error
+		expectedError            error
+	}{
+		{
+			comment:     "working",
+			userId:      34,
+			email:       "user@example.info",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(1)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    1,
+			validatePasswordError:    nil,
+			hashPasswordCount:        1,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          1,
+			updateUserError:          nil,
+			expectedError:            nil,
+		},
+		{
+			comment:     "working with different case email",
+			userId:      34,
+			email:       " uSeR@example.inFo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(1)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    1,
+			validatePasswordError:    nil,
+			hashPasswordCount:        1,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          1,
+			updateUserError:          nil,
+			expectedError:            nil,
+		},
+		{
+			comment:     "no user",
+			userId:      34,
+			email:       " uSeR@example.inFo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().PasswordLogin().Times(0).Return(true)
+				return user
+			},
+			getUserError:             errors.New("missing user"),
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			hashPasswordCount:        0,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          0,
+			updateUserError:          nil,
+			expectedError:            errors.New("missing user"),
+		},
+		{
+			comment:     "no password access",
+			userId:      34,
+			email:       " uSeR@example.inFo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().PasswordLogin().Times(1).Return(false)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			hashPasswordCount:        0,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          0,
+			updateUserError:          nil,
+			expectedError:            errors.New("user_password_login_forbidden"),
+		}, {
+			comment:     "emails don't match",
+			userId:      34,
+			email:       " uSeR@example.inFoo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			hashPasswordCount:        0,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          0,
+			updateUserError:          nil,
+			expectedError:            errors.New("password_change_forbidden"),
+		},
+		{
+			comment:     "wrong password",
+			userId:      34,
+			email:       " uSeR@example.inFo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: false,
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			hashPasswordCount:        0,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          0,
+			updateUserError:          nil,
+			expectedError:            errors.New("password_change_forbidden"),
+		},
+		{
+			comment:     "invalid password",
+			userId:      34,
+			email:       " uSeR@example.inFo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    1,
+			validatePasswordError:    errors.New("bad password"),
+			hashPasswordCount:        0,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          0,
+			updateUserError:          nil,
+			expectedError:            errors.New("bad password"),
+		},
+		{
+			comment:     "can't update user",
+			userId:      34,
+			email:       " uSeR@example.inFo ",
+			newPassword: "new password",
+			oldPassword: "old password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("hashed password").Times(1)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				return user
+			},
+			getUserError:             nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: true,
+			validatePasswordCount:    1,
+			validatePasswordError:    nil,
+			hashPasswordCount:        1,
+			hashPasswordResponse:     "hashed password",
+			updateUserCount:          1,
+			updateUserError:          errors.New("can't update user"),
+			expectedError:            errors.New("can't update user"),
+		},
+	}
 
-func TestBasicHelper_PasswordChangeForced(t *testing.T) {
-	assert.Fail(t, "not done")
+	for _, testCase := range testCases {
+		// arrange
+		user := testCase.getUserUser()
+
+		mockUserRepo := mocks.NewMockUserRepo(mockCtrl)
+		mockUserRepo.EXPECT().GetUser(testCase.userId).Times(1).Return(user, testCase.getUserError)
+		mockUserRepo.EXPECT().UpdateUser(user).Times(testCase.updateUserCount).Return(nil, testCase.updateUserError)
+
+		mockPasswordResetRepo := mocks.NewMockResetRepo(mockCtrl)
+
+		mockPasswordHelper := mocks.NewMockHelper(mockCtrl)
+		mockPasswordHelper.EXPECT().ComparePasswords("hashed password", testCase.oldPassword).Times(testCase.comparePasswordsCount).Return(testCase.comparePasswordsResponse)
+		mockPasswordHelper.EXPECT().ValidatePassword("new password").Times(testCase.validatePasswordCount).Return(testCase.validatePasswordError)
+		mockPasswordHelper.EXPECT().HashPassword("new password").Times(testCase.hashPasswordCount).Return("hashed password")
+
+		basicHelper := users.NewUserHelper(mockUserRepo, mockPasswordResetRepo, mockPasswordHelper)
+
+		// act
+		err := basicHelper.PasswordChange(testCase.userId, testCase.email, testCase.newPassword, testCase.oldPassword)
+
+		// assert
+		assert.Equal(t, testCase.expectedError, err)
+	}
 }
 
 func TestBasicHelper_Login(t *testing.T) {
-	assert.Fail(t, "not done")
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testCases := []struct {
+		comment                  string
+		getUserUser              func() users.User
+		validatePasswordCount    int
+		validatePasswordError    error
+		comparePasswordsCount    int
+		comparePasswordsResponse bool
+		createJWTTokenCount      int
+		expectedError            error
+	}{
+		{
+			comment: "working",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				user.EXPECT().Activated().Times(1).Return(true)
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("").Times(1)
+				user.EXPECT().Id().Times(1).Return(34)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().SetToken("token").Times(1)
+				user.EXPECT().Organizations().Times(1).Return([]int{3, 454, 534})
+				return user
+			},
+			validatePasswordCount:    1,
+			validatePasswordError:    nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: true,
+			createJWTTokenCount:      1,
+			expectedError:            nil,
+		},
+		{
+			comment: "wrong org",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				user.EXPECT().Activated().Times(1).Return(true)
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("").Times(0)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().SetToken("token").Times(0)
+				user.EXPECT().Organizations().Times(1).Return([]int{3, 2, 534})
+				return user
+			},
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			createJWTTokenCount:      0,
+			expectedError:            errors.New("user_not_in_organization"),
+		},
+		{
+			comment: "can't use a password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().PasswordLogin().Times(1).Return(false)
+				user.EXPECT().Activated().Times(0).Return(true)
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("").Times(0)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().SetToken("token").Times(0)
+				user.EXPECT().Organizations().Times(0).Return([]int{3, 454, 534})
+
+				return user
+			},
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			createJWTTokenCount:      0,
+			expectedError:            errors.New("user_password_login_forbidden"),
+		},
+		{
+			comment: "not activated",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				user.EXPECT().Activated().Times(1).Return(false)
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("").Times(0)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().SetToken("token").Times(0)
+				user.EXPECT().Organizations().Times(0).Return([]int{3, 454, 534})
+
+				return user
+			},
+			validatePasswordCount:    0,
+			validatePasswordError:    nil,
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			createJWTTokenCount:      0,
+			expectedError:            errors.New("user_not_activated"),
+		},
+		{
+			comment: "non valid password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				user.EXPECT().Activated().Times(1).Return(true)
+				user.EXPECT().Password().Times(0).Return("hashed password")
+				user.EXPECT().SetPassword("").Times(0)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().SetToken("token").Times(0)
+				user.EXPECT().Organizations().Times(1).Return([]int{3, 454, 534})
+				return user
+			},
+			validatePasswordCount:    1,
+			validatePasswordError:    errors.New("bad password"),
+			comparePasswordsCount:    0,
+			comparePasswordsResponse: true,
+			createJWTTokenCount:      0,
+			expectedError:            errors.New("login_invalid_password"),
+		},
+		{
+			comment: "pass words don't match",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().PasswordLogin().Times(1).Return(true)
+				user.EXPECT().Activated().Times(1).Return(true)
+				user.EXPECT().Password().Times(1).Return("hashed password")
+				user.EXPECT().SetPassword("").Times(1)
+				user.EXPECT().Id().Times(0).Return(34)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().SetToken("token").Times(0)
+				user.EXPECT().Organizations().Times(1).Return([]int{3, 454, 534})
+				return user
+			},
+			validatePasswordCount:    1,
+			validatePasswordError:    nil,
+			comparePasswordsCount:    1,
+			comparePasswordsResponse: false,
+			createJWTTokenCount:      0,
+			expectedError:            errors.New("login_invalid_password"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		// arrange
+		user := testCase.getUserUser()
+
+		mockUserRepo := mocks.NewMockUserRepo(mockCtrl)
+		mockPasswordResetRepo := mocks.NewMockResetRepo(mockCtrl)
+
+		mockPasswordHelper := mocks.NewMockHelper(mockCtrl)
+		mockPasswordHelper.EXPECT().ValidatePassword("new password").Times(testCase.validatePasswordCount).Return(testCase.validatePasswordError)
+		mockPasswordHelper.EXPECT().ComparePasswords("hashed password", "new password").Times(testCase.comparePasswordsCount).Return(testCase.comparePasswordsResponse)
+		mockPasswordHelper.EXPECT().CreateJWTToken(34, 454, "user@example.info").Times(testCase.createJWTTokenCount).Return("token")
+
+		basicHelper := users.NewUserHelper(mockUserRepo, mockPasswordResetRepo, mockPasswordHelper)
+
+		// act
+		returnUser, err := basicHelper.Login("new password", 454, user)
+
+		// assert
+		if testCase.expectedError == nil {
+			assert.Equal(t, user, returnUser)
+		} else {
+			assert.Nil(t, returnUser)
+			assert.Equal(t, testCase.expectedError, err)
+		}
+	}
+}
+
+func TestBasicHelper_PasswordChangeForced(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testCases := []struct {
+		comment               string
+		userId                int
+		email                 string
+		newPassword           string
+		getUserUser           func() users.User
+		getUserError          error
+		validatePasswordCount int
+		validatePasswordError error
+		hashPasswordCount     int
+		hashPasswordResponse  string
+		updateUserCount       int
+		updateUserError       error
+		expectedError         error
+	}{
+		{
+			comment:     "working",
+			userId:      34,
+			email:       "user@example.info",
+			newPassword: "new password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().SetPassword("hashed password").Times(1)
+				return user
+			},
+			getUserError:          nil,
+			validatePasswordCount: 1,
+			validatePasswordError: nil,
+			hashPasswordCount:     1,
+			hashPasswordResponse:  "hashed password",
+			updateUserCount:       1,
+			updateUserError:       nil,
+			expectedError:         nil,
+		},
+		{
+			comment: "weird email",
+			userId:  34,
+			email: " 	uSeR@example.INfo		",
+			newPassword: "new password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().SetPassword("hashed password").Times(1)
+				return user
+			},
+			getUserError:          nil,
+			validatePasswordCount: 1,
+			validatePasswordError: nil,
+			hashPasswordCount:     1,
+			hashPasswordResponse:  "hashed password",
+			updateUserCount:       1,
+			updateUserError:       nil,
+			expectedError:         nil,
+		},
+		{
+			comment: "can't find user",
+			userId:  34,
+			email: " 	uSeR@example.INfo		",
+			newPassword: "new password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(0).Return("user@example.info")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				return user
+			},
+			getUserError:          errors.New("can't find user"),
+			validatePasswordCount: 0,
+			validatePasswordError: nil,
+			hashPasswordCount:     0,
+			hashPasswordResponse:  "hashed password",
+			updateUserCount:       0,
+			updateUserError:       nil,
+			expectedError:         errors.New("can't find user"),
+		},
+		{
+			comment:     "emails don't match",
+			userId:      34,
+			email:       "user@example.infoo",
+			newPassword: "new password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				return user
+			},
+			getUserError:          nil,
+			validatePasswordCount: 0,
+			validatePasswordError: nil,
+			hashPasswordCount:     0,
+			hashPasswordResponse:  "hashed password",
+			updateUserCount:       0,
+			updateUserError:       nil,
+			expectedError:         errors.New("password_change_forbidden"),
+		},
+		{
+			comment:     "non valid passsword",
+			userId:      34,
+			email:       "user@example.info",
+			newPassword: "new password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().SetPassword("hashed password").Times(0)
+				return user
+			},
+			getUserError:          nil,
+			validatePasswordCount: 1,
+			validatePasswordError: errors.New("non valid password"),
+			hashPasswordCount:     0,
+			hashPasswordResponse:  "hashed password",
+			updateUserCount:       0,
+			updateUserError:       nil,
+			expectedError:         errors.New("non valid password"),
+		},
+		{
+			comment:     "can't update user",
+			userId:      34,
+			email:       "user@example.info",
+			newPassword: "new password",
+			getUserUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Times(1).Return("user@example.info")
+				user.EXPECT().SetPassword("hashed password").Times(1)
+				return user
+			},
+			getUserError:          nil,
+			validatePasswordCount: 1,
+			validatePasswordError: nil,
+			hashPasswordCount:     1,
+			hashPasswordResponse:  "hashed password",
+			updateUserCount:       1,
+			updateUserError:       errors.New("can't update user"),
+			expectedError:         errors.New("can't update user"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		// arrange
+		user := testCase.getUserUser()
+
+		mockUserRepo := mocks.NewMockUserRepo(mockCtrl)
+		mockUserRepo.EXPECT().GetUser(testCase.userId).Times(1).Return(user, testCase.getUserError)
+		mockUserRepo.EXPECT().UpdateUser(user).Times(testCase.updateUserCount).Return(nil, testCase.updateUserError)
+
+		mockPasswordResetRepo := mocks.NewMockResetRepo(mockCtrl)
+
+		mockPasswordHelper := mocks.NewMockHelper(mockCtrl)
+		mockPasswordHelper.EXPECT().ValidatePassword("new password").Times(testCase.validatePasswordCount).Return(testCase.validatePasswordError)
+		mockPasswordHelper.EXPECT().HashPassword("new password").Times(testCase.hashPasswordCount).Return("hashed password")
+
+		basicHelper := users.NewUserHelper(mockUserRepo, mockPasswordResetRepo, mockPasswordHelper)
+
+		// act
+		err := basicHelper.PasswordChangeForced(testCase.userId, testCase.email, testCase.newPassword)
+
+		// assert
+		assert.Equal(t, testCase.expectedError, err)
+	}
 }

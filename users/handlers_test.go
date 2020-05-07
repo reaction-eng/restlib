@@ -49,7 +49,7 @@ func TestHandler_handleUserCreate(t *testing.T) {
 				user := mocks.NewMockUser(mockCtrl)
 				user.EXPECT().SetEmail("user@example.info").Times(1)
 				user.EXPECT().SetPassword("new password").Times(1)
-				user.EXPECT().AddOrganization(34).Times(1)
+				user.EXPECT().SetOrganizations(34).Times(1)
 				return user
 			},
 			expectDecodeSuccessful: true,
@@ -76,7 +76,7 @@ func TestHandler_handleUserCreate(t *testing.T) {
 				user := mocks.NewMockUser(mockCtrl)
 				user.EXPECT().SetEmail("user@example.info").Times(1)
 				user.EXPECT().SetPassword("new password").Times(1)
-				user.EXPECT().AddOrganization(34).Times(1)
+				user.EXPECT().SetOrganizations(34).Times(1)
 				return user
 			},
 			expectDecodeSuccessful: true,

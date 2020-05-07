@@ -5,9 +5,10 @@
 package mocks
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	users "github.com/reaction-eng/restlib/users"
-	reflect "reflect"
 )
 
 // MockUserRepo is a mock of Repo interface
@@ -92,34 +93,19 @@ func (mr *MockUserRepoMockRecorder) GetUserByEmail(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUserRepo)(nil).GetUserByEmail), arg0)
 }
 
-// ListAllActiveUsers mocks base method
-func (m *MockUserRepo) ListAllActiveUsers() ([]int, error) {
+// ListUsers mocks base method
+func (m *MockUserRepo) ListUsers(arg0 bool, arg1 []int) ([]int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllActiveUsers")
+	ret := m.ctrl.Call(m, "ListUsers", arg0, arg1)
 	ret0, _ := ret[0].([]int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListAllActiveUsers indicates an expected call of ListAllActiveUsers
-func (mr *MockUserRepoMockRecorder) ListAllActiveUsers() *gomock.Call {
+// ListUsers indicates an expected call of ListUsers
+func (mr *MockUserRepoMockRecorder) ListAllUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllActiveUsers", reflect.TypeOf((*MockUserRepo)(nil).ListAllActiveUsers))
-}
-
-// ListAllUsers mocks base method
-func (m *MockUserRepo) ListAllUsers() ([]int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllUsers")
-	ret0, _ := ret[0].([]int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListAllUsers indicates an expected call of ListAllUsers
-func (mr *MockUserRepoMockRecorder) ListAllUsers() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllUsers", reflect.TypeOf((*MockUserRepo)(nil).ListAllUsers))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockUserRepo)(nil).ListUsers), arg0, arg1)
 }
 
 // NewEmptyUser mocks base method

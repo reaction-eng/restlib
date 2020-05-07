@@ -126,6 +126,9 @@ func (helper *BasicHelper) PasswordChange(userId int, email string, newPassword 
 
 	//Load up the user
 	oldUser, err := helper.GetUser(userId)
+	if err != nil {
+		return err
+	}
 
 	//Make sure the user can login with password
 	if !oldUser.PasswordLogin() {
@@ -138,15 +141,15 @@ func (helper *BasicHelper) PasswordChange(userId int, email string, newPassword 
 	}
 
 	//Make sure the old password matches
-	passwordsMath := helper.Helper.ComparePasswords(oldUser.Password(), oldPassword)
+	passwordsMatch := helper.ComparePasswords(oldUser.Password(), oldPassword)
 
 	//Make sure that the emails match
-	if !passwordsMath {
+	if !passwordsMatch {
 		return errors.New("password_change_forbidden")
 	}
 
 	//Make sure the new password is valid
-	err = helper.Helper.ValidatePassword(newPassword)
+	err = helper.ValidatePassword(newPassword)
 
 	//If the password is bad
 	if err != nil {
@@ -154,7 +157,7 @@ func (helper *BasicHelper) PasswordChange(userId int, email string, newPassword 
 	}
 
 	//So it looks like we can update it, so hash the new password
-	oldUser.SetPassword(helper.Helper.HashPassword(newPassword))
+	oldUser.SetPassword(helper.HashPassword(newPassword))
 
 	//Now update in the repo
 	_, err = helper.UpdateUser(oldUser)
@@ -163,9 +166,6 @@ func (helper *BasicHelper) PasswordChange(userId int, email string, newPassword 
 
 }
 
-/**
-Updates everything from the password
-*/
 func (helper *BasicHelper) PasswordChangeForced(userId int, email string, newPassword string) error {
 
 	//Clean up the email
@@ -173,14 +173,17 @@ func (helper *BasicHelper) PasswordChangeForced(userId int, email string, newPas
 
 	//Load up the user
 	oldUser, err := helper.GetUser(userId)
+	if err != nil {
+		return err
+	}
 
-	//Make sure the user can login with password
-	//if !oldUser.PasswordLogin() {
-	//	return errors.New("user_password_login_forbidden")
-	//}
+	//Make sure that the emails match
+	if email != oldUser.Email() {
+		return errors.New("password_change_forbidden")
+	}
 
 	//Make sure the new password is valid
-	err = helper.Helper.ValidatePassword(newPassword)
+	err = helper.ValidatePassword(newPassword)
 
 	//If the password is bad
 	if err != nil {
@@ -188,7 +191,7 @@ func (helper *BasicHelper) PasswordChangeForced(userId int, email string, newPas
 	}
 
 	//So it looks like we can update it, so hash the new password
-	oldUser.SetPassword(helper.Helper.HashPassword(newPassword))
+	oldUser.SetPassword(helper.HashPassword(newPassword))
 
 	//Now update in the repo
 	_, err = helper.UpdateUser(oldUser)
@@ -200,7 +203,7 @@ func (helper *BasicHelper) PasswordChangeForced(userId int, email string, newPas
 /**
 Login in the user
 */
-func (helper *BasicHelper) Login(userPassword string, orgId int, user User) (User, error) {
+func (helper *BasicHelper) Login(userPassword string, organizationId int, user User) (User, error) {
 
 	//Make sure the user can login with password
 	if !user.PasswordLogin() {
@@ -212,8 +215,12 @@ func (helper *BasicHelper) Login(userPassword string, orgId int, user User) (Use
 		return nil, errors.New("user_not_activated")
 	}
 
-	//Make sure the new password is valid
-	err := helper.Helper.ValidatePassword(userPassword)
+	// make sure user is in org
+	if !inList(user.Organizations(), organizationId) {
+		return nil, errors.New("user_not_in_organization")
+	}
+
+	err := helper.ValidatePassword(userPassword)
 
 	//If the password is bad
 	if err != nil {
@@ -221,18 +228,27 @@ func (helper *BasicHelper) Login(userPassword string, orgId int, user User) (Use
 	}
 
 	//Now see if we login
-	passwordsMath := helper.Helper.ComparePasswords(user.Password(), userPassword)
+	passwordsMatch := helper.ComparePasswords(user.Password(), userPassword)
 
 	//Blank out the password before returning
 	user.SetPassword("")
 
 	//If they do not match
-	if !passwordsMath {
+	if !passwordsMatch {
 		return nil, errors.New("login_invalid_password")
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(helper.Helper.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(helper.CreateJWTToken(user.Id(), organizationId, user.Email()))
 
 	return user, nil
+}
+
+func inList(organizationList []int, organization int) bool {
+	for _, org := range organizationList {
+		if org == organization {
+			return true
+		}
+	}
+	return false
 }

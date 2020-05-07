@@ -104,23 +104,27 @@ func TestBasicHelper_HashPassword(t *testing.T) {
 func TestBasicHelper_CreateJWTToken(t *testing.T) {
 	testCases := []struct {
 		userId         int
+		orgId          int
 		email          string
 		expectedResult string
 	}{
 		{
 			42,
+			65,
 			"example@example.com",
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjQyLCJFbWFpbCI6ImV4YW1wbGVAZXhhbXBsZS5jb20ifQ.Ah3uKFRpjKpfBys0Rmq3MdSwwxkPj_WLBqBy9P21heI",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjQyLCJPcmdhbml6YXRpb25JZCI6NjUsIkVtYWlsIjoiZXhhbXBsZUBleGFtcGxlLmNvbSJ9.8xvP_tiVqrowq85_t4eoJqh0PXJGqOY1mG6ixKcFpqw",
 		},
 		{
 			102,
+			23,
 			"example2@example.com",
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEwMiwiRW1haWwiOiJleGFtcGxlMkBleGFtcGxlLmNvbSJ9.tsBA8HJeN-Zhamyx6AvcTlmp5P_5ihTYsusln-50MBg",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEwMiwiT3JnYW5pemF0aW9uSWQiOjIzLCJFbWFpbCI6ImV4YW1wbGUyQGV4YW1wbGUuY29tIn0.s0IMktQm5I3DJ9Bixdyd42-q3dEbj6xAFz_v7AOaLRY",
 		},
 		{
 			98,
+			346,
 			"matt@example.com",
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjk4LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20ifQ.zbpK1ZSeOTrsvSscE7KJqdhHfMgiOSHiu_2jOBsOLyA",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjk4LCJPcmdhbml6YXRpb25JZCI6MzQ2LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20ifQ.pzf0sT2F77gH-1Ghqw_bwWrxSDbpc85FD1nXxBByHQc",
 		},
 	}
 
@@ -132,7 +136,7 @@ func TestBasicHelper_CreateJWTToken(t *testing.T) {
 		helper := setupBasicHelper(t, mockCtrl)
 
 		// act
-		output := helper.CreateJWTToken(testCase.userId, testCase.email)
+		output := helper.CreateJWTToken(testCase.userId, testCase.orgId, testCase.email)
 
 		// assert
 		assert.Equal(t, testCase.expectedResult, output)

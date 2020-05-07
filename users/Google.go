@@ -156,7 +156,7 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(gHandler.helper.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(gHandler.helper.CreateJWTToken(user.Id(), -1, user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {

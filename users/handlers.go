@@ -162,7 +162,7 @@ func (handler *Handler) handleUserCreate(w http.ResponseWriter, r *http.Request)
 	//Copy over the new user data
 	newUser.SetEmail(newUserInfo.Email)
 	newUser.SetPassword(newUserInfo.Password)
-	newUser.AddOrganization(newUserInfo.OrganizationId)
+	newUser.SetOrganizations(newUserInfo.OrganizationId)
 
 	//Now create the new user
 	err = handler.userHelper.CreateUser(newUser)

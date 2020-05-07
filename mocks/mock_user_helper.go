@@ -5,9 +5,10 @@
 package mocks
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	users "github.com/reaction-eng/restlib/users"
-	reflect "reflect"
 )
 
 // MockUserHelper is a mock of Helper interface
@@ -119,17 +120,17 @@ func (mr *MockUserHelperMockRecorder) ComparePasswords(arg0, arg1 interface{}) *
 }
 
 // CreateJWTToken mocks base method
-func (m *MockUserHelper) CreateJWTToken(arg0 int, arg1 string) string {
+func (m *MockUserHelper) CreateJWTToken(arg0, arg1 int, arg2 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateJWTToken", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateJWTToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // CreateJWTToken indicates an expected call of CreateJWTToken
-func (mr *MockUserHelperMockRecorder) CreateJWTToken(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockUserHelperMockRecorder) CreateJWTToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWTToken", reflect.TypeOf((*MockUserHelper)(nil).CreateJWTToken), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWTToken", reflect.TypeOf((*MockUserHelper)(nil).CreateJWTToken), arg0, arg1, arg2)
 }
 
 // CreateUser mocks base method
@@ -218,34 +219,19 @@ func (mr *MockUserHelperMockRecorder) IssueResetRequest(arg0, arg1, arg2 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueResetRequest", reflect.TypeOf((*MockUserHelper)(nil).IssueResetRequest), arg0, arg1, arg2)
 }
 
-// ListAllActiveUsers mocks base method
-func (m *MockUserHelper) ListAllActiveUsers() ([]int, error) {
+// ListUsers mocks base method
+func (m *MockUserHelper) ListUsers(arg0 bool, arg1 []int) ([]int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllActiveUsers")
+	ret := m.ctrl.Call(m, "ListUsers", arg0, arg1)
 	ret0, _ := ret[0].([]int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListAllActiveUsers indicates an expected call of ListAllActiveUsers
-func (mr *MockUserHelperMockRecorder) ListAllActiveUsers() *gomock.Call {
+// ListUsers indicates an expected call of ListUsers
+func (mr *MockUserHelperMockRecorder) ListAllUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllActiveUsers", reflect.TypeOf((*MockUserHelper)(nil).ListAllActiveUsers))
-}
-
-// ListAllUsers mocks base method
-func (m *MockUserHelper) ListAllUsers() ([]int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllUsers")
-	ret0, _ := ret[0].([]int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListAllUsers indicates an expected call of ListAllUsers
-func (mr *MockUserHelperMockRecorder) ListAllUsers() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllUsers", reflect.TypeOf((*MockUserHelper)(nil).ListAllUsers))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockUserHelper)(nil).ListUsers), arg0, arg1)
 }
 
 // Login mocks base method
@@ -391,19 +377,4 @@ func (m *MockUserHelper) ValidateToken(arg0 string) (int, string, error) {
 func (mr *MockUserHelperMockRecorder) ValidateToken(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateToken", reflect.TypeOf((*MockUserHelper)(nil).ValidateToken), arg0)
-}
-
-// ValidateUser mocks base method
-func (m *MockUserHelper) ValidateUser(arg0 users.User) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateUser", arg0)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ValidateUser indicates an expected call of ValidateUser
-func (mr *MockUserHelperMockRecorder) ValidateUser(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUser", reflect.TypeOf((*MockUserHelper)(nil).ValidateUser), arg0)
 }
