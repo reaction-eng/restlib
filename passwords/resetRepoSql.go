@@ -14,19 +14,24 @@ import (
 
 const TableName = "resetrequests"
 
+var TokenExpired = errors.New("token_expired")
+
 type ResetRepoSql struct {
 	//Hold on to the sql databased
 	db *sql.DB
 
 	//We need the emailer
-	emailer               email.Emailer
-	resetEmailConfig      PasswordResetConfig
-	activationEmailConfig PasswordResetConfig
+	emailer                    email.Emailer
+	resetEmailConfig           PasswordResetConfig
+	activationEmailConfig      PasswordResetConfig
+	oneTimePasswordEmailConfig PasswordResetConfig
 
 	//Store the required statements to reduce compute time
 	addRequestStatement *sql.Stmt
 	getRequestStatement *sql.Stmt
 	rmRequestStatement  *sql.Stmt
+
+	tokenLifeSpan float64
 }
 
 /**
@@ -35,8 +40,9 @@ Store the type of token
 type tokenType int
 
 const (
-	activation tokenType = 1
-	reset      tokenType = 2
+	activation      tokenType = 1
+	reset           tokenType = 2
+	oneTimePassword tokenType = 3
 )
 
 func NewRepoMySql(db *sql.DB, emailer email.Emailer, configuration configuration.Configuration) (*ResetRepoSql, error) {
@@ -44,10 +50,25 @@ func NewRepoMySql(db *sql.DB, emailer email.Emailer, configuration configuration
 	//Build a reset and activation config
 	resetEmailConfig := PasswordResetConfig{}
 	activationEmailConfig := PasswordResetConfig{}
+	oneTimePasswordEmailConfig := PasswordResetConfig{}
 
 	//Pull from the config
-	configuration.GetStruct("password_reset", &resetEmailConfig)
+	err := configuration.GetStruct("password_reset", &resetEmailConfig)
+	if err != nil {
+		return nil, err
+	}
 	configuration.GetStruct("user_activation", &activationEmailConfig)
+	if err != nil {
+		return nil, err
+	}
+	configuration.GetStruct("one_time_password", &oneTimePasswordEmailConfig)
+	if err != nil {
+		return nil, err
+	}
+	tokenLifeSpan, err := configuration.GetFloat("tokenLifeSpan")
+	if err != nil {
+		return nil, err
+	}
 
 	//Define a new repo
 	newRepo := ResetRepoSql{
@@ -55,6 +76,7 @@ func NewRepoMySql(db *sql.DB, emailer email.Emailer, configuration configuration
 		emailer:               emailer,
 		resetEmailConfig:      resetEmailConfig,
 		activationEmailConfig: activationEmailConfig,
+		tokenLifeSpan:         tokenLifeSpan,
 	}
 
 	//Add request data to table
@@ -93,10 +115,25 @@ func NewRepoPostgresSql(db *sql.DB, emailer email.Emailer, configuration configu
 	//Build a reset and activation config
 	resetEmailConfig := PasswordResetConfig{}
 	activationEmailConfig := PasswordResetConfig{}
+	oneTimePasswordEmailConfig := PasswordResetConfig{}
 
 	//Pull from the config
-	configuration.GetStruct("password_reset", &resetEmailConfig)
+	err := configuration.GetStruct("password_reset", &resetEmailConfig)
+	if err != nil {
+		return nil, err
+	}
 	configuration.GetStruct("user_activation", &activationEmailConfig)
+	if err != nil {
+		return nil, err
+	}
+	configuration.GetStruct("one_time_password", &oneTimePasswordEmailConfig)
+	if err != nil {
+		return nil, err
+	}
+	tokenLifeSpan, err := configuration.GetFloat("tokenLifeSpan")
+	if err != nil {
+		return nil, err
+	}
 
 	//Define a new repo
 	newRepo := ResetRepoSql{
@@ -104,6 +141,7 @@ func NewRepoPostgresSql(db *sql.DB, emailer email.Emailer, configuration configu
 		emailer:               emailer,
 		resetEmailConfig:      resetEmailConfig,
 		activationEmailConfig: activationEmailConfig,
+		tokenLifeSpan:         tokenLifeSpan,
 	}
 
 	//Add request data to table
@@ -192,16 +230,39 @@ func (repo *ResetRepoSql) IssueActivationRequest(token string, userId int, email
 	return err
 }
 
-/**
-Use the token to validate
-*/
+func (repo *ResetRepoSql) IssueOneTimePasswordRequest(token string, userId int, emailAddress string) error {
+
+	//Now add it to the database
+	_, err := repo.addRequestStatement.Exec(userId, emailAddress, token, time.Now(), oneTimePassword)
+	if err != nil {
+		return err
+	}
+
+	//Make the email header
+	header := email.HeaderInfo{
+		Subject: repo.activationEmailConfig.Subject,
+		To:      []string{emailAddress},
+	}
+
+	//Build a reset token
+	resetInfo := PasswordResetInfo{
+		Token: token,
+		Email: emailAddress,
+	}
+
+	//Now email
+	err = repo.emailer.SendTemplateFile(&header, repo.oneTimePasswordEmailConfig.Template, resetInfo, nil)
+
+	return err
+}
+
 func (repo *ResetRepoSql) CheckForResetToken(userId int, token string) (int, error) {
 
 	//Get the id and errors
 	id, err := repo.checkForToken(userId, token, reset)
 
 	//If there is an error customize it
-	if err != nil {
+	if err != nil && err != TokenExpired {
 		err = errors.New("password_change_forbidden")
 	}
 
@@ -209,17 +270,28 @@ func (repo *ResetRepoSql) CheckForResetToken(userId int, token string) (int, err
 
 }
 
-/**
-Use the taken to validate
-*/
 func (repo *ResetRepoSql) CheckForActivationToken(userId int, token string) (int, error) {
 
 	//Get the id and errors
 	id, err := repo.checkForToken(userId, token, activation)
 
 	//If there is an error customize it
-	if err != nil {
+	if err != nil && err != TokenExpired {
 		err = errors.New("activation_forbidden")
+	}
+
+	return id, err
+
+}
+
+func (repo *ResetRepoSql) CheckForOneTimePasswordToken(userId int, token string) (int, error) {
+
+	//Get the id and errors
+	id, err := repo.checkForToken(userId, token, oneTimePassword)
+
+	//If there is an error customize it
+	if err != nil && err != TokenExpired {
+		err = errors.New("oneTimePassword_login_forbidden")
 	}
 
 	return id, err
@@ -240,12 +312,14 @@ func (repo *ResetRepoSql) checkForToken(userId int, token string, tkType tokenTy
 	//Get the value
 	err := repo.getRequestStatement.QueryRow(userId, token, tkType).Scan(&id, &userIdDb, &emailDb, &tokenDb, &issued, &tokenType)
 
-	//So it was correct, check the date
-	//TODO: check the date
-
 	//If there is an error, assume it can't be done
 	if err != nil {
 		return -1, errors.New("invalid_token")
+	}
+
+	//So it was correct, check the date
+	if time.Now().Sub(issued).Hours() > repo.tokenLifeSpan {
+		return 0, TokenExpired
 	}
 
 	//Make sure the user id and token match

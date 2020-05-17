@@ -8,11 +8,15 @@ package passwords
 type ResetRepo interface {
 	IssueResetRequest(token string, userId int, email string) error
 
-	CheckForResetToken(userId int, reset_token string) (int, error)
+	CheckForResetToken(userId int, resetToken string) (int, error)
 
 	IssueActivationRequest(token string, userId int, email string) error
 
 	CheckForActivationToken(userId int, activationToken string) (int, error)
+
+	IssueOneTimePasswordRequest(token string, userId int, email string) error
+
+	CheckForOneTimePasswordToken(userId int, activationToken string) (int, error)
 
 	UseToken(id int) error
 

@@ -31,6 +31,9 @@ func TestNewRepoMySql(t *testing.T) {
 	mock.ExpectPrepare("UPDATE " + users.UserTableName)
 	mock.ExpectPrepare("UPDATE " + users.UserTableName)
 	mock.ExpectPrepare("SELECT id, activation FROM " + users.UserTableName)
+	mock.ExpectPrepare("SELECT orgId FROM " + users.UserOrgTableName)
+	mock.ExpectPrepare("INSERT INTO " + users.UserOrgTableName)
+	mock.ExpectPrepare("DELETE FROM " + users.UserOrgTableName)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -57,6 +60,9 @@ func TestNewRepoPostgresSql(t *testing.T) {
 	mock.ExpectPrepare("UPDATE " + users.UserTableName)
 	mock.ExpectPrepare("UPDATE " + users.UserTableName)
 	mock.ExpectPrepare("SELECT id, activation FROM " + users.UserTableName)
+	mock.ExpectPrepare("SELECT orgId FROM " + users.UserOrgTableName)
+	mock.ExpectPrepare("INSERT INTO " + users.UserOrgTableName)
+	mock.ExpectPrepare("DELETE FROM " + users.UserOrgTableName)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -81,6 +87,9 @@ func setupSqlMock(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	mock.ExpectPrepare("UPDATE " + users.UserTableName)
 	mock.ExpectPrepare("UPDATE " + users.UserTableName)
 	mock.ExpectPrepare("SELECT id, activation FROM " + users.UserTableName)
+	mock.ExpectPrepare("SELECT orgId FROM " + users.UserOrgTableName)
+	mock.ExpectPrepare("INSERT INTO " + users.UserOrgTableName)
+	mock.ExpectPrepare("DELETE FROM " + users.UserOrgTableName)
 
 	return db, mock
 }
@@ -91,6 +100,7 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 		emailInput        string
 		expectedError     error
 		query             func(*sqlmock.ExpectedQuery)
+		queryOrgs         func(*sqlmock.ExpectedQuery)
 		userId            int
 		userOrgs          []int
 		userEmail         string
@@ -109,6 +119,14 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 						sqlmock.NewRows(
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "password", time.Now()))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
 			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
@@ -129,6 +147,14 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "password", time.Now()))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
+			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
 			userEmail:         "user@example.com",
@@ -139,10 +165,18 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 		{
 			comment:       "no rows",
 			emailInput:    "user@example.com",
-			expectedError: errors.New("login_email_not_found"),
+			expectedError: users.UserNotFound,
 			query: func(query *sqlmock.ExpectedQuery) {
 				query.
 					WithArgs("user@example.com").WillReturnError(sql.ErrNoRows)
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
 			},
 		},
 		{
@@ -156,6 +190,14 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 						sqlmock.NewRows(
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "password", nil))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
 			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
@@ -176,6 +218,14 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "", time.Now()))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
+			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
 			userEmail:         "user@example.com",
@@ -195,12 +245,42 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "", nil))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
+			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
 			userEmail:         "user@example.com",
 			userToken:         "",
 			userActivated:     false,
 			userPasswordLogin: false,
+		},
+		{
+			comment:       "get org error should return nil",
+			emailInput:    "user@example.com",
+			expectedError: errors.New("could not get org info"),
+			query: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs("user@example.com").
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"id", "email", "password", "activationDate"}).
+							AddRow(43, "user@example.com", "password", time.Now()))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23)).
+					WillReturnError(errors.New("could not get org info"))
+			},
 		},
 	}
 
@@ -210,8 +290,10 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 
 		db, dbMock := setupSqlMock(t)
 
-		repo, _ := users.NewRepoPostgresSql(db)
+		repo, err := users.NewRepoPostgresSql(db)
 		testCase.query(dbMock.ExpectQuery("SELECT \\* FROM users"))
+		testCase.queryOrgs(dbMock.ExpectQuery("SELECT orgId FROM userOrganizations"))
+		assert.Nil(t, err)
 
 		// act
 		user, err := repo.GetUserByEmail(testCase.emailInput)
@@ -220,7 +302,7 @@ func TestResetRepoSql_GetUserByEmail(t *testing.T) {
 		assert.Equal(t, testCase.expectedError, err)
 		if err == nil {
 			assert.Equal(t, testCase.userId, user.Id())
-			//TODO: assert.Equal(t, testCase.userOrgs, user.Organizations())
+			assert.Equal(t, testCase.userOrgs, user.Organizations())
 			assert.Equal(t, testCase.userEmail, user.Email())
 			assert.Equal(t, testCase.userActivated, user.Activated())
 			assert.Equal(t, testCase.userPasswordLogin, user.PasswordLogin())
@@ -239,6 +321,7 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 		idInput           int
 		expectedError     error
 		query             func(*sqlmock.ExpectedQuery)
+		queryOrgs         func(*sqlmock.ExpectedQuery)
 		userId            int
 		userOrgs          []int
 		userEmail         string
@@ -258,6 +341,42 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "password", time.Now()))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
+			},
+			userId:            43,
+			userOrgs:          []int{54, 23},
+			userEmail:         "user@example.com",
+			userToken:         "",
+			userActivated:     true,
+			userPasswordLogin: true,
+		},
+		{
+			comment:       "other db error",
+			idInput:       43,
+			expectedError: errors.New("other db error"),
+			query: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"id", "email", "password", "activationDate"}).
+							AddRow(43, "user@example.com", "password", time.Now())).
+					WillReturnError(errors.New("other db error"))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
+			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
 			userEmail:         "user@example.com",
@@ -268,10 +387,18 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 		{
 			comment:       "no rows",
 			idInput:       43,
-			expectedError: errors.New("login_user_id_not_found"),
+			expectedError: users.UserNotFound,
 			query: func(query *sqlmock.ExpectedQuery) {
 				query.
 					WithArgs(43).WillReturnError(sql.ErrNoRows)
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
 			},
 		},
 		{
@@ -286,8 +413,16 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "password", nil))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23).AddRow(32))
+			},
 			userId:            43,
-			userOrgs:          []int{54, 23},
+			userOrgs:          []int{54, 23, 32},
 			userEmail:         "user@example.com",
 			userToken:         "",
 			userActivated:     false,
@@ -304,6 +439,14 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 						sqlmock.NewRows(
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "", time.Now()))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
 			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
@@ -324,12 +467,67 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.com", "", nil))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}).
+							AddRow(54).AddRow(23))
+			},
 			userId:            43,
 			userOrgs:          []int{54, 23},
 			userEmail:         "user@example.com",
 			userToken:         "",
 			userActivated:     false,
 			userPasswordLogin: false,
+		},
+		{
+			comment:       "no orgs should work",
+			idInput:       43,
+			expectedError: nil,
+			query: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"id", "email", "password", "activationDate"}).
+							AddRow(43, "user@example.com", "password", time.Now()))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}))
+			},
+			userId:            43,
+			userOrgs:          []int{},
+			userEmail:         "user@example.com",
+			userToken:         "",
+			userActivated:     true,
+			userPasswordLogin: true,
+		},
+		{
+			comment:       "org db error",
+			idInput:       43,
+			expectedError: errors.New("org db error"),
+			query: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"id", "email", "password", "activationDate"}).
+							AddRow(43, "user@example.com", "password", time.Now()))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"})).
+					WillReturnError(errors.New("org db error"))
+			},
 		},
 	}
 
@@ -341,6 +539,7 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 
 		repo, _ := users.NewRepoPostgresSql(db)
 		testCase.query(dbMock.ExpectQuery("SELECT \\* FROM users"))
+		testCase.queryOrgs(dbMock.ExpectQuery("SELECT orgId FROM userOrganizations"))
 
 		// act
 		user, err := repo.GetUser(testCase.idInput)
@@ -349,7 +548,7 @@ func TestResetRepoSql_GetUser(t *testing.T) {
 		assert.Equal(t, testCase.expectedError, err)
 		if err == nil {
 			assert.Equal(t, testCase.userId, user.Id())
-			//TODO: assert.Equal(t, testCase.userOrgs, user.Organizations())
+			assert.Equal(t, testCase.userOrgs, user.Organizations())
 			assert.Equal(t, testCase.userEmail, user.Email())
 			assert.Equal(t, testCase.userActivated, user.Activated())
 			assert.Equal(t, testCase.userPasswordLogin, user.PasswordLogin())
@@ -496,10 +695,11 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 		expectedError          error
 		inputUser              func() users.User
 		checkUserStatementExec func(exec *sqlmock.ExpectedQuery)
+		checkUserQueryOrgs     func(*sqlmock.ExpectedQuery)
 		addUserStatementExec   func(exec *sqlmock.ExpectedExec)
 		getUserByEmailQuery    func(query *sqlmock.ExpectedQuery)
+		queryOrgs              func(*sqlmock.ExpectedQuery)
 		userId                 int
-		userOrgs               []int
 		userEmail              string
 		userToken              string
 		userActivated          bool
@@ -532,8 +732,14 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.info", "password", nil))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}))
+			},
 			userId:            43,
-			userOrgs:          []int{54, 23},
 			userEmail:         "user@example.info",
 			userToken:         "",
 			userActivated:     false,
@@ -556,11 +762,20 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 							[]string{"id", "email", "password", "activationDate"}).
 							AddRow(43, "user@example.info", "password", nil))
 			},
+			checkUserQueryOrgs: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs(43).
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"orgId"}))
+			},
 			addUserStatementExec: func(exec *sqlmock.ExpectedExec) {
 
 			},
 			getUserByEmailQuery: func(query *sqlmock.ExpectedQuery) {
 
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
 			},
 		},
 		{
@@ -574,7 +789,12 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 			expectedError: errors.New("db error"),
 			checkUserStatementExec: func(query *sqlmock.ExpectedQuery) {
 				query.
-					WithArgs("user@example.info").WillReturnError(users.UserNotFound)
+					WithArgs("user@example.info").
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"id", "email", "password", "activationDate"}).
+							AddRow(43, "user@example.info", "password", nil)).
+					WillReturnError(sql.ErrNoRows)
 			},
 			addUserStatementExec: func(exec *sqlmock.ExpectedExec) {
 				exec.
@@ -583,6 +803,40 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 					WillReturnError(errors.New("db error"))
 			},
 			getUserByEmailQuery: func(query *sqlmock.ExpectedQuery) {
+
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+			},
+		},
+		{
+			comment: "get user by email error",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Return("user@example.info").Times(3)
+				user.EXPECT().Password().Return("hashed password").Times(1)
+				return user
+			},
+			expectedError: errors.New("db error"),
+			checkUserStatementExec: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs("user@example.info").
+					WillReturnError(sql.ErrNoRows)
+			},
+			addUserStatementExec: func(exec *sqlmock.ExpectedExec) {
+				exec.
+					WithArgs("user@example.info", "hashed password").
+					WillReturnResult(sqlmock.NewResult(3, 3))
+			},
+			getUserByEmailQuery: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs("user@example.info").
+					WillReturnRows(
+						sqlmock.NewRows(
+							[]string{"id", "email", "password", "activationDate"}).
+							AddRow(43, "user@example.info", "password", nil)).
+					WillReturnError(errors.New("db error"))
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
 
 			},
 		},
@@ -614,6 +868,31 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 							AddRow(43, "user@example.info", "password", nil)).
 					WillReturnError(errors.New("db error"))
 			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+
+			},
+		},
+		{
+			comment: "get user by email error in check",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Email().Return("user@example.info").Times(1)
+				user.EXPECT().Password().Return("hashed password").Times(0)
+				return user
+			},
+			expectedError: errors.New("db error"),
+			checkUserStatementExec: func(query *sqlmock.ExpectedQuery) {
+				query.
+					WithArgs("user@example.info").
+					WillReturnError(errors.New("db error"))
+			},
+			addUserStatementExec: func(exec *sqlmock.ExpectedExec) {
+			},
+			getUserByEmailQuery: func(query *sqlmock.ExpectedQuery) {
+			},
+			queryOrgs: func(query *sqlmock.ExpectedQuery) {
+
+			},
 		},
 	}
 
@@ -623,8 +902,12 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 
 		repo, _ := users.NewRepoPostgresSql(db)
 		testCase.checkUserStatementExec(dbMock.ExpectQuery("SELECT \\* FROM users "))
+		if testCase.checkUserQueryOrgs != nil {
+			testCase.checkUserQueryOrgs(dbMock.ExpectQuery("SELECT orgId FROM userOrganizations"))
+		}
 		testCase.addUserStatementExec(dbMock.ExpectExec("INSERT INTO users "))
 		testCase.getUserByEmailQuery(dbMock.ExpectQuery("SELECT \\* FROM users "))
+		testCase.queryOrgs(dbMock.ExpectQuery("SELECT orgId FROM userOrganizations"))
 
 		// act
 		user, err := repo.AddUser(testCase.inputUser())
@@ -633,7 +916,6 @@ func TestResetRepoSql_AddUser(t *testing.T) {
 		assert.Equal(t, testCase.expectedError, err)
 		if err == nil {
 			assert.Equal(t, testCase.userId, user.Id())
-			//TODO: assert.Equal(t, testCase.userOrgs, user.Organizations())
 			assert.Equal(t, testCase.userEmail, user.Email())
 			assert.Equal(t, testCase.userActivated, user.Activated())
 			assert.Equal(t, testCase.userPasswordLogin, user.PasswordLogin())
@@ -765,6 +1047,165 @@ func TestResetRepoSql_ActivateUser(t *testing.T) {
 
 		// act
 		err := repo.ActivateUser(userInput)
+
+		// assert
+		assert.Equal(t, testCase.expectedError, err)
+
+		// cleanup
+		db.Close()
+	}
+}
+
+func TestResetRepoSql_AddUserToOrganization(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testCases := []struct {
+		comment          string
+		inputUser        func() users.User
+		orgId            int
+		activateUserExec func(exec *sqlmock.ExpectedExec)
+		expectedError    error
+	}{
+		{
+			comment: "working",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(34).Times(1)
+				return user
+			},
+			activateUserExec: func(query *sqlmock.ExpectedExec) {
+				query.
+					WithArgs(34, 3234, sqlmock.AnyArg()).
+					WillReturnResult(sqlmock.NewResult(3, 3))
+			},
+			orgId:         3234,
+			expectedError: nil,
+		},
+		{
+			comment: "add with error",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(34).Times(1)
+				return user
+			},
+			activateUserExec: func(query *sqlmock.ExpectedExec) {
+				query.
+					WithArgs(34, 3234, sqlmock.AnyArg()).
+					WillReturnResult(sqlmock.NewResult(3, 3)).
+					WillReturnError(errors.New("db error"))
+
+			},
+			orgId:         3234,
+			expectedError: errors.New("db error"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		// arrange
+		db, dbMock := setupSqlMock(t)
+
+		repo, _ := users.NewRepoPostgresSql(db)
+		testCase.activateUserExec(dbMock.ExpectExec("INSERT INTO userOrganizations "))
+
+		userInput := testCase.inputUser()
+
+		// act
+		err := repo.AddUserToOrganization(userInput, testCase.orgId)
+
+		// assert
+		assert.Equal(t, testCase.expectedError, err)
+
+		// cleanup
+		db.Close()
+	}
+}
+
+func TestResetRepoSql_RemoveUserFromOrganization(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testCases := []struct {
+		comment          string
+		inputUser        func() users.User
+		orgId            int
+		activateUserExec func(exec *sqlmock.ExpectedExec)
+		expectedError    error
+	}{
+		{
+			comment: "working",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(34).Times(1)
+				return user
+			},
+			activateUserExec: func(query *sqlmock.ExpectedExec) {
+				query.
+					WithArgs(34, 3234).
+					WillReturnResult(sqlmock.NewResult(3, 3))
+			},
+			orgId:         3234,
+			expectedError: nil,
+		},
+		{
+			comment: "add with error",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(34).Times(1)
+				return user
+			},
+			activateUserExec: func(query *sqlmock.ExpectedExec) {
+				query.
+					WithArgs(34, 3234).
+					WillReturnResult(sqlmock.NewResult(3, 3)).
+					WillReturnError(errors.New("db error"))
+
+			},
+			orgId:         3234,
+			expectedError: errors.New("db error"),
+		},
+		{
+			comment: "no rows errors",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(34).Times(1)
+				return user
+			},
+			activateUserExec: func(query *sqlmock.ExpectedExec) {
+				query.
+					WithArgs(34, 3234).
+					WillReturnResult(sqlmock.NewResult(3, 0))
+			},
+			orgId:         3234,
+			expectedError: errors.New("no_organizations_removed"),
+		}, {
+			comment: "errors from results",
+			inputUser: func() users.User {
+				user := mocks.NewMockUser(mockCtrl)
+				user.EXPECT().Id().Return(34).Times(1)
+				return user
+			},
+			activateUserExec: func(query *sqlmock.ExpectedExec) {
+				query.
+					WithArgs(34, 3234).
+					WillReturnResult(sqlmock.NewErrorResult(errors.New("errors from results")))
+			},
+			orgId:         3234,
+			expectedError: errors.New("errors from results"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		// arrange
+		db, dbMock := setupSqlMock(t)
+
+		repo, _ := users.NewRepoPostgresSql(db)
+		testCase.activateUserExec(dbMock.ExpectExec("DELETE FROM userOrganizations "))
+
+		userInput := testCase.inputUser()
+
+		// act
+		err := repo.RemoveUserFromOrganization(userInput, testCase.orgId)
 
 		// assert
 		assert.Equal(t, testCase.expectedError, err)

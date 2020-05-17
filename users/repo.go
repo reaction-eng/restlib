@@ -3,7 +3,12 @@
 
 package users
 
+import "errors"
+
 //go:generate mockgen -destination=../mocks/mock_users_repo.go -package=mocks -mock_names Repo=MockUserRepo github.com/reaction-eng/restlib/users  Repo
+
+var UserNotFound = errors.New("user_not_found")
+var UserNotInOrganization = errors.New("user_not_in_organization")
 
 type Repo interface {
 	/**
@@ -35,6 +40,9 @@ type Repo interface {
 	Create empty user
 	*/
 	NewEmptyUser() User
+
+	AddUserToOrganization(user User, orgId int) error
+	RemoveUserFromOrganization(user User, orgId int) error
 
 	/**
 	List all users

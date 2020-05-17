@@ -47,6 +47,21 @@ func (mr *MockResetRepoMockRecorder) CheckForActivationToken(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckForActivationToken", reflect.TypeOf((*MockResetRepo)(nil).CheckForActivationToken), arg0, arg1)
 }
 
+// CheckForOneTimePasswordToken mocks base method
+func (m *MockResetRepo) CheckForOneTimePasswordToken(arg0 int, arg1 string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckForOneTimePasswordToken", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckForOneTimePasswordToken indicates an expected call of CheckForOneTimePasswordToken
+func (mr *MockResetRepoMockRecorder) CheckForOneTimePasswordToken(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckForOneTimePasswordToken", reflect.TypeOf((*MockResetRepo)(nil).CheckForOneTimePasswordToken), arg0, arg1)
+}
+
 // CheckForResetToken mocks base method
 func (m *MockResetRepo) CheckForResetToken(arg0 int, arg1 string) (int, error) {
 	m.ctrl.T.Helper()
@@ -86,6 +101,20 @@ func (m *MockResetRepo) IssueActivationRequest(arg0 string, arg1 int, arg2 strin
 func (mr *MockResetRepoMockRecorder) IssueActivationRequest(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueActivationRequest", reflect.TypeOf((*MockResetRepo)(nil).IssueActivationRequest), arg0, arg1, arg2)
+}
+
+// IssueOneTimePasswordRequest mocks base method
+func (m *MockResetRepo) IssueOneTimePasswordRequest(arg0 string, arg1 int, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IssueOneTimePasswordRequest", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IssueOneTimePasswordRequest indicates an expected call of IssueOneTimePasswordRequest
+func (mr *MockResetRepoMockRecorder) IssueOneTimePasswordRequest(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueOneTimePasswordRequest", reflect.TypeOf((*MockResetRepo)(nil).IssueOneTimePasswordRequest), arg0, arg1, arg2)
 }
 
 // IssueResetRequest mocks base method

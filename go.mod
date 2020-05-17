@@ -13,11 +13,9 @@ require (
 	github.com/go-redis/cache v6.4.0+incompatible
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0 // indirect
-	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/klauspost/compress v1.10.5 // indirect
@@ -30,9 +28,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rubenv/sql-migrate v0.0.0-20200423171638-eef9d3b68125
 	github.com/stretchr/testify v1.4.0
-	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
-	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect
 	go.mongodb.org/mongo-driver v1.3.2
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5

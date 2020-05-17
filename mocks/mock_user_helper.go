@@ -5,10 +5,9 @@
 package mocks
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	users "github.com/reaction-eng/restlib/users"
+	reflect "reflect"
 )
 
 // MockUserHelper is a mock of Helper interface
@@ -63,6 +62,20 @@ func (mr *MockUserHelperMockRecorder) AddUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUserHelper)(nil).AddUser), arg0)
 }
 
+// AddUserToOrganization mocks base method
+func (m *MockUserHelper) AddUserToOrganization(arg0 users.User, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddUserToOrganization", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddUserToOrganization indicates an expected call of AddUserToOrganization
+func (mr *MockUserHelperMockRecorder) AddUserToOrganization(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUserToOrganization", reflect.TypeOf((*MockUserHelper)(nil).AddUserToOrganization), arg0, arg1)
+}
+
 // CheckForActivationToken mocks base method
 func (m *MockUserHelper) CheckForActivationToken(arg0 int, arg1 string) (int, error) {
 	m.ctrl.T.Helper()
@@ -76,6 +89,21 @@ func (m *MockUserHelper) CheckForActivationToken(arg0 int, arg1 string) (int, er
 func (mr *MockUserHelperMockRecorder) CheckForActivationToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckForActivationToken", reflect.TypeOf((*MockUserHelper)(nil).CheckForActivationToken), arg0, arg1)
+}
+
+// CheckForOneTimePasswordToken mocks base method
+func (m *MockUserHelper) CheckForOneTimePasswordToken(arg0 int, arg1 string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckForOneTimePasswordToken", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckForOneTimePasswordToken indicates an expected call of CheckForOneTimePasswordToken
+func (mr *MockUserHelperMockRecorder) CheckForOneTimePasswordToken(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckForOneTimePasswordToken", reflect.TypeOf((*MockUserHelper)(nil).CheckForOneTimePasswordToken), arg0, arg1)
 }
 
 // CheckForResetToken mocks base method
@@ -205,6 +233,20 @@ func (mr *MockUserHelperMockRecorder) IssueActivationRequest(arg0, arg1, arg2 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueActivationRequest", reflect.TypeOf((*MockUserHelper)(nil).IssueActivationRequest), arg0, arg1, arg2)
 }
 
+// IssueOneTimePasswordRequest mocks base method
+func (m *MockUserHelper) IssueOneTimePasswordRequest(arg0 string, arg1 int, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IssueOneTimePasswordRequest", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IssueOneTimePasswordRequest indicates an expected call of IssueOneTimePasswordRequest
+func (mr *MockUserHelperMockRecorder) IssueOneTimePasswordRequest(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueOneTimePasswordRequest", reflect.TypeOf((*MockUserHelper)(nil).IssueOneTimePasswordRequest), arg0, arg1, arg2)
+}
+
 // IssueResetRequest mocks base method
 func (m *MockUserHelper) IssueResetRequest(arg0 string, arg1 int, arg2 string) error {
 	m.ctrl.T.Helper()
@@ -229,7 +271,7 @@ func (m *MockUserHelper) ListUsers(arg0 bool, arg1 []int) ([]int, error) {
 }
 
 // ListUsers indicates an expected call of ListUsers
-func (mr *MockUserHelperMockRecorder) ListAllUsers(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockUserHelperMockRecorder) ListUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockUserHelper)(nil).ListUsers), arg0, arg1)
 }
@@ -289,6 +331,20 @@ func (m *MockUserHelper) PasswordChangeForced(arg0 int, arg1, arg2 string) error
 func (mr *MockUserHelperMockRecorder) PasswordChangeForced(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PasswordChangeForced", reflect.TypeOf((*MockUserHelper)(nil).PasswordChangeForced), arg0, arg1, arg2)
+}
+
+// RemoveUserFromOrganization mocks base method
+func (m *MockUserHelper) RemoveUserFromOrganization(arg0 users.User, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUserFromOrganization", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUserFromOrganization indicates an expected call of RemoveUserFromOrganization
+func (mr *MockUserHelperMockRecorder) RemoveUserFromOrganization(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserFromOrganization", reflect.TypeOf((*MockUserHelper)(nil).RemoveUserFromOrganization), arg0, arg1)
 }
 
 // TokenGenerator mocks base method

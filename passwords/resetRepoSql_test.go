@@ -48,6 +48,12 @@ func TestNewRepoMySql(t *testing.T) {
 		as.Subject = "test email subject"
 		as.Template = "test email template"
 	})
+	mockConfiguration.EXPECT().GetStruct("one_time_password", gomock.Any()).Times(1).Do(func(name string, s interface{}) {
+		as, _ := s.(*passwords.PasswordResetConfig)
+		as.Subject = "one time email subject"
+		as.Template = "one time email template"
+	})
+	mockConfiguration.EXPECT().GetFloat("tokenLifeSpan").Times(1).Return(float64(24), nil)
 
 	// act
 	repoMySql, err := passwords.NewRepoMySql(db, mockEmailer, mockConfiguration)
@@ -84,6 +90,12 @@ func TestNewRepoPostgresSql(t *testing.T) {
 		as.Subject = "test email subject"
 		as.Template = "test email template"
 	})
+	mockConfiguration.EXPECT().GetStruct("one_time_password", gomock.Any()).Times(1).Do(func(name string, s interface{}) {
+		as, _ := s.(*passwords.PasswordResetConfig)
+		as.Subject = "one time email subject"
+		as.Template = "one time email template"
+	})
+	mockConfiguration.EXPECT().GetFloat("tokenLifeSpan").Times(1).Return(float64(24), nil)
 
 	// act
 	repoMySql, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
@@ -115,6 +127,12 @@ func setupSqlMock(t *testing.T, mockCtrl *gomock.Controller, tableName string) (
 		as.Subject = "user_activation_subject"
 		as.Template = "user_activation_template"
 	})
+	mockConfiguration.EXPECT().GetStruct("one_time_password", gomock.Any()).Times(1).Do(func(name string, s interface{}) {
+		as, _ := s.(*passwords.PasswordResetConfig)
+		as.Subject = "one time email subject"
+		as.Template = "one time email template"
+	})
+	mockConfiguration.EXPECT().GetFloat("tokenLifeSpan").Times(1).Return(float64(24), nil)
 
 	return db, mock, mockEmailer, mockConfiguration
 }
@@ -305,6 +323,7 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 		token         string
 		userIdDb      int
 		tokenDb       string
+		issueTime     time.Time
 		queryError    error
 		rowId         int
 		expectedRowId int
@@ -315,6 +334,18 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 			"example token",
 			100,
 			"example token",
+			time.Now().Add(-25 * time.Hour),
+			nil,
+			1023,
+			0,
+			errors.New("token_expired"),
+		},
+		{
+			100,
+			"example token",
+			100,
+			"example token",
+			time.Now(),
 			nil,
 			1023,
 			1023,
@@ -325,6 +356,7 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 			"example token",
 			100,
 			"other token token",
+			time.Now(),
 			nil,
 			1023,
 			-1,
@@ -335,6 +367,7 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 			"example token",
 			102,
 			"other example token",
+			time.Now(),
 			nil,
 			1023,
 			-1,
@@ -345,6 +378,7 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 			"example token",
 			102,
 			"example token",
+			time.Now(),
 			nil,
 			1023,
 			-1,
@@ -355,6 +389,7 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 			"example token",
 			100,
 			"example token",
+			time.Now(),
 			errors.New("queryError"),
 			1023,
 			-1,
@@ -371,7 +406,7 @@ func TestResetRepoSql_CheckForResetToken(t *testing.T) {
 		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 		rows := sqlmock.NewRows([]string{"id", "userId", "email", "token", "issued", "type"}).
-			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, time.Now(), 1)
+			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, testCase.issueTime, 1)
 
 		dbMock.ExpectQuery("SELECT (.+) FROM " + passwords.TableName).
 			WillReturnRows(rows).
@@ -399,6 +434,7 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 		token         string
 		userIdDb      int
 		tokenDb       string
+		issueTime     time.Time
 		queryError    error
 		rowId         int
 		expectedRowId int
@@ -409,6 +445,18 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 			"example token",
 			100,
 			"example token",
+			time.Now().Add(-25 * time.Hour),
+			nil,
+			1023,
+			0,
+			errors.New("token_expired"),
+		},
+		{
+			100,
+			"example token",
+			100,
+			"example token",
+			time.Now(),
 			nil,
 			1023,
 			1023,
@@ -419,6 +467,7 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 			"example token",
 			100,
 			"other token token",
+			time.Now(),
 			nil,
 			1023,
 			-1,
@@ -429,6 +478,7 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 			"example token",
 			102,
 			"other example token",
+			time.Now(),
 			nil,
 			1023,
 			-1,
@@ -439,6 +489,7 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 			"example token",
 			102,
 			"example token",
+			time.Now(),
 			nil,
 			1023,
 			-1,
@@ -449,6 +500,7 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 			"example token",
 			100,
 			"example token",
+			time.Now(),
 			errors.New("queryError"),
 			1023,
 			-1,
@@ -465,7 +517,7 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 
 		rows := sqlmock.NewRows([]string{"id", "userId", "email", "token", "issued", "type"}).
-			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, time.Now(), 2)
+			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, testCase.issueTime, 2)
 
 		dbMock.ExpectQuery("SELECT (.+) FROM " + passwords.TableName).
 			WillReturnRows(rows).
@@ -473,6 +525,117 @@ func TestResetRepoSql_CheckForActivationToken(t *testing.T) {
 
 		// act
 		returnedRowId, err := repo.CheckForActivationToken(testCase.userId, testCase.token)
+
+		// assert
+		assert.Equal(t, testCase.expectedRowId, returnedRowId)
+		assert.Equal(t, testCase.expectedError, err)
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+
+		// cleanup
+		db.Close()
+		mockCtrl.Finish()
+	}
+}
+
+func TestResetRepoSql_CheckForOneTimePasswordToken(t *testing.T) {
+	testCases := []struct {
+		userId        int
+		token         string
+		userIdDb      int
+		tokenDb       string
+		issueTime     time.Time
+		queryError    error
+		rowId         int
+		expectedRowId int
+		expectedError error
+	}{
+		{
+			100,
+			"example token",
+			100,
+			"example token",
+			time.Now().Add(-25 * time.Hour),
+			nil,
+			1023,
+			0,
+			errors.New("token_expired"),
+		},
+		{
+			100,
+			"example token",
+			100,
+			"example token",
+			time.Now(),
+			nil,
+			1023,
+			1023,
+			nil,
+		},
+		{
+			100,
+			"example token",
+			100,
+			"other token token",
+			time.Now(),
+			nil,
+			1023,
+			-1,
+			errors.New("oneTimePassword_login_forbidden"),
+		},
+		{
+			100,
+			"example token",
+			102,
+			"other example token",
+			time.Now(),
+			nil,
+			1023,
+			-1,
+			errors.New("oneTimePassword_login_forbidden"),
+		},
+		{
+			100,
+			"example token",
+			102,
+			"example token",
+			time.Now(),
+			nil,
+			1023,
+			-1,
+			errors.New("oneTimePassword_login_forbidden"),
+		},
+		{
+			100,
+			"example token",
+			100,
+			"example token",
+			time.Now(),
+			errors.New("queryError"),
+			1023,
+			-1,
+			errors.New("oneTimePassword_login_forbidden"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		// arrange
+		mockCtrl := gomock.NewController(t)
+
+		db, dbMock, mockEmailer, mockConfiguration := setupSqlMock(t, mockCtrl, passwords.TableName)
+
+		repo, err := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
+
+		rows := sqlmock.NewRows([]string{"id", "userId", "email", "token", "issued", "type"}).
+			AddRow(testCase.rowId, testCase.userIdDb, "email", testCase.tokenDb, testCase.issueTime, 3)
+
+		dbMock.ExpectQuery("SELECT (.+) FROM " + passwords.TableName).
+			WillReturnRows(rows).
+			WillReturnError(testCase.queryError)
+
+		// act
+		returnedRowId, err := repo.CheckForOneTimePasswordToken(testCase.userId, testCase.token)
 
 		// assert
 		assert.Equal(t, testCase.expectedRowId, returnedRowId)
@@ -555,6 +718,12 @@ func TestResetRepoSql_CleanUp(t *testing.T) {
 		as.Subject = "test email subject"
 		as.Template = "test email template"
 	})
+	mockConfiguration.EXPECT().GetStruct("one_time_password", gomock.Any()).Times(1).Do(func(name string, s interface{}) {
+		as, _ := s.(*passwords.PasswordResetConfig)
+		as.Subject = "one time email subject"
+		as.Template = "one time email template"
+	})
+	mockConfiguration.EXPECT().GetFloat("tokenLifeSpan").Times(1).Return(float64(24), nil)
 
 	repo, _ := passwords.NewRepoPostgresSql(db, mockEmailer, mockConfiguration)
 

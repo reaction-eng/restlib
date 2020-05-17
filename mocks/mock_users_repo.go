@@ -5,10 +5,9 @@
 package mocks
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	users "github.com/reaction-eng/restlib/users"
+	reflect "reflect"
 )
 
 // MockUserRepo is a mock of Repo interface
@@ -63,6 +62,20 @@ func (mr *MockUserRepoMockRecorder) AddUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUserRepo)(nil).AddUser), arg0)
 }
 
+// AddUserToOrganization mocks base method
+func (m *MockUserRepo) AddUserToOrganization(arg0 users.User, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddUserToOrganization", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddUserToOrganization indicates an expected call of AddUserToOrganization
+func (mr *MockUserRepoMockRecorder) AddUserToOrganization(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUserToOrganization", reflect.TypeOf((*MockUserRepo)(nil).AddUserToOrganization), arg0, arg1)
+}
+
 // GetUser mocks base method
 func (m *MockUserRepo) GetUser(arg0 int) (users.User, error) {
 	m.ctrl.T.Helper()
@@ -103,7 +116,7 @@ func (m *MockUserRepo) ListUsers(arg0 bool, arg1 []int) ([]int, error) {
 }
 
 // ListUsers indicates an expected call of ListUsers
-func (mr *MockUserRepoMockRecorder) ListAllUsers(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockUserRepoMockRecorder) ListUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockUserRepo)(nil).ListUsers), arg0, arg1)
 }
@@ -120,6 +133,20 @@ func (m *MockUserRepo) NewEmptyUser() users.User {
 func (mr *MockUserRepoMockRecorder) NewEmptyUser() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewEmptyUser", reflect.TypeOf((*MockUserRepo)(nil).NewEmptyUser))
+}
+
+// RemoveUserFromOrganization mocks base method
+func (m *MockUserRepo) RemoveUserFromOrganization(arg0 users.User, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUserFromOrganization", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUserFromOrganization indicates an expected call of RemoveUserFromOrganization
+func (mr *MockUserRepoMockRecorder) RemoveUserFromOrganization(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserFromOrganization", reflect.TypeOf((*MockUserRepo)(nil).RemoveUserFromOrganization), arg0, arg1)
 }
 
 // UpdateUser mocks base method

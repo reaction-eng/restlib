@@ -13,9 +13,7 @@ import (
 )
 
 const UserTableName = "users"
-const OrgTableName = "userOrgs"
-
-var UserNotFound = errors.New("login_email_not_found")
+const UserOrgTableName = "userOrganizations"
 
 /**
 Define a struct for Repo for use with users
@@ -28,12 +26,15 @@ type RepoSql struct {
 	tableName string
 
 	//Store the required statements to reduce compute time
-	addUserStatement        *sql.Stmt
-	getUserStatement        *sql.Stmt
-	getUserByEmailStatement *sql.Stmt
-	updateUserStatement     *sql.Stmt
-	activateStatement       *sql.Stmt
-	listAllUsersStatement   *sql.Stmt
+	addUserStatement           *sql.Stmt
+	getUserStatement           *sql.Stmt
+	getUserByEmailStatement    *sql.Stmt
+	updateUserStatement        *sql.Stmt
+	activateStatement          *sql.Stmt
+	listAllUsersStatement      *sql.Stmt
+	getUserOrganizations       *sql.Stmt
+	addUserToOrganization      *sql.Stmt
+	removeUserFromOrganization *sql.Stmt
 }
 
 //Provide a method to make a new UserRepoSql
@@ -83,6 +84,24 @@ func NewRepoMySql(db *sql.DB) (*RepoSql, error) {
 	}
 	newRepo.listAllUsersStatement = listAllUsers
 
+	getUserOrganizations, err := db.Prepare("SELECT orgId FROM " + UserOrgTableName + " where userId = ?")
+	if err != nil {
+		return nil, err
+	}
+	newRepo.getUserOrganizations = getUserOrganizations
+
+	addUserToOrganization, err := db.Prepare("INSERT INTO " + UserOrgTableName + " (userId,orgId,joinDate) VALUES (?, ?, ?)")
+	if err != nil {
+		return nil, err
+	}
+	newRepo.addUserToOrganization = addUserToOrganization
+
+	removeUserFromOrganization, err := db.Prepare("DELETE FROM " + UserOrgTableName + " WHERE userId = ? AND orgId = ?")
+	if err != nil {
+		return nil, err
+	}
+	newRepo.removeUserFromOrganization = removeUserFromOrganization
+
 	//Return a point
 	return &newRepo, nil
 
@@ -109,7 +128,6 @@ func NewRepoPostgresSql(db *sql.DB) (*RepoSql, error) {
 	newRepo.getUserStatement = getUser
 
 	getUserByEmail, err := db.Prepare("SELECT * FROM " + UserTableName + " where email like $1")
-	//Check for error
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +151,24 @@ func NewRepoPostgresSql(db *sql.DB) (*RepoSql, error) {
 	}
 	newRepo.listAllUsersStatement = listAllUsers
 
+	getUserOrganizations, err := db.Prepare("SELECT orgId FROM " + UserOrgTableName + " where userId = $1")
+	if err != nil {
+		return nil, err
+	}
+	newRepo.getUserOrganizations = getUserOrganizations
+
+	addUserToOrganization, err := db.Prepare("INSERT INTO " + UserOrgTableName + " (userId,orgId,joinDate) VALUES ($1, $2, $3)")
+	if err != nil {
+		return nil, err
+	}
+	newRepo.addUserToOrganization = addUserToOrganization
+
+	removeUserFromOrganization, err := db.Prepare("DELETE FROM " + UserOrgTableName + " WHERE userId = $1 AND orgId = $2")
+	if err != nil {
+		return nil, err
+	}
+	newRepo.removeUserFromOrganization = removeUserFromOrganization
+
 	return &newRepo, nil
 }
 
@@ -155,11 +191,19 @@ func (repo *RepoSql) GetUserByEmail(email string) (User, error) {
 	//Use a useful error
 	if err == sql.ErrNoRows {
 		return nil, UserNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
 	//Store if this is activated
 	user.activated_ = activationDate.Valid
 	user.passwordlogin_ = len(user.password_) > 0
+
+	orgIds, err := repo.listUserOrganizations(user.Id_)
+	if err != nil {
+		return nil, err
+	}
+	user.SetOrganizations(orgIds...)
 
 	return &user, err
 }
@@ -178,12 +222,20 @@ func (repo *RepoSql) GetUser(id int) (User, error) {
 
 	//Use a useful error
 	if err == sql.ErrNoRows {
-		err = errors.New("login_user_id_not_found")
+		return nil, UserNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
 	//Store if this is activated
 	user.activated_ = activationDate.Valid
 	user.passwordlogin_ = len(user.password_) > 0
+
+	orgIds, err := repo.listUserOrganizations(user.Id_)
+	if err != nil {
+		return nil, err
+	}
+	user.SetOrganizations(orgIds...)
 
 	return &user, err
 }
@@ -262,6 +314,53 @@ func (repo *RepoSql) ActivateUser(user User) error {
 	//Just update the info//"UPDATE  " + tableName + " SET activation = $1 WHERE id = $2")
 	_, err := repo.activateStatement.Exec(actTime, user.Id())
 	return err
+}
+
+func (repo *RepoSql) AddUserToOrganization(user User, orgId int) error {
+	_, err := repo.addUserToOrganization.Exec(user.Id(), orgId, time.Now())
+	return err
+}
+
+func (repo *RepoSql) RemoveUserFromOrganization(user User, orgId int) error {
+	result, err := repo.removeUserFromOrganization.Exec(user.Id(), orgId)
+	if err != nil {
+		return err
+	}
+
+	rowsChange, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsChange < 1 {
+		return errors.New("no_organizations_removed")
+	}
+
+	return err
+}
+
+func (repo *RepoSql) listUserOrganizations(userId int) ([]int, error) {
+	//Put in the list
+	list := make([]int, 0)
+
+	rows, err := repo.getUserOrganizations.Query(userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var orgId int
+
+		err := rows.Scan(&orgId)
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, orgId)
+	}
+	err = rows.Err()
+
+	return list, err
+
 }
 
 func (repo *RepoSql) CleanUp() {

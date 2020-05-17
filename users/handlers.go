@@ -519,5 +519,4 @@ func (handler *Handler) handleUserActivationGet(w http.ResponseWriter, r *http.R
 
 	//Now just return
 	utils.ReturnJsonStatus(w, http.StatusOK, true, "activation_token_request_received")
-
 }
