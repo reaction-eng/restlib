@@ -216,7 +216,7 @@ func (helper *BasicHelper) Login(userPassword string, organizationId int, user U
 	}
 
 	// make sure user is in org
-	if !inList(user.Organizations(), organizationId) {
+	if !InOrganization(user, organizationId) {
 		return nil, errors.New("user_not_in_organization")
 	}
 
@@ -242,13 +242,4 @@ func (helper *BasicHelper) Login(userPassword string, organizationId int, user U
 	user.SetToken(helper.CreateJWTToken(user.Id(), organizationId, user.Email()))
 
 	return user, nil
-}
-
-func inList(organizationList []int, organization int) bool {
-	for _, org := range organizationList {
-		if org == organization {
-			return true
-		}
-	}
-	return false
 }

@@ -105,7 +105,7 @@ func TestHandler_handleUserPreferencesGet(t *testing.T) {
 
 		handler := preferences.NewHandler(mockUserRepo, mockPrefRepo)
 
-		router := mocks.NewTestRouter(handler, testCase.user())
+		router := mocks.NewTestRouterWithUser(handler, testCase.user(), 0)
 
 		req := httptest.NewRequest("GET", "http://localhost/users/preferences", nil)
 		w := httptest.NewRecorder()
@@ -239,7 +239,7 @@ func TestHandler_handleUserPreferencesSet(t *testing.T) {
 
 		handler := preferences.NewHandler(mockUserRepo, mockPrefRepo)
 
-		router := mocks.NewTestRouter(handler, testCase.user())
+		router := mocks.NewTestRouterWithUser(handler, testCase.user(), 0)
 
 		req := httptest.NewRequest("POST", "http://localhost/users/preferences", testCase.body)
 		w := httptest.NewRecorder()

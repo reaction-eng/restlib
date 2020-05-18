@@ -204,7 +204,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 		mockHelper.EXPECT().IssueOneTimePasswordRequest(token, 34, "user@example.com").Times(testCase.issueOneTimePasswordRequestCount).Return(testCase.issueOneTimePasswordRequestError)
 
 		handler := users.NewOneTimePasswordHandler(mockHelper)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("GET", testCase.url, nil)
 		w := httptest.NewRecorder()
@@ -450,7 +450,7 @@ func TestHandler_handleOneTimePasswordLoginPut(t *testing.T) {
 		mockHelper.EXPECT().CreateJWTToken(34, 45, "user@example.com").Times(testCase.createJwtTokenCount).Return("jwtToken")
 
 		handler := users.NewOneTimePasswordHandler(mockHelper)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("POST", "http://localhost/users/onetimelogin", testCase.body)
 		w := httptest.NewRecorder()

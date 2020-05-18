@@ -22,7 +22,6 @@ func (perm *Permissions) AllowedTo(tasks ...string) bool {
 		if !contains(perm.Permissions, task) {
 			return false
 		}
-
 	}
 
 	//I Guess we can

@@ -98,7 +98,7 @@ func TestHandler_handleUserCreate(t *testing.T) {
 		}
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("POST", "http://localhost/users/new", testCase.body)
 		w := httptest.NewRecorder()
@@ -214,7 +214,7 @@ func TestHandler_handleUserLogin(t *testing.T) {
 		mockHelper.EXPECT().Login("new password", 34, mockUser).Times(testCase.loginCount).Return(mockUser, testCase.loginError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("POST", "http://localhost/users/login", testCase.body)
 		w := httptest.NewRecorder()
@@ -358,7 +358,7 @@ func TestHandler_handleUserUpdate(t *testing.T) {
 		mockHelper.EXPECT().Update(34, testCase.expectedUserAfterDecode()).Times(testCase.updateCount).Return(testCase.expectedUserAfterDecode(), testCase.updateError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, testCase.loggedInUser) // not logged in
+		router := mocks.NewTestRouterWithUser(handler, testCase.loggedInUser, 0) // not logged in
 
 		req := httptest.NewRequest("PUT", "http://localhost/users/", testCase.body)
 		w := httptest.NewRecorder()
@@ -437,7 +437,7 @@ func TestHandler_handleUserGet(t *testing.T) {
 		mockHelper.EXPECT().GetUser(34).Times(testCase.getUserCount).Return(testCase.getUserUser(), testCase.getUserError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, testCase.loggedInUser) // not logged in
+		router := mocks.NewTestRouterWithUser(handler, testCase.loggedInUser, 0)
 
 		req := httptest.NewRequest("GET", "http://localhost/users/", nil)
 		w := httptest.NewRecorder()
@@ -515,7 +515,7 @@ func TestHandler_handlePasswordUpdate(t *testing.T) {
 		mockHelper.EXPECT().PasswordChange(34, "user@example.info", "new password", "old password").Times(testCase.passwordChangeCount).Return(testCase.passwordChangeError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, testCase.loggedInUser) // not logged in
+		router := mocks.NewTestRouterWithUser(handler, testCase.loggedInUser, 0)
 
 		req := httptest.NewRequest("POST", "http://localhost/users/password/change", testCase.body)
 		w := httptest.NewRecorder()
@@ -645,7 +645,7 @@ func TestHandler_handlePasswordResetGet(t *testing.T) {
 		mockHelper.EXPECT().IssueResetRequest(token, 34, "user@example.com").Times(testCase.issueResetRequestCount).Return(testCase.issueResetRequestError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("GET", testCase.url, nil)
 		w := httptest.NewRecorder()
@@ -815,7 +815,7 @@ func TestHandler_handlePasswordResetPut(t *testing.T) {
 		mockHelper.EXPECT().UseToken(reqId).Times(testCase.useTokenCount).Return(testCase.userTokenError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("POST", "http://localhost/users/password/reset", testCase.body)
 		w := httptest.NewRecorder()
@@ -981,7 +981,7 @@ func TestHandler_handleUserActivationPut(t *testing.T) {
 		mockHelper.EXPECT().UseToken(reqId).Times(testCase.useTokenCount).Return(testCase.userTokenError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("POST", "http://localhost/users/activate", testCase.body)
 		w := httptest.NewRecorder()
@@ -1134,7 +1134,7 @@ func TestHandler_handleUserActivationGet(t *testing.T) {
 		mockHelper.EXPECT().IssueActivationRequest(token, 34, "user@example.com").Times(testCase.issueActivationRequestCount).Return(testCase.issueActivationRequestError)
 
 		handler := users.NewHandler(mockHelper, true)
-		router := mocks.NewTestRouter(handler, nil) // not logged in
+		router := mocks.NewTestRouter(handler) // not logged in
 
 		req := httptest.NewRequest("GET", testCase.url, nil)
 		w := httptest.NewRecorder()

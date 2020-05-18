@@ -420,13 +420,14 @@ func (mr *MockUserHelperMockRecorder) ValidatePassword(arg0 interface{}) *gomock
 }
 
 // ValidateToken mocks base method
-func (m *MockUserHelper) ValidateToken(arg0 string) (int, string, error) {
+func (m *MockUserHelper) ValidateToken(arg0 string) (int, int, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateToken", arg0)
 	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // ValidateToken indicates an expected call of ValidateToken

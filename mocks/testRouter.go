@@ -5,26 +5,47 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/reaction-eng/restlib/routing"
 	"github.com/reaction-eng/restlib/users"
+
+	"github.com/reaction-eng/restlib/utils"
+
+	"github.com/reaction-eng/restlib/routing"
 )
 
 type TestRouter struct {
 	routes []routing.Route
-	user   users.User
+	userId *int
+	orgId  *int
 }
 
-func NewTestRouter(routerProducer routing.RouteProducer, user users.User) *TestRouter {
+func NewTestRouter(routerProducer routing.RouteProducer) *TestRouter {
 	return &TestRouter{
 		routerProducer.GetRoutes(),
-		user,
+		nil,
+		nil,
+	}
+}
+func NewTestRouterWithUserId(routerProducer routing.RouteProducer, userId int, orgId int) *TestRouter {
+	return &TestRouter{
+		routerProducer.GetRoutes(),
+		&userId,
+		&orgId,
+	}
+}
+
+func NewTestRouterWithUser(routerProducer routing.RouteProducer, user users.User, orgId int) *TestRouter {
+	if user == nil {
+		return NewTestRouter(routerProducer)
+	} else {
+		return NewTestRouterWithUserId(routerProducer, user.Id(), orgId)
 	}
 }
 
 func (router *TestRouter) Handle(w http.ResponseWriter, r *http.Request) *routing.Route {
 	// Update the context
-	if router.user != nil {
-		ctx := context.WithValue(r.Context(), "user", router.user.Id())
+	if router.userId != nil {
+		ctx := context.WithValue(r.Context(), utils.UserKey, *router.userId)
+		ctx = context.WithValue(ctx, utils.OrganizationKey, *router.orgId)
 		r = r.WithContext(ctx)
 	}
 

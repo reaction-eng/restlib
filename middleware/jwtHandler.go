@@ -72,7 +72,7 @@ func MakeJwtMiddlewareFunc(router routing.Router, userRepo users.Repo, permRepo 
 			}
 
 			//Validate and get the user id
-			userId, tokenEmail, err := passHelper.ValidateToken(tokenHeader)
+			userId, orgId, tokenEmail, err := passHelper.ValidateToken(tokenHeader)
 
 			//If there is an error return
 			if err != nil {
@@ -105,10 +105,16 @@ func MakeJwtMiddlewareFunc(router routing.Router, userRepo users.Repo, permRepo 
 				return
 			}
 
+			// Make sure that the user is in the org
+			if !users.InOrganization(loggedInUser, orgId) {
+				utils.ReturnJsonStatus(w, http.StatusForbidden, false, users.UserNotInOrganization.Error())
+				return
+			}
+
 			//Make sure that the user has permission
 			if permRepo != nil {
 				//See if we are allowed
-				userPerm, err := permRepo.GetPermissions(loggedInUser)
+				userPerm, err := permRepo.GetPermissions(loggedInUser, orgId)
 
 				//See if we are allowed to
 				if err != nil || !userPerm.AllowedTo(route.ReqPermissions...) {
@@ -121,7 +127,8 @@ func MakeJwtMiddlewareFunc(router routing.Router, userRepo users.Repo, permRepo 
 
 			//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
 			//fmt.Sprintf("User %", tk.Username) //Useful for monitoring
-			ctx := context.WithValue(r.Context(), "user", userId)
+			ctx := context.WithValue(r.Context(), utils.UserKey, userId)
+			ctx = context.WithValue(ctx, utils.OrganizationKey, orgId)
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r) //proceed in the middleware chain!
 		})

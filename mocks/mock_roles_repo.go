@@ -35,44 +35,44 @@ func (m *MockRolesRepo) EXPECT() *MockRolesRepoMockRecorder {
 }
 
 // GetPermissions mocks base method
-func (m *MockRolesRepo) GetPermissions(arg0 users.User) (*roles.Permissions, error) {
+func (m *MockRolesRepo) GetPermissions(arg0 users.User, arg1 int) (*roles.Permissions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissions", arg0)
+	ret := m.ctrl.Call(m, "GetPermissions", arg0, arg1)
 	ret0, _ := ret[0].(*roles.Permissions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissions indicates an expected call of GetPermissions
-func (mr *MockRolesRepoMockRecorder) GetPermissions(arg0 interface{}) *gomock.Call {
+func (mr *MockRolesRepoMockRecorder) GetPermissions(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissions", reflect.TypeOf((*MockRolesRepo)(nil).GetPermissions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissions", reflect.TypeOf((*MockRolesRepo)(nil).GetPermissions), arg0, arg1)
 }
 
 // SetRolesByName mocks base method
-func (m *MockRolesRepo) SetRolesByName(arg0 users.User, arg1 []string) error {
+func (m *MockRolesRepo) SetRolesByName(arg0 users.User, arg1 int, arg2 []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetRolesByName", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetRolesByName", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetRolesByName indicates an expected call of SetRolesByName
-func (mr *MockRolesRepoMockRecorder) SetRolesByName(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRolesRepoMockRecorder) SetRolesByName(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRolesByName", reflect.TypeOf((*MockRolesRepo)(nil).SetRolesByName), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRolesByName", reflect.TypeOf((*MockRolesRepo)(nil).SetRolesByName), arg0, arg1, arg2)
 }
 
 // SetRolesByRoleId mocks base method
-func (m *MockRolesRepo) SetRolesByRoleId(arg0 users.User, arg1 []int) error {
+func (m *MockRolesRepo) SetRolesByRoleId(arg0 users.User, arg1 int, arg2 []int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetRolesByRoleId", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetRolesByRoleId", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetRolesByRoleId indicates an expected call of SetRolesByRoleId
-func (mr *MockRolesRepoMockRecorder) SetRolesByRoleId(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRolesRepoMockRecorder) SetRolesByRoleId(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRolesByRoleId", reflect.TypeOf((*MockRolesRepo)(nil).SetRolesByRoleId), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRolesByRoleId", reflect.TypeOf((*MockRolesRepo)(nil).SetRolesByRoleId), arg0, arg1, arg2)
 }

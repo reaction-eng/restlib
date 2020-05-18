@@ -212,17 +212,20 @@ func TestBasicHelper_ValidateToken(t *testing.T) {
 	testCases := []struct {
 		token  string
 		userId int
+		orgId  int
 		email  string
 		error  error
 	}{
 		{
-			"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjk4LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20ifQ.zbpK1ZSeOTrsvSscE7KJqdhHfMgiOSHiu_2jOBsOLyA",
+			"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjk4LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20iLCJPcmdhbml6YXRpb25JZCI6MjI0M30.Xb_scxUShDoaBRmKqxSzwrdPlZq8fzHNBy39fe6rrGI",
 			98,
+			2243,
 			"matt@example.com",
 			nil,
 		},
 		{
 			"",
+			-1,
 			-1,
 			"",
 			errors.New("auth_missing_token"),
@@ -230,11 +233,13 @@ func TestBasicHelper_ValidateToken(t *testing.T) {
 		{
 			"Be",
 			-1,
+			-1,
 			"",
 			errors.New("auth_malformed_token"),
 		},
 		{
 			"BearereyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjk4LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20ifQ.zbpK1ZSeOTrsvSscE7KJqdhHfMgiOSHiu_2jOBsOLyA",
+			-1,
 			-1,
 			"",
 			errors.New("auth_malformed_token"),
@@ -242,11 +247,13 @@ func TestBasicHelper_ValidateToken(t *testing.T) {
 		{
 			"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ2.eyJVc2VySWQiOjk4LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20ifQ.zbpK1ZSeOTrsvSscE7KJqdhHfMgiOSHiu_2jOBsOLyA",
 			-1,
+			-1,
 			"",
 			errors.New("auth_malformed_token"),
 		},
 		{
 			"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjk4LCJFbWFpbCI6Im1hdHRAZXhhbXBsZS5jb20ifQ.zbpK1ZSeOTrsvSscEdKJqdhHfMgiOSHiu_2jOBsOLyA",
+			-1,
 			-1,
 			"",
 			errors.New("auth_malformed_token"),
@@ -261,10 +268,11 @@ func TestBasicHelper_ValidateToken(t *testing.T) {
 		helper := setupBasicHelper(t, mockCtrl)
 
 		// act
-		userId, email, err := helper.ValidateToken(testCase.token)
+		userId, orgId, email, err := helper.ValidateToken(testCase.token)
 
 		// assert
 		assert.Equal(t, testCase.userId, userId)
+		assert.Equal(t, testCase.orgId, orgId)
 		assert.Equal(t, testCase.email, email)
 		assert.Equal(t, testCase.error, err)
 	}

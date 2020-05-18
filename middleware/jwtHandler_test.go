@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/reaction-eng/restlib/utils"
+
 	"github.com/reaction-eng/restlib/roles"
 
 	"github.com/reaction-eng/restlib/routing"
@@ -111,7 +113,7 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(0, "", errors.New("bad token"))
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(0, 0, "", errors.New("bad token"))
 
 			},
 			http.StatusForbidden,
@@ -128,7 +130,7 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example one two three").Return(0, "", errors.New("bad token"))
+				mockHelper.EXPECT().ValidateToken("Example one two three").Return(0, 0, "", errors.New("bad token"))
 
 			},
 			http.StatusForbidden,
@@ -145,7 +147,7 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "", nil)
 
 				mockUsers.EXPECT().GetUser(100).Times(1).Return(nil, nil)
 
@@ -164,7 +166,7 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 
@@ -185,7 +187,7 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("")
@@ -207,7 +209,7 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
@@ -233,15 +235,16 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
 				mockUser.EXPECT().Activated().Times(1).Return(true)
+				mockUser.EXPECT().Organizations().Times(1).Return([]int{1000})
 
 				mockUsers.EXPECT().GetUser(100).Times(1).Return(mockUser, nil)
 
-				mockRoles.EXPECT().GetPermissions(mockUser).Times(1).Return(&roles.Permissions{
+				mockRoles.EXPECT().GetPermissions(mockUser, 1000).Times(1).Return(&roles.Permissions{
 					Permissions: []string{},
 				}, nil)
 			},
@@ -262,15 +265,16 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
 				mockUser.EXPECT().Activated().Times(1).Return(true)
 
 				mockUsers.EXPECT().GetUser(100).Times(1).Return(mockUser, nil)
+				mockUser.EXPECT().Organizations().Times(1).Return([]int{1000})
 
-				mockRoles.EXPECT().GetPermissions(mockUser).Times(1).Return(&roles.Permissions{
+				mockRoles.EXPECT().GetPermissions(mockUser, 1000).Times(1).Return(&roles.Permissions{
 					Permissions: []string{"req_permissio"},
 				}, nil)
 			},
@@ -291,20 +295,51 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
 				mockUser.EXPECT().Activated().Times(1).Return(true)
+				mockUser.EXPECT().Organizations().Times(1).Return([]int{1000})
 
 				mockUsers.EXPECT().GetUser(100).Times(1).Return(mockUser, nil)
 
-				mockRoles.EXPECT().GetPermissions(mockUser).Times(1).Return(&roles.Permissions{
+				mockRoles.EXPECT().GetPermissions(mockUser, 1000).Times(1).Return(&roles.Permissions{
 					Permissions: []string{},
 				}, errors.New("permission error"))
 			},
 			http.StatusForbidden,
 			"{\"message\":\"insufficient_access\",\"status\":false}\n",
+			false,
+			nil,
+		},
+		{
+			"get with private route with good token wrong org",
+			"GET",
+			map[string]string{"Authorization": "Example Token"},
+			func(ctrl *gomock.Controller, mockRouter *mocks.MockRouter, mockUsers *mocks.MockUserRepo, mockRoles *mocks.MockRolesRepo, mockHelper *mocks.MockHelper) {
+				route := &routing.Route{
+					Public:         false,
+					ReqPermissions: []string{},
+				}
+
+				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
+
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
+
+				mockUser := mocks.NewMockUser(ctrl)
+				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
+				mockUser.EXPECT().Activated().Times(1).Return(true)
+				mockUser.EXPECT().Organizations().Times(1).Return([]int{132})
+
+				mockUsers.EXPECT().GetUser(100).Times(1).Return(mockUser, nil)
+
+				mockRoles.EXPECT().GetPermissions(mockUser, 1000).Times(0).Return(&roles.Permissions{
+					Permissions: []string{},
+				}, errors.New("user_not_in_organization"))
+			},
+			http.StatusForbidden,
+			"{\"message\":\"user_not_in_organization\",\"status\":false}\n",
 			false,
 			nil,
 		},
@@ -320,22 +355,23 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
 				mockUser.EXPECT().Activated().Times(1).Return(true)
+				mockUser.EXPECT().Organizations().Times(1).Return([]int{1000})
 
 				mockUsers.EXPECT().GetUser(100).Times(1).Return(mockUser, nil)
 
-				mockRoles.EXPECT().GetPermissions(mockUser).Times(1).Return(&roles.Permissions{
+				mockRoles.EXPECT().GetPermissions(mockUser, 1000).Times(1).Return(&roles.Permissions{
 					Permissions: []string{},
 				}, nil)
 			},
 			http.StatusOK,
 			"",
 			true,
-			map[string]interface{}{"user": 100},
+			map[string]interface{}{utils.UserKey: 100, utils.OrganizationKey: 1000},
 		},
 		{
 			"get user context with private route with needed permissions",
@@ -349,22 +385,23 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 				mockRouter.EXPECT().GetRoute(gomock.Any()).Times(1).Return(route)
 
-				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, "example@example.com", nil)
+				mockHelper.EXPECT().ValidateToken("Example Token").Return(100, 1000, "example@example.com", nil)
 
 				mockUser := mocks.NewMockUser(ctrl)
 				mockUser.EXPECT().Email().Times(1).Return("example@example.com")
 				mockUser.EXPECT().Activated().Times(1).Return(true)
+				mockUser.EXPECT().Organizations().Times(1).Return([]int{1000})
 
 				mockUsers.EXPECT().GetUser(100).Times(1).Return(mockUser, nil)
 
-				mockRoles.EXPECT().GetPermissions(mockUser).Times(1).Return(&roles.Permissions{
+				mockRoles.EXPECT().GetPermissions(mockUser, 1000).Times(1).Return(&roles.Permissions{
 					Permissions: []string{"perm 1", "perm 2", "req_perm", "perm 4"},
 				}, nil)
 			},
 			http.StatusOK,
 			"",
 			true,
-			map[string]interface{}{"user": 100},
+			map[string]interface{}{utils.UserKey: 100, utils.OrganizationKey: 1000},
 		},
 	}
 
@@ -402,11 +439,13 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 		// assert
 		if testCase.next {
-			for k, v := range testCase.context {
-				ctx := context.WithValue(r.Context(), k, v)
+			if len(testCase.context) > 0 {
+				ctx := r.Context()
+				for k, v := range testCase.context {
+					ctx = context.WithValue(ctx, k, v)
+				}
 				r = r.WithContext(ctx)
 			}
-
 			assert.Equal(t, w, wResponse, testCase.description)
 			assert.Equal(t, r, rResponse, testCase.description)
 			assert.Equal(t, http.StatusOK, w.Result().StatusCode, testCase.description)

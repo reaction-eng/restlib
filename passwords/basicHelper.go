@@ -92,17 +92,17 @@ func (helper *BasicHelper) TokenGenerator() string {
 	return fmt.Sprintf("%x", b)
 }
 
-func (helper *BasicHelper) ValidateToken(tokenHeader string) (int, string, error) {
+func (helper *BasicHelper) ValidateToken(tokenHeader string) (int, int, string, error) {
 
 	//Token is missing, returns with error code 403 Unauthorized
 	if tokenHeader == "" {
-		return -1, "", errors.New("auth_missing_token")
+		return -1, -1, "", errors.New("auth_missing_token")
 	}
 
 	//Now split the token to get the useful part
 	splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 	if len(splitted) != 2 {
-		return -1, "", errors.New("auth_malformed_token")
+		return -1, -1, "", errors.New("auth_malformed_token")
 
 	}
 
@@ -120,17 +120,17 @@ func (helper *BasicHelper) ValidateToken(tokenHeader string) (int, string, error
 
 	//check for mailformed data
 	if err != nil { //Malformed token, returns with http code 403 as usual
-		return -1, "", errors.New("auth_malformed_token")
+		return -1, -1, "", errors.New("auth_malformed_token")
 
 	}
 
 	//Token is invalid, maybe not signed on this server
 	if !token.Valid {
 		//Return the error
-		return -1, "", errors.New("auth_forbidden")
+		return -1, -1, "", errors.New("auth_forbidden")
 	}
 
-	return tk.UserId, tk.Email, nil
+	return tk.UserId, tk.OrganizationId, tk.Email, nil
 }
 
 /**

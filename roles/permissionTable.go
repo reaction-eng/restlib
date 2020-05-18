@@ -3,15 +3,10 @@
 
 package roles
 
-/**
-Define an interface for roles
-*/
+//go:generate mockgen -destination=../mocks/mock_permissionTable.go -package=mocks github.com/reaction-eng/restlib/roles PermissionTable
+
 type PermissionTable interface {
-	/**
-	Get the user with the email.  An error is thrown is not found
-	*/
 	GetPermissions(roleId int) []string
 
-	//Look up the role id based upon the name
 	LookUpRoleId(name string) (int, error)
 }

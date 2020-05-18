@@ -10,6 +10,6 @@ type Helper interface {
 	CreateJWTToken(userId int, orgId int, email string) string
 	ComparePasswords(currentPwHash string, testingPassword string) bool
 	TokenGenerator() string
-	ValidateToken(tokenHeader string) (int, string, error)
+	ValidateToken(tokenHeader string) (int, int, string, error)
 	ValidatePassword(password string) error
 }

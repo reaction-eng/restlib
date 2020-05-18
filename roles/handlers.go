@@ -54,7 +54,11 @@ func (handler *Handler) GetRoutes() []routing.Route {
 func (handler *Handler) handleUserPermissionsGet(w http.ResponseWriter, r *http.Request) {
 
 	//We have gone through the auth, so we should know the id of the logged in user
-	loggedInUser := r.Context().Value("user").(int) //Grab the id of the user that send the request
+	loggedInUser, organizationId, err := utils.UserFromContext(r.Context())
+	if err != nil {
+		utils.ReturnJsonError(w, http.StatusForbidden, err)
+		return
+	}
 
 	//Get the user
 	user, err := handler.userRepo.GetUser(loggedInUser)
@@ -66,12 +70,12 @@ func (handler *Handler) handleUserPermissionsGet(w http.ResponseWriter, r *http.
 	}
 
 	//Get the list of permissions
-	perm, err := handler.roleRepo.GetPermissions(user)
+	perm, err := handler.roleRepo.GetPermissions(user, organizationId)
 
 	//Check to see if the user was created
 	if err == nil {
 		utils.ReturnJson(w, http.StatusOK, perm)
 	} else {
-		utils.ReturnJsonStatus(w, http.StatusUnsupportedMediaType, false, err.Error())
+		utils.ReturnJsonStatus(w, http.StatusServiceUnavailable, false, err.Error())
 	}
 }

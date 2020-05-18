@@ -141,7 +141,7 @@ func (handler *OneTimePasswordHandler) handleOneTimePasswordLoginPut(w http.Resp
 		return
 	}
 
-	if !inList(user.Organizations(), info.OrganizationId) {
+	if !InOrganization(user, info.OrganizationId) {
 		utils.ReturnJsonStatus(w, http.StatusForbidden, false, UserNotInOrganization.Error())
 		return
 	}
