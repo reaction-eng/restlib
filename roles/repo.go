@@ -7,22 +7,10 @@ package roles
 
 import "github.com/reaction-eng/restlib/users"
 
-/**
-Define an interface for roles
-*/
 type Repo interface {
-	/**
-	Get the user with the email.  An error is thrown is not found
-	*/
 	GetPermissions(user users.User, organizationId int) (*Permissions, error)
 
-	/**
-	Set the user's roles. Note this wipes out all current roles
-	*/
 	SetRolesByRoleId(user users.User, organizationId int, roles []int) error
 
-	/**
-	Set the user's roles.  Note this wipes out all current roles
-	*/
 	SetRolesByName(user users.User, organizationId int, roles []string) error
 }

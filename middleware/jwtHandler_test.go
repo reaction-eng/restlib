@@ -4,17 +4,14 @@
 package middleware_test
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/reaction-eng/restlib/utils"
-
 	"github.com/reaction-eng/restlib/roles"
-
 	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 
 	"github.com/golang/mock/gomock"
 
@@ -439,15 +436,12 @@ func TestMakeJwtMiddlewareFunc(t *testing.T) {
 
 		// assert
 		if testCase.next {
-			if len(testCase.context) > 0 {
-				ctx := r.Context()
-				for k, v := range testCase.context {
-					ctx = context.WithValue(ctx, k, v)
-				}
-				r = r.WithContext(ctx)
+			for k, v := range testCase.context {
+				value := rResponse.Context().Value(k)
+				assert.Equal(t, v, value, testCase.description)
 			}
+
 			assert.Equal(t, w, wResponse, testCase.description)
-			assert.Equal(t, r, rResponse, testCase.description)
 			assert.Equal(t, http.StatusOK, w.Result().StatusCode, testCase.description)
 			assert.Empty(t, w.Body.String(), testCase.description)
 		} else {
