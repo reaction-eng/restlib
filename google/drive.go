@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -29,24 +28,35 @@ type Drive struct {
 	//Store the connection to google.  This has been wrapped with the correct Headers
 	connection *drive.Service
 
-	//Store the preview length
-	previewLength int
-
 	//Store the timezone
 	timeZone string
 }
 
 //Get a new interface
-func NewDrive(configuration configuration.Configuration) *Drive {
+func NewDrive(configuration configuration.Configuration) (*Drive, error) {
 	//Create a new
+	timeZone, err := configuration.GetStringError("default_time_zone")
+	if err != nil {
+		return nil, err
+	}
+
 	gInter := &Drive{
-		timeZone: configuration.GetStringFatal("default_time_zone"),
+		timeZone: timeZone,
+	}
+
+	email, err := configuration.GetStringError("google_auth_email")
+	if err != nil {
+		return nil, err
+	}
+	privateKey, err := configuration.GetStringError("google_auth_key")
+	if err != nil {
+		return nil, err
 	}
 
 	//Open the client
 	jwtConfig := &jwt.Config{
-		Email:      configuration.GetStringFatal("google_auth_email"),
-		PrivateKey: []byte(configuration.GetStringFatal("google_auth_key")),
+		Email:      email,
+		PrivateKey: []byte(privateKey),
 		Scopes: []string{
 			drive.DriveMetadataReadonlyScope,
 			drive.DriveReadonlyScope,
@@ -62,13 +72,7 @@ func NewDrive(configuration configuration.Configuration) *Drive {
 	driveConn, err := drive.New(httpCon)
 	gInter.connection = driveConn
 
-	//Check for errors
-	if err != nil {
-		log.Fatalf("Unable to retrieve Drive client: %v", err)
-	}
-
-	gInter.previewLength, _ = configuration.GetInt("preview_length")
-	return gInter
+	return gInter, err
 }
 
 //See if starts with a date and name
@@ -130,10 +134,7 @@ func (gog *Drive) splitNameAndDate(nameIn string) (string, *time.Time) {
 
 }
 
-/**
-Recursive call to build the file list
-*/
-func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFilter func(fileType string) bool) *gDirectory {
+func (gog *Drive) BuildListing(dirId string, previewLength int, includeFilter func(fileType string) bool) (*file.Listing, error) {
 
 	//Get this item
 	folderInfo, err := gog.connection.Files.
@@ -143,21 +144,16 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 
 	//Return nothing from this folder
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	//Split the name and see if it is to be used
 	name, date := gog.splitNameAndDate(folderInfo.Name)
 
 	//Get all of the files in this folder
-	dir := &gDirectory{
-		gFile: gFile{
-			Id:   folderInfo.Id,
-			Name: name,
-		},
-		Type:  folderInfo.MimeType,
-		Items: make([]file.Item, 0),
-	}
+	dir := file.NewListing()
+	dir.Id = folderInfo.Id
+	dir.Name = name
 
 	//If there is a date add it
 	if date != nil {
@@ -174,7 +170,7 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 	//If there is an error just return
 	if err != nil {
 		log.Printf("Unable to retrieve Drive client: %v\n", err)
-		return nil
+		return nil, err
 	}
 
 	//For each file
@@ -184,33 +180,34 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 			//If the item is a folder, get all of it's children
 			if item.MimeType == "application/vnd.google-apps.folder" {
 				//Get the child
-				childFolder := gog.BuildFileHierarchy(item.Id, buildPreview, includeFilter)
+				childFolder, err := gog.BuildListing(item.Id, previewLength, includeFilter)
+
+				if err != nil {
+					return nil, err
+				}
 
 				//Now set the parent Id to this
 				childFolder.ParentId = dir.Id
 
 				//Just add the child
-				dir.Items = append(dir.Items, childFolder)
+				dir.Listings = append(dir.Listings, *childFolder)
 
 			} else if includeFilter(item.MimeType) { ////Else check the filter
 				//Split the name and see if it is to be used
 				name, date := gog.splitNameAndDate(item.Name)
 
 				//Create a new document
-				doc := &gDocument{
-					gFile: gFile{
-						Id:   item.Id,
-						Name: name,
-					},
-					Type: item.MimeType,
-
+				doc := file.Item{
+					Id:       item.Id,
+					Name:     name,
 					ParentId: dir.Id,
+					Type:     item.MimeType,
 				}
-				//Only build the previews if needed
-				if buildPreview {
-					doc.Preview = gog.GetFilePreview(item.Id)
-					doc.ThumbnailUrl = gog.GetFileThumbnailUrl(item.Id)
 
+				//Only build the previews if needed
+				if previewLength > 0 {
+					doc.Preview = gog.GetFilePreview(item.Id, previewLength)
+					doc.ThumbnailUrl = gog.GetFileThumbnailUrl(item.Id)
 				}
 
 				//If there is a date add it
@@ -224,100 +221,13 @@ func (gog *Drive) BuildFileHierarchy(dirId string, buildPreview bool, includeFil
 		}
 	}
 
-	return dir
-}
-
-/**
-Builds all of the forms and downloads them at the same time
-*/
-func (gog *Drive) BuildFormHierarchy(dirId string) *gDirectory {
-
-	//Get this item
-	folderInfo, err := gog.connection.Files.
-		Get(dirId).
-		SupportsTeamDrives(true).
-		Do()
-
-	//Return nothing from this folder
-	if err != nil {
-		return nil
-	}
-
-	//Get all of the files in this folder
-	dir := &gDirectory{
-		gFile: gFile{
-			Id:   folderInfo.Id,
-			Name: folderInfo.Name,
-		},
-		Type:  folderInfo.MimeType,
-		Items: make([]file.Item, 0),
-	}
-
-	//Now get all of the files
-	files, err := gog.connection.Files.List().
-		SupportsTeamDrives(true).
-		IncludeTeamDriveItems(true).
-		Q("'" + dirId + "' in parents").
-		Do()
-
-	//If there is an error just return
-	if err != nil {
-		log.Printf("Unable to retrieve Drive client: %v\n", err)
-		return nil
-	}
-
-	//For each file
-	for _, item := range files.Files {
-		//Make sure item is not trashed
-		if !item.Trashed {
-			//If the item is a folder, get all of it's children
-			if item.MimeType == "application/vnd.google-apps.folder" {
-				//Get the child
-				childFolder := gog.BuildFormHierarchy(item.Id)
-
-				//Now set the parent Id to this
-				childFolder.ParentId = dir.Id
-
-				//Only add the form is there are any children
-				if len(childFolder.Items) > 0 {
-
-					//Just add the child
-					dir.Items = append(dir.Items, childFolder)
-				}
-
-			} else if item.MimeType == "application/json" {
-				//Now download the forms
-				form, err := gog.downloadForm(item.Id)
-
-				//If there was an error
-				if err != nil {
-					log.Printf("Error: %v", err)
-				} else {
-					//Remove the extention
-					name := strings.TrimSuffix(item.Name, filepath.Ext(item.Name))
-
-					//Add the forms Id
-					form.Id = item.Id
-					form.Name = name
-					form.ParentId = dir.Id
-
-					//Now add it to the parents children
-					dir.Items = append(dir.Items, form)
-
-				}
-
-			}
-		}
-
-	}
-
-	return dir
+	return dir, nil
 }
 
 /**
 * Method to get the information hierarchy
  */
-func (gog *Drive) GetFilePreview(id string) string {
+func (gog *Drive) GetFilePreview(id string, previewLength int) string {
 	//Get the file type
 	fileInfo, err := gog.connection.Files.Get(id).SupportsTeamDrives(true).Do()
 	if err != nil {
@@ -347,44 +257,11 @@ func (gog *Drive) GetFilePreview(id string) string {
 
 	//Return only the first specified number of chars
 	//Get the minimum value
-	previewLength := gog.previewLength
 	if len(resultString) < previewLength {
 		previewLength = len(resultString)
 	}
 
 	return resultString[0:previewLength]
-
-}
-
-/**
-* Method to get the information hierarchy
- */
-func (gog *Drive) downloadForm(id string) (*gForm, error) {
-
-	//Get the plain text version of the file
-	resp, err := gog.connection.Files.Get(id).Download()
-
-	//If there was an error just don't do anything
-	if err != nil {
-		return nil, err
-	}
-
-	//Encode the response
-	dec := json.NewDecoder(resp.Body)
-
-	//Createa a new forms
-	form := &gForm{}
-
-	//Now decode the stream into the forms
-	err = dec.Decode(form)
-
-	//If there was an error just don't do anything
-	if err != nil {
-		return nil, err
-	}
-
-	//Return it
-	return form, nil
 
 }
 

@@ -5,6 +5,8 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
+type ReferenceType struct{}
+
 func MySql() migrate.MigrationSource {
 	return &migrate.PackrMigrationSource{
 		Box: packr.New("mysql", "./mysql"),
@@ -13,6 +15,6 @@ func MySql() migrate.MigrationSource {
 
 func Postgres() migrate.MigrationSource {
 	return &migrate.PackrMigrationSource{
-		Box: packr.New("postgres", "./postgres"),
+		Box: packr.New("postgres", "/postgres"),
 	}
 }

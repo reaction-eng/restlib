@@ -36,12 +36,14 @@ func NewObjectRedisCache(redis *redis.Ring) *Redis {
 	return &infoRepo
 }
 
-func (repo *Redis) Get(key string, item interface{}) {
+func (repo *Redis) Get(key string, item interface{}) bool {
 	//Get the summary
 	err := repo.codec.Get(key, &item)
 	if err != nil {
 		item = nil
+		return false
 	}
+	return true
 }
 
 func (repo *Redis) Set(key string, item interface{}) error {

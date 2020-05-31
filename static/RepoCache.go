@@ -70,7 +70,6 @@ func (repo *RepoCache) GetStaticPublicDocument(path string) (string, error) {
 Get the public static
 */
 func (repo *RepoCache) GetStaticPrivateDocument(path string) (string, error) {
-
 	//Look up the document id from the config
 	documentId, err := repo.privateConfig.GetStringError(path)
 

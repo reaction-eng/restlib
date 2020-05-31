@@ -3,6 +3,8 @@
 
 package cache
 
+//go:generate mockgen -destination=../mocks/mock_cache.go -package=mocks github.com/reaction-eng/restlib/cache Cache
+
 type Cache interface {
 	Get(key string, item interface{}) bool
 

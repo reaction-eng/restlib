@@ -28,9 +28,6 @@ func NewJson(configFiles ...string) (*Json, error) {
 		},
 	}
 
-	// Read secrets last which will overwrite any existing keys
-	configFiles = append(configFiles, "config.secret.json")
-
 	//Now march over each file
 	for _, configFile := range configFiles {
 		//See if itself a config

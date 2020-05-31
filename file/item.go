@@ -1,18 +1,32 @@
 package file
 
-//go:generate mockgen -destination=../mocks/mock_storage.go -package=mocks github.com/reaction-eng/restlib/file Item
-
 import (
 	"time"
 )
 
-/**
- * An interface type to hold a document or directory
- */
-type Item interface {
-	GetId() string
-	GetName() string
-	GetDate() *time.Time
+type Item struct {
+	//Keep a boolean if it is a file
+	Id string `json:"Id"`
+
+	//Hold the item
+	Name string `json:"name"`
+
+	//Hold if we should hide the item
+	HideListing bool `json:"hideListing"`
+
+	//Keep a date if useful
+	Date *time.Time `json:"date"`
+
+	Type string `json:"type"`
+
+	//Keep the Preview
+	Preview string `json:"preview"`
+
+	//Thumbnail Image
+	ThumbnailUrl string `json:"thumbnail"`
+
+	//Also Keep the parent Id
+	ParentId string `json:"parentId"`
 }
 
 // ByAge implements sort.Interface for []Person based on
@@ -23,8 +37,8 @@ func (a ByDate) Len() int      { return len(a) }
 func (a ByDate) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByDate) Less(i, j int) bool {
 	//Get both dates
-	iDate := a[i].GetDate()
-	jDate := a[j].GetDate()
+	iDate := a[i].Date
+	jDate := a[j].Date
 
 	//If
 	if iDate == nil && jDate == nil {

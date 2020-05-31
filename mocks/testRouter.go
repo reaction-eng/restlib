@@ -3,7 +3,8 @@ package mocks
 import (
 	"context"
 	"net/http"
-	"strings"
+
+	"github.com/gorilla/mux"
 
 	"github.com/reaction-eng/restlib/users"
 
@@ -13,24 +14,47 @@ import (
 )
 
 type TestRouter struct {
-	routes []routing.Route
-	userId *int
-	orgId  *int
+	router   *mux.Router
+	routeMap map[string]routing.Route
+	userId   *int
+	orgId    *int
 }
 
 func NewTestRouter(routerProducer routing.RouteProducer) *TestRouter {
-	return &TestRouter{
-		routerProducer.GetRoutes(),
-		nil,
-		nil,
-	}
+	return NewTestRouterWithUserId(routerProducer, -1, -1)
 }
 func NewTestRouterWithUserId(routerProducer routing.RouteProducer, userId int, orgId int) *TestRouter {
-	return &TestRouter{
-		routerProducer.GetRoutes(),
-		&userId,
-		&orgId,
+
+	var testRouter *TestRouter
+	if userId >= 0 {
+		testRouter = &TestRouter{
+			mux.NewRouter().StrictSlash(true),
+			make(map[string]routing.Route, 0),
+			&userId,
+			&orgId,
+		}
+	} else {
+		// not logged in
+		testRouter = &TestRouter{
+			mux.NewRouter().StrictSlash(true),
+			make(map[string]routing.Route, 0),
+			nil,
+			nil,
+		}
 	}
+
+	for _, route := range routerProducer.GetRoutes() {
+		muxRoute := testRouter.router.
+			Methods(route.Method).
+			Path(route.Pattern).
+			Name(route.Name).
+			Handler(route.HandlerFunc)
+
+		testRouter.routeMap[muxRoute.GetName()] = route
+	}
+
+	return testRouter
+
 }
 
 func NewTestRouterWithUser(routerProducer routing.RouteProducer, user users.User, orgId int) *TestRouter {
@@ -49,15 +73,13 @@ func (router *TestRouter) Handle(w http.ResponseWriter, r *http.Request) *routin
 		r = r.WithContext(ctx)
 	}
 
-	uri := r.URL.Path
-	method := r.Method
+	router.router.ServeHTTP(w, r)
 
-	for _, route := range router.routes {
-		if strings.EqualFold(route.Pattern, uri) && strings.EqualFold(route.Method, method) {
-			route.HandlerFunc(w, r)
-
-			return &route
-		}
+	var match mux.RouteMatch
+	if router.router.Match(r, &match) {
+		route := router.routeMap[match.Route.GetName()]
+		return &route
 	}
+
 	return nil
 }
