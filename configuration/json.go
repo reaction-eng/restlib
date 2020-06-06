@@ -19,6 +19,14 @@ type Json struct {
 	fatal func(interface{})
 }
 
+func NewJsonFatal(configFiles ...string) *Json {
+	config, err := NewJson(configFiles...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return config
+}
+
 func NewJson(configFiles ...string) (*Json, error) {
 	//Define a Configuration
 	config := Json{

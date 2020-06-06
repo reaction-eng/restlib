@@ -79,18 +79,20 @@ Function used to create new user
 */
 func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *http.Request) {
 
-	//Create an empty new user
-	tok := &oauth2.Token{}
+	googleLoginStruct := struct {
+		Token          oauth2.Token `json:"token"`
+		OrganizationId int          `json:"organizationId"`
+	}{}
 
 	//decode the request body into struct and failed if any error occur
-	err := json.NewDecoder(r.Body).Decode(&tok)
+	err := json.NewDecoder(r.Body).Decode(&googleLoginStruct)
 	if err != nil {
 		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
 		return
 
 	}
 	//Make sure it is valid
-	if !tok.Valid() {
+	if !googleLoginStruct.Token.Valid() {
 		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, errors.New("invalid_token"))
 		return
 
@@ -98,7 +100,7 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 
 	//Now get the user info
 	ctx := context.Background()
-	client := oauth2.NewClient(ctx, gHandler.oAuthConfig.TokenSource(ctx, tok))
+	client := oauth2.NewClient(ctx, gHandler.oAuthConfig.TokenSource(ctx, &googleLoginStruct.Token))
 	svc, err := goauth2.New(client)
 	if err != nil {
 		utils.ReturnJsonError(w, http.StatusUnprocessableEntity, err)
@@ -145,6 +147,11 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 		//Now get the user by email
 		user, err = gHandler.helper.GetUserByEmail(user.Email())
 
+		// add the user to the
+		gHandler.helper.AddUserToOrganization(user, googleLoginStruct.OrganizationId)
+
+		user, err = gHandler.helper.GetUserByEmail(user.Email())
+
 		if err != nil {
 			utils.ReturnJsonError(w, http.StatusForbidden, err)
 		}
@@ -155,8 +162,13 @@ func (gHandler *GoogleHandler) handleUserLoginGoogle(w http.ResponseWriter, r *h
 		return
 	}
 
+	if !InOrganization(user, googleLoginStruct.OrganizationId) {
+		utils.ReturnJsonError(w, http.StatusForbidden, errors.New("not in organization"))
+		return
+	}
+
 	//Create JWT token and Store the token in the response
-	user.SetToken(gHandler.helper.CreateJWTToken(user.Id(), -1, user.Email()))
+	user.SetToken(gHandler.helper.CreateJWTToken(user.Id(), googleLoginStruct.OrganizationId, user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {

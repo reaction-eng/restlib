@@ -6,7 +6,7 @@ import (
 
 type Item struct {
 	//Keep a boolean if it is a file
-	Id string `json:"Id"`
+	Id string `json:"id"`
 
 	//Hold the item
 	Name string `json:"name"`
