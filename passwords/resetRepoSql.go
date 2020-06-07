@@ -242,7 +242,7 @@ func (repo *ResetRepoSql) IssueOneTimePasswordRequest(token string, userId int, 
 
 	//Make the email header
 	header := email.HeaderInfo{
-		Subject: repo.activationEmailConfig.Subject,
+		Subject: repo.oneTimePasswordEmailConfig.Subject,
 		To:      []string{emailAddress},
 	}
 
