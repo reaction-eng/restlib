@@ -87,7 +87,7 @@ func (helper *BasicHelper) ComparePasswords(currentPwHash string, testingPasswor
  * Get a random token
  */
 func (helper *BasicHelper) TokenGenerator() string {
-	b := make([]byte, 4)
+	b := make([]byte, 32)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
 }

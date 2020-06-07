@@ -72,11 +72,12 @@ func NewRepoMySql(db *sql.DB, emailer email.Emailer, configuration configuration
 
 	//Define a new repo
 	newRepo := ResetRepoSql{
-		db:                    db,
-		emailer:               emailer,
-		resetEmailConfig:      resetEmailConfig,
-		activationEmailConfig: activationEmailConfig,
-		tokenLifeSpan:         tokenLifeSpan,
+		db:                         db,
+		emailer:                    emailer,
+		resetEmailConfig:           resetEmailConfig,
+		activationEmailConfig:      activationEmailConfig,
+		oneTimePasswordEmailConfig: oneTimePasswordEmailConfig,
+		tokenLifeSpan:              tokenLifeSpan,
 	}
 
 	//Add request data to table
@@ -137,11 +138,12 @@ func NewRepoPostgresSql(db *sql.DB, emailer email.Emailer, configuration configu
 
 	//Define a new repo
 	newRepo := ResetRepoSql{
-		db:                    db,
-		emailer:               emailer,
-		resetEmailConfig:      resetEmailConfig,
-		activationEmailConfig: activationEmailConfig,
-		tokenLifeSpan:         tokenLifeSpan,
+		db:                         db,
+		emailer:                    emailer,
+		resetEmailConfig:           resetEmailConfig,
+		activationEmailConfig:      activationEmailConfig,
+		oneTimePasswordEmailConfig: oneTimePasswordEmailConfig,
+		tokenLifeSpan:              tokenLifeSpan,
 	}
 
 	//Add request data to table

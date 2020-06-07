@@ -437,12 +437,11 @@ func (gog *Drive) GetMostRecentFileInDir(dirId string) (io.ReadCloser, error) {
 func (gog *Drive) GetFileAsInterface(id string, inter interface{}) error {
 	//Get the resposne,
 	rep, err := gog.GetArbitraryFile(id)
-	defer rep.Close()
 	//If there was no error
 	if err != nil {
 		return err
 	}
-
+	defer rep.Close()
 	//REad the data
 	data, err := ioutil.ReadAll(rep)
 	if err != nil {
