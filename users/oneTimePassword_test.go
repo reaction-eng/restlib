@@ -32,6 +32,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 		issueOneTimePasswordRequestError error
 		addUserCount                     int
 		addUserError                     error
+		addUserToOrgCount                int
 		tokenGeneratorCount              int
 		expectedStatus                   int
 		expectedResponse                 string
@@ -55,6 +56,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 			addUserCount:        0,
 			addUserError:        nil,
 			tokenGeneratorCount: 1,
+			addUserToOrgCount:   0,
 			expectedStatus:      http.StatusOK,
 			expectedResponse:    "{\"message\":\"onetimepassword_token_request_received\",\"status\":true}\n",
 		},
@@ -111,6 +113,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 				user.EXPECT().SetEmail("user@example.com").Times(1)
 				user.EXPECT().SetPassword("").Times(1)
 				user.EXPECT().SetOrganizations(43).Times(1)
+				user.EXPECT().Organizations().Return([]int{43}).Times(1)
 				user.EXPECT().Id().Times(1).Return(34)
 				user.EXPECT().Email().Times(1).Return("user@example.com")
 				return user
@@ -118,6 +121,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 			addUserCount:        1,
 			addUserError:        nil,
 			tokenGeneratorCount: 1,
+			addUserToOrgCount:   1,
 			expectedStatus:      http.StatusOK,
 			expectedResponse:    "{\"message\":\"onetimepassword_token_request_received\",\"status\":true}\n",
 		},
@@ -134,6 +138,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 				user.EXPECT().SetEmail("user@example.com").Times(1)
 				user.EXPECT().SetPassword("").Times(1)
 				user.EXPECT().SetOrganizations(43).Times(1)
+				user.EXPECT().Organizations().Return([]int{43}).Times(0)
 				return user
 			},
 			addUserCount:                     1,
@@ -141,6 +146,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 			issueOneTimePasswordRequestCount: 0,
 			issueOneTimePasswordRequestError: nil,
 			tokenGeneratorCount:              0,
+			addUserToOrgCount:                0,
 			expectedStatus:                   http.StatusForbidden,
 			expectedResponse:                 "{\"message\":\"db error\",\"status\":false}\n",
 		},
@@ -202,6 +208,7 @@ func TestHandler_handleOneTimePasswordGet(t *testing.T) {
 
 		mockHelper.EXPECT().TokenGenerator().Times(testCase.tokenGeneratorCount).Return(token)
 		mockHelper.EXPECT().IssueOneTimePasswordRequest(token, 34, "user@example.com").Times(testCase.issueOneTimePasswordRequestCount).Return(testCase.issueOneTimePasswordRequestError)
+		mockHelper.EXPECT().AddUserToOrganization(gomock.Any(), 43).Times(testCase.addUserToOrgCount).Return(nil)
 
 		handler := users.NewOneTimePasswordHandler(mockHelper)
 		router := mocks.NewTestRouter(handler) // not logged in

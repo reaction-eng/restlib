@@ -89,6 +89,18 @@ func (handler *OneTimePasswordHandler) handleOneTimePasswordGet(w http.ResponseW
 
 		//Now store it
 		user, err = handler.helper.AddUser(newUser)
+		if err != nil {
+			utils.ReturnJsonError(w, http.StatusForbidden, err)
+			return
+		}
+		//Add the users to the org
+		for _, orgId := range user.Organizations() {
+			err = handler.helper.AddUserToOrganization(newUser, orgId)
+			if err != nil {
+				utils.ReturnJsonError(w, http.StatusForbidden, err)
+				return
+			}
+		}
 
 		//Make sure it created an id
 		if err != nil {
