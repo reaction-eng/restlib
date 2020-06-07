@@ -47,6 +47,14 @@ func (helper *BasicHelper) CreateUser(user User) error {
 		return err
 	}
 
+	//Add the users to the org
+	for _, orgId := range user.Organizations() {
+		err = helper.AddUserToOrganization(newUser, orgId)
+		if err != nil {
+			return err
+		}
+	}
+
 	//Else issue the request
 	err = helper.IssueActivationRequest(helper.TokenGenerator(), newUser.Id(), newUser.Email())
 

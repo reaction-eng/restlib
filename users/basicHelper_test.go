@@ -44,6 +44,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 		issueActivationRequestCount int
 		issueActivationRequestError error
 		tokenGeneratorCount         int
+		addUserToOrgCount           int
 		expectedError               error
 	}{
 		{
@@ -54,6 +55,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 				user.EXPECT().Email().Times(2).Return("user@example.info")
 				user.EXPECT().Password().Times(2).Return("password 123")
 				user.EXPECT().SetPassword("hashed password").Times(1)
+				user.EXPECT().Organizations().Return([]int{1000, 1002}).Times(1)
 				return user
 			},
 			validatePasswordCount:       1,
@@ -64,6 +66,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			issueActivationRequestCount: 1,
 			issueActivationRequestError: nil,
 			tokenGeneratorCount:         1,
+			addUserToOrgCount:           2,
 			expectedError:               nil,
 		},
 		{
@@ -74,6 +77,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 				user.EXPECT().Email().Times(1).Return("user@example.info")
 				user.EXPECT().Password().Times(1).Return("password 123")
 				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().Organizations().Return([]int{1000, 1002}).Times(0)
 				return user
 			},
 			validatePasswordCount:       1,
@@ -84,6 +88,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			issueActivationRequestCount: 0,
 			issueActivationRequestError: nil,
 			tokenGeneratorCount:         0,
+			addUserToOrgCount:           0,
 			expectedError:               errors.New("invalid password"),
 		},
 		{
@@ -94,6 +99,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 				user.EXPECT().Email().Times(1).Return("userexample.info")
 				user.EXPECT().Password().Times(0).Return("password 123")
 				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().Organizations().Return([]int{1000, 1002}).Times(0)
 				return user
 			},
 			validatePasswordCount:       0,
@@ -104,6 +110,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			issueActivationRequestCount: 0,
 			issueActivationRequestError: nil,
 			tokenGeneratorCount:         0,
+			addUserToOrgCount:           0,
 			expectedError:               errors.New("validate_missing_email"),
 		},
 		{
@@ -114,6 +121,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 				user.EXPECT().Email().Times(1).Return("")
 				user.EXPECT().Password().Times(0).Return("password 123")
 				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().Organizations().Return([]int{1000, 1002}).Times(0)
 				return user
 			},
 			validatePasswordCount:       0,
@@ -124,6 +132,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			issueActivationRequestCount: 0,
 			issueActivationRequestError: nil,
 			tokenGeneratorCount:         0,
+			addUserToOrgCount:           0,
 			expectedError:               errors.New("validate_missing_email"),
 		},
 		{
@@ -134,6 +143,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 				user.EXPECT().Email().Times(1).Return("  			 ")
 				user.EXPECT().Password().Times(0).Return("password 123")
 				user.EXPECT().SetPassword("hashed password").Times(0)
+				user.EXPECT().Organizations().Return([]int{1000, 1002}).Times(0)
 				return user
 			},
 			validatePasswordCount:       0,
@@ -144,6 +154,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			issueActivationRequestCount: 0,
 			issueActivationRequestError: nil,
 			tokenGeneratorCount:         0,
+			addUserToOrgCount:           0,
 			expectedError:               errors.New("validate_missing_email"),
 		},
 		{
@@ -154,6 +165,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 				user.EXPECT().Email().Times(1).Return("user@example.info")
 				user.EXPECT().Password().Times(2).Return("password 123")
 				user.EXPECT().SetPassword("hashed password").Times(1)
+				user.EXPECT().Organizations().Return([]int{1000, 1002}).Times(0)
 				return user
 			},
 			validatePasswordCount:       1,
@@ -164,6 +176,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 			issueActivationRequestCount: 0,
 			issueActivationRequestError: nil,
 			tokenGeneratorCount:         0,
+			addUserToOrgCount:           0,
 			expectedError:               errors.New("user already here"),
 		},
 	}
@@ -174,6 +187,7 @@ func TestBasicHelper_CreateUser(t *testing.T) {
 
 		mockUserRepo := mocks.NewMockUserRepo(mockCtrl)
 		mockUserRepo.EXPECT().AddUser(user).Times(testCase.addUserCount).Return(user, testCase.addUserError)
+		mockUserRepo.EXPECT().AddUserToOrganization(user, gomock.Any()).Times(testCase.addUserToOrgCount).Return(nil)
 
 		mockPasswordResetRepo := mocks.NewMockResetRepo(mockCtrl)
 		token := "token 123"
