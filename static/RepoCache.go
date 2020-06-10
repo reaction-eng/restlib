@@ -6,32 +6,22 @@ package static
 import (
 	"github.com/reaction-eng/restlib/cache"
 	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/google"
+	"github.com/reaction-eng/restlib/file"
 )
 
-/**
-Define a struct for RepoMem for news
-*/
 type RepoCache struct {
 	//Store the cache
-	cas cache.ObjectCache
+	cas cache.Cache
 
-	//We also need googl
-	drive *google.Drive
+	drive file.Storage
 
 	//Store the public and private
-	privateConfig *configuration.Configuration
-	publicConfig  *configuration.Configuration
+	privateConfig configuration.Configuration
+	publicConfig  configuration.Configuration
 }
 
-//Provide a method to make a new AnimalRepoSql
-func NewRepoCache(drive *google.Drive, cas cache.ObjectCache, privateConfigFile string, publicConfigFile string) *RepoCache {
+func NewRepoCache(drive file.Storage, cas cache.Cache, privateConfig configuration.Configuration, publicConfig configuration.Configuration) *RepoCache {
 
-	//Create a new config
-	privateConfig, _ := configuration.NewConfiguration(privateConfigFile)
-	publicConfig, _ := configuration.NewConfiguration(publicConfigFile)
-
-	//Define a new repo
 	newRepo := RepoCache{
 		cas:           cas,
 		drive:         drive,
@@ -80,7 +70,6 @@ func (repo *RepoCache) GetStaticPublicDocument(path string) (string, error) {
 Get the public static
 */
 func (repo *RepoCache) GetStaticPrivateDocument(path string) (string, error) {
-
 	//Look up the document id from the config
 	documentId, err := repo.privateConfig.GetStringError(path)
 

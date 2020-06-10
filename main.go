@@ -6,13 +6,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/reaction-eng/restlib/notification"
 	"github.com/reaction-eng/restlib/stl"
 	"github.com/reaction-eng/restlib/users"
-	"log"
-	"os"
-	"time"
 )
 
 //Define the global variables that are setup in the main
@@ -113,7 +114,7 @@ func main() {
 	//config, _ := configuration.NewConfiguration("config.mysql.json", "config.host.json")
 	localSql, err := sql.Open("mysql", "root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true") //"root:P1p3sh0p@tcp(:3306)/localDB?parseTime=true"
 
-	sqlConnectiont := users.NewRepoMySql(localSql, "users")
+	sqlConnectiont, err := users.NewRepoMySql(localSql)
 
 	//include some kind of db call to get email to who'm we send to
 	userG, err := sqlConnectiont.GetUser(2)

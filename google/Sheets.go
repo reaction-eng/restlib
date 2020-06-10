@@ -4,15 +4,16 @@
 package google
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
 	"errors"
+	"log"
+	"strconv"
+	"strings"
+
+	"github.com/reaction-eng/restlib/configuration"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/sheets/v4"
-	"log"
-	"strconv"
-	"strings"
 )
 
 type Sheets struct {
@@ -22,17 +23,14 @@ type Sheets struct {
 }
 
 //Get a new interface
-func NewSheets(configFiles ...string) *Sheets {
-	//Create a new config
-	config, err := configuration.NewConfiguration(configFiles...)
-
+func NewSheets(configuation configuration.Configuration) *Sheets {
 	//Create a new
 	gInter := &Sheets{}
 
 	//Open the client
 	jwtConfig := &jwt.Config{
-		Email:      config.GetStringFatal("google_auth_email"),
-		PrivateKey: []byte(config.GetStringFatal("google_auth_key")),
+		Email:      configuation.GetStringFatal("google_auth_email"),
+		PrivateKey: []byte(configuation.GetStringFatal("google_auth_key")),
 		Scopes: []string{
 			sheets.DriveScope,
 			sheets.DriveFileScope,
@@ -138,7 +136,7 @@ func stringInSlice(a string, list []string) bool {
 }
 
 /**
-Append to the sheet with the name and id split with a /
+Append to the sheet with the name and Id split with a /
 */
 func (sheetsCon *Sheets) AppendToSheetIdAndName(sheetIdAndName string, data interface{}) error {
 

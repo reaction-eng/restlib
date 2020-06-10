@@ -4,14 +4,15 @@
 package users
 
 import (
-	"github.com/reaction-eng/restlib/configuration"
-	"github.com/reaction-eng/restlib/routing"
-	"github.com/reaction-eng/restlib/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/reaction-eng/restlib/configuration"
+	"github.com/reaction-eng/restlib/routing"
+	"github.com/reaction-eng/restlib/utils"
 )
 
 /**
@@ -59,7 +60,7 @@ type facebookMeResponse struct {
  */
 type FacebookHandler struct {
 	// The user handler needs to have access to user repo
-	helper *Helper
+	helper Helper
 
 	//Store the facebook info
 	clientId     string
@@ -69,15 +70,12 @@ type FacebookHandler struct {
 /**
  * This struct is used
  */
-func NewFacebookHandler(helper *Helper, configFiles ...string) *FacebookHandler {
-	//Create a new config
-	config, _ := configuration.NewConfiguration(configFiles...)
-
+func NewFacebookHandler(helper Helper, configuration configuration.Configuration) *FacebookHandler {
 	//Create a new
 	facebook := &FacebookHandler{
 		helper:       helper,
-		clientId:     config.GetString("facebook_client_id"),
-		clientSecret: config.GetString("facebook_client_secret"),
+		clientId:     configuration.GetString("facebook_client_id"),
+		clientSecret: configuration.GetString("facebook_client_secret"),
 	}
 
 	return facebook
@@ -246,7 +244,7 @@ func (fbHandler *FacebookHandler) handleUserLoginFacebook(w http.ResponseWriter,
 	}
 
 	//Create JWT token and Store the token in the response
-	user.SetToken(fbHandler.helper.passwordHelper.CreateJWTToken(user.Id(), user.Email()))
+	user.SetToken(fbHandler.helper.CreateJWTToken(user.Id(), -1, user.Email()))
 
 	//Check to see if the user was created
 	if err == nil {

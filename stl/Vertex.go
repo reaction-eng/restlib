@@ -65,9 +65,9 @@ func (v *Vertex) norm() {
 	mag := float32(math.Sqrt(float64(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])))
 
 	//New vertex
-	v[0] /= mag + 1E-30
-	v[1] /= mag + 1E-30
-	v[2] /= mag + 1E-30
+	v[0] /= mag + 1e-30
+	v[1] /= mag + 1e-30
+	v[2] /= mag + 1e-30
 
 }
 
@@ -82,13 +82,14 @@ func (v *Vertex) addTo(other *Vertex) {
 	v[2] += other[2]
 
 }
+
 // see two Vertex is differ
-func (v * Vertex) diff(oth *Vertex) bool{
-	return (v[0]== oth[0]&& v[1]==oth[1]&& v[2]==oth[2])
+func (v *Vertex) diff(oth *Vertex) bool {
+	return (v[0] == oth[0] && v[1] == oth[1] && v[2] == oth[2])
 }
 
 // vertex translation
-func (v * Vertex) trans(normTrans *Vertex, ExtrudLen float64) Vertex{
+func (v *Vertex) trans(normTrans *Vertex, ExtrudLen float64) Vertex {
 
 	return Vertex{
 		v[0] + normTrans[0]*float32(ExtrudLen),
@@ -97,8 +98,3 @@ func (v * Vertex) trans(normTrans *Vertex, ExtrudLen float64) Vertex{
 	}
 
 }
-
-
-
-
-

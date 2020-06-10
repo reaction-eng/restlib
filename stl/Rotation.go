@@ -62,7 +62,7 @@ func (rot *RotationMatrix) getPtOrg(pt *Vertex) Vertex {
 	fracBot := rot.lineMag * rot.lineMag
 
 	//Compute the fraction t
-	t := -fracTop / (fracBot + 1E-30)
+	t := -fracTop / (fracBot + 1e-30)
 
 	//Now compute the location
 	if t < 0 {

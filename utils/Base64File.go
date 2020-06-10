@@ -22,9 +22,10 @@ type Base64File struct {
 	mime string
 }
 
-/**
-Decode the base 64 string
-*/
+func NewBase64FileFromData(name string, data []byte) *Base64File {
+	return &Base64File{name: name, data: data}
+}
+
 func NewBase64FileFromForm(file multipart.File, fileInfo *multipart.FileHeader) (*Base64File, error) {
 	//Store the file name and mime
 	// Read entire JPG into byte slice.
@@ -35,11 +36,10 @@ func NewBase64FileFromForm(file multipart.File, fileInfo *multipart.FileHeader) 
 	b64File := Base64File{
 		data: content,
 		name: fileInfo.Filename,
-		mime: fileInfo.Header.Get("Content-Type"),
+		mime: fileInfo.Header.Get("Content-GetType"),
 	}
 
 	return &b64File, error
-
 }
 
 /**

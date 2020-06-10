@@ -6,6 +6,7 @@ package notification
 import (
 	"database/sql"
 	"encoding/json"
+
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/reaction-eng/restlib/preferences"
 	"github.com/reaction-eng/restlib/users"
@@ -34,8 +35,11 @@ func NewWebPushNotifier(preferencesJsonFile string, db *sql.DB) *WebPushNotifier
 func (notif *WebPushNotifier) Notify(notification Notification, user users.User) error {
 
 	//Get user preferences.
-	options := preferences.LoadOptionsGroup(notif.PreferencesJson)
-	sqlConnectiont := preferences.NewRepoMySql(notif.db, "userpref", options)
+	options, err := preferences.LoadOptionsGroup(notif.PreferencesJson)
+	if err != nil {
+		return err
+	}
+	sqlConnectiont, err := preferences.NewRepoMySql(notif.db, options)
 	usrsPref, err := sqlConnectiont.GetPreferences(user)
 
 	//Get user's subscription to send notification to.

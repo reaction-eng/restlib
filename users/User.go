@@ -3,7 +3,8 @@
 
 package users
 
-//a struct to rep user account
+//go:generate mockgen -destination=../mocks/mock_user.go -package=mocks github.com/reaction-eng/restlib/users User
+
 type User interface {
 	//Return the user id
 	Id() int
@@ -17,13 +18,24 @@ type User interface {
 	Password() string
 	SetPassword(password string)
 
-	//Return the user email
 	Token() string
 	SetToken(token string)
+
+	SetOrganizations(organizations ...int)
+	Organizations() []int
 
 	//Check if the user was activated
 	Activated() bool
 
 	//Check to see if the user can login with a password
 	PasswordLogin() bool
+}
+
+func InOrganization(user User, organization int) bool {
+	for _, org := range user.Organizations() {
+		if org == organization {
+			return true
+		}
+	}
+	return false
 }
