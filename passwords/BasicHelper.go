@@ -10,8 +10,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/reaction-eng/restlib/configuration"
-	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
