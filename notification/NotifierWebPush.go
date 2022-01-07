@@ -6,13 +6,11 @@ package notification
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
+
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/reaction-eng/restlib/preferences"
 	"github.com/reaction-eng/restlib/users"
-
-	//"encoding/json"
-	//"github.com/SherClockHolmes/webpush-go"
-	"log"
 )
 
 type WebPushNotifier struct {
