@@ -1,16 +1,16 @@
 module github.com/reaction-eng/restlib
 
-go 1.14
+go 1.15
 
 require (
-	github.com/SherClockHolmes/webpush-go v1.1.0
+	github.com/SherClockHolmes/webpush-go v1.1.3
 	github.com/domodwyer/mailyak v3.1.1+incompatible
 	github.com/fogleman/fauxgl v0.0.0-20190627205746-5ab08979c242
 	github.com/fogleman/simplify v0.0.0-20170216171241-d32f302d5046 // indirect
 	github.com/go-redis/cache v6.4.0+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/lusis/go-slackbot v0.0.0-20180109053408-401027ccfef5 // indirect
