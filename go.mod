@@ -23,8 +23,8 @@ require (
 	github.com/tidwall/pretty v1.0.2 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	go.mongodb.org/mongo-driver v1.5.1
-	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
-	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
+	golang.org/x/crypto v0.21.0
+	golang.org/x/net v0.23.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0
 )
